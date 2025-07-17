@@ -1,23 +1,8 @@
 // Game State
 let gameState = {
   money: 0,
-  grid: Array(GAME_CONFIG.gridConfig.maxSize)
-    .fill()
-    .map(() => Array(GAME_CONFIG.gridConfig.maxSize).fill(null)),
-  gridSize: GAME_CONFIG.gridConfig.initialSize,
-  purchasedCells: new Set(
-    Array.from(
-      {
-        length:
-          GAME_CONFIG.gridConfig.initialSize *
-          GAME_CONFIG.gridConfig.initialSize,
-      },
-      (_, i) =>
-        `${Math.floor(i / GAME_CONFIG.gridConfig.initialSize)}-${
-          i % GAME_CONFIG.gridConfig.initialSize
-        }`
-    )
-  ), // Initialize purchased cells for initialSize x initialSize
+  grid: [],
+  purchasedCells: new Set(),
   selectedCell: null,
   draggedCell: null,
   isSlaughterAnimating: false,
@@ -37,16 +22,46 @@ let gameState = {
   },
 };
 
+// Initialize grid dimensions based on available spots
+function initializeGridState() {
+  const maxRow =
+    Math.max(...GAME_CONFIG.gridConfig.availableSpots.map((spot) => spot.row)) +
+    1;
+  const maxCol =
+    Math.max(...GAME_CONFIG.gridConfig.availableSpots.map((spot) => spot.col)) +
+    1;
+  gameState.grid = Array(maxRow)
+    .fill()
+    .map(() => Array(maxCol).fill(null));
+  GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
+    if (cost === 0) {
+      gameState.purchasedCells.add(`${row}-${col}`);
+    }
+  });
+}
+
 // HTML Structure
 function generateGridHTML() {
-  let gridHTML = `<div class="game-grid grid grid-cols-${
-    GAME_CONFIG.gridConfig.maxSize
-  } gap-3 w-${80 * GAME_CONFIG.gridConfig.maxSize} h-${
-    80 * GAME_CONFIG.gridConfig.maxSize
-  } p-4 rounded-2xl mx-auto">`;
-  for (let i = 0; i < GAME_CONFIG.gridConfig.maxSize; i++) {
-    for (let j = 0; j < GAME_CONFIG.gridConfig.maxSize; j++) {
-      gridHTML += `<div id="cell-${i}-${j}" class="grid-cell rounded-xl flex items-center justify-center text-5xl cursor-pointer" draggable="true"></div>`;
+  const maxRow =
+    Math.max(...GAME_CONFIG.gridConfig.availableSpots.map((spot) => spot.row)) +
+    1;
+  const maxCol =
+    Math.max(...GAME_CONFIG.gridConfig.availableSpots.map((spot) => spot.col)) +
+    1;
+  let gridHTML = `<div class="game-grid grid grid-cols-${maxCol} gap-3 w-${
+    80 * maxCol
+  } h-${80 * maxRow} p-4 rounded-2xl mx-auto">`;
+  for (let i = 0; i < maxRow; i++) {
+    for (let j = 0; j < maxCol; j++) {
+      if (
+        GAME_CONFIG.gridConfig.availableSpots.some(
+          (spot) => spot.row === i && spot.col === j
+        )
+      ) {
+        gridHTML += `<div id="cell-${i}-${j}" class="grid-cell rounded-xl flex items-center justify-center text-5xl cursor-pointer" draggable="true"></div>`;
+      } else {
+        gridHTML += `<div class="grid-cell invisible"></div>`; // Placeholder for non-available spots
+      }
     }
   }
   gridHTML += `</div>`;
@@ -188,6 +203,9 @@ const HTML_STRUCTURE = `
 
 // Initialize Game
 function initializeGame() {
+  // Initialize grid state
+  initializeGridState();
+
   // Inject HTML structure
   document.getElementById("gameContainer").innerHTML = HTML_STRUCTURE;
 
@@ -204,17 +222,15 @@ function initializeGame() {
   updateAnimalValues();
   updateMergeablePairs();
   updateStatus(
-    `Start with a ${GAME_CONFIG.gridConfig.initialSize}x${GAME_CONFIG.gridConfig.initialSize} grid! Click 🌱 grass squares to expand!`
+    `Start with initial grid spots! Click 🌱 grass squares to expand!`
   );
 
   // Set up grass cells for unpurchased cells
-  for (let i = 0; i < GAME_CONFIG.gridConfig.maxSize; i++) {
-    for (let j = 0; j < GAME_CONFIG.gridConfig.maxSize; j++) {
-      if (!gameState.purchasedCells.has(`${i}-${j}`)) {
-        setupGrassCell(i, j);
-      }
+  GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
+    if (cost > 0) {
+      setupGrassCell(row, col, cost);
     }
-  }
+  });
 
   // Start game loops
   startGameTimers();
@@ -223,116 +239,68 @@ function initializeGame() {
 
 // Event Listeners
 function initializeGridEventListeners() {
-  for (let i = 0; i < GAME_CONFIG.gridConfig.maxSize; i++) {
-    for (let j = 0; j < GAME_CONFIG.gridConfig.maxSize; j++) {
-      const cell = document.getElementById(`cell-${i}-${j}`);
+  GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
+    const cell = document.getElementById(`cell-${row}-${col}`);
+    if (!cell) return;
 
-      // Check if cell is purchasable
-      if (!gameState.purchasedCells.has(`${i}-${j}`)) {
-        cell.addEventListener("click", () => handleCellPurchase(i, j));
-        setupGrassCell(i, j);
-      } else {
-        cell.addEventListener("click", () => handleCellClick(i, j));
-        cell.addEventListener("dragstart", (e) => handleDragStart(i, j, e));
-        cell.addEventListener("dragover", (e) => e.preventDefault());
-        cell.addEventListener("drop", (e) => handleDrop(i, j, e));
-        cell.addEventListener("touchstart", (e) => handleTouchStart(i, j, e));
-        cell.addEventListener("touchmove", (e) => handleTouchMove(e));
-        cell.addEventListener("touchend", (e) => handleTouchEnd(i, j, e));
-      }
+    if (!gameState.purchasedCells.has(`${row}-${col}`)) {
+      cell.addEventListener("click", () => handleCellPurchase(row, col, cost));
+    } else {
+      cell.addEventListener("click", () => handleCellClick(row, col));
+      cell.addEventListener("dragstart", (e) => handleDragStart(row, col, e));
+      cell.addEventListener("dragover", (e) => e.preventDefault());
+      cell.addEventListener("drop", (e) => handleDrop(row, col, e));
+      cell.addEventListener("touchstart", (e) => handleTouchStart(row, col, e));
+      cell.addEventListener("touchmove", (e) => handleTouchMove(e));
+      cell.addEventListener("touchend", (e) => handleTouchEnd(row, col, e));
     }
-  }
+  });
 }
 
-function setupGrassCell(i, j) {
-  const cell = document.getElementById(`cell-${i}-${j}`);
+function setupGrassCell(row, col, cost) {
+  const cell = document.getElementById(`cell-${row}-${col}`);
+  if (!cell) return;
   cell.classList.add("grass");
   cell.draggable = false;
-
-  // Determine cost based on position
-  let cost;
-  if (
-    i < GAME_CONFIG.gridConfig.initialSize &&
-    j < GAME_CONFIG.gridConfig.initialSize
-  ) {
-    cost = 0; // Initial cells are free (already purchased)
-  } else if (i < 2 || j < 2) {
-    cost = GAME_CONFIG.gridConfig.expansionCosts.row2;
-  } else if (i < 3 || j < 3) {
-    cost = GAME_CONFIG.gridConfig.expansionCosts.row3;
-  } else {
-    cost = GAME_CONFIG.gridConfig.expansionCosts.row4;
-  }
-
   cell.setAttribute("data-cost", cost);
   cell.style.pointerEvents = "auto";
 }
 
-function handleCellPurchase(i, j) {
-  let cost;
-  if (
-    i < GAME_CONFIG.gridConfig.initialSize &&
-    j < GAME_CONFIG.gridConfig.initialSize
-  ) {
-    return; // Already purchased
-  } else if (i < 2 || j < 2) {
-    cost = GAME_CONFIG.gridConfig.expansionCosts.row2;
-  } else if (i < 3 || j < 3) {
-    cost = GAME_CONFIG.gridConfig.expansionCosts.row3;
-  } else {
-    cost = GAME_CONFIG.gridConfig.expansionCosts.row4;
-  }
+function handleCellPurchase(row, col, cost) {
+  if (gameState.purchasedCells.has(`${row}-${col}`)) return;
 
   if (gameState.money >= cost) {
     gameState.money -= cost;
-    gameState.purchasedCells.add(`${i}-${j}`);
+    gameState.purchasedCells.add(`${row}-${col}`);
 
     // Convert grass cell to regular cell
-    const cell = document.getElementById(`cell-${i}-${j}`);
+    const cell = document.getElementById(`cell-${row}-${col}`);
     cell.classList.remove("grass");
     cell.removeAttribute("data-cost");
     cell.draggable = true;
 
     // Remove old event listeners and add new ones
     cell.replaceWith(cell.cloneNode(true));
-    const newCell = document.getElementById(`cell-${i}-${j}`);
-    newCell.addEventListener("click", () => handleCellClick(i, j));
-    newCell.addEventListener("dragstart", (e) => handleDragStart(i, j, e));
+    const newCell = document.getElementById(`cell-${row}-${col}`);
+    newCell.addEventListener("click", () => handleCellClick(row, col));
+    newCell.addEventListener("dragstart", (e) => handleDragStart(row, col, e));
     newCell.addEventListener("dragover", (e) => e.preventDefault());
-    newCell.addEventListener("drop", (e) => handleDrop(i, j, e));
-    newCell.addEventListener("touchstart", (e) => handleTouchStart(i, j, e));
+    newCell.addEventListener("drop", (e) => handleDrop(row, col, e));
+    newCell.addEventListener("touchstart", (e) =>
+      handleTouchStart(row, col, e)
+    );
     newCell.addEventListener("touchmove", (e) => handleTouchMove(e));
-    newCell.addEventListener("touchend", (e) => handleTouchEnd(i, j, e));
+    newCell.addEventListener("touchend", (e) => handleTouchEnd(row, col, e));
 
     updateMoney();
     updateMergeablePairs();
-    showAchievement(`🌱 Purchased Grid Square (${i}, ${j})!`);
+    showAchievement(`🌱 Purchased Grid Square (${row}, ${col})!`);
     updateStatus(`Purchased grid square for ${cost}! 🌱`);
-
-    // Check if we need to update grid size
-    updateGridSize();
   } else {
     updateStatus(`Need ${cost} to purchase this square! 😕`);
     document.body.classList.add("screen-shake");
     setTimeout(() => document.body.classList.remove("screen-shake"), 500);
   }
-}
-
-function updateGridSize() {
-  // Check if all cells in current expansion are purchased
-  let maxPurchasedRow = GAME_CONFIG.gridConfig.initialSize;
-  let maxPurchasedCol = GAME_CONFIG.gridConfig.initialSize;
-
-  for (let i = 0; i < GAME_CONFIG.gridConfig.maxSize; i++) {
-    for (let j = 0; j < GAME_CONFIG.gridConfig.maxSize; j++) {
-      if (gameState.purchasedCells.has(`${i}-${j}`)) {
-        maxPurchasedRow = Math.max(maxPurchasedRow, i + 1);
-        maxPurchasedCol = Math.max(maxPurchasedCol, j + 1);
-      }
-    }
-  }
-
-  gameState.gridSize = Math.min(maxPurchasedRow, maxPurchasedCol);
 }
 
 // Event Listeners for Slaughter House
@@ -397,42 +365,40 @@ function updateMergeablePairs() {
   const neighbors = [
     { di: 0, dj: 1 }, // Right
     { di: 1, dj: 0 }, // Down
+    { di: 0, dj: -1 }, // Left
+    { di: -1, dj: 0 }, // Up
   ];
-  for (let i = 0; i < GAME_CONFIG.gridConfig.maxSize; i++) {
-    for (let j = 0; j < GAME_CONFIG.gridConfig.maxSize; j++) {
-      if (
-        gameState.purchasedCells.has(`${i}-${j}`) &&
-        gameState.grid[i][j] &&
-        GAME_CONFIG.animalTypes[gameState.grid[i][j]].mergeTo
-      ) {
-        for (const { di, dj } of neighbors) {
-          const ni = i + di;
-          const nj = j + dj;
-          if (
-            ni < GAME_CONFIG.gridConfig.maxSize &&
-            nj < GAME_CONFIG.gridConfig.maxSize &&
-            gameState.purchasedCells.has(`${ni}-${nj}`) &&
-            gameState.grid[ni][nj] === gameState.grid[i][j]
-          ) {
-            gameState.mergeablePairs.push({
-              source: { i, j },
-              target: { i: ni, j: nj },
-            });
-          }
+  GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+    if (
+      gameState.purchasedCells.has(`${i}-${j}`) &&
+      gameState.grid[i][j] &&
+      GAME_CONFIG.animalTypes[gameState.grid[i][j]].mergeTo
+    ) {
+      for (const { di, dj } of neighbors) {
+        const ni = i + di;
+        const nj = j + dj;
+        if (
+          GAME_CONFIG.gridConfig.availableSpots.some(
+            (spot) => spot.row === ni && spot.col === nj
+          ) &&
+          gameState.purchasedCells.has(`${ni}-${nj}`) &&
+          gameState.grid[ni][nj] === gameState.grid[i][j]
+        ) {
+          gameState.mergeablePairs.push({
+            source: { i, j },
+            target: { i: ni, j: nj },
+          });
         }
       }
     }
-  }
+  });
 }
 
 function isGridFull() {
-  for (let i = 0; i < GAME_CONFIG.gridConfig.maxSize; i++) {
-    for (let j = 0; j < GAME_CONFIG.gridConfig.maxSize; j++) {
-      if (gameState.purchasedCells.has(`${i}-${j}`) && !gameState.grid[i][j])
-        return false;
-    }
-  }
-  return true;
+  return GAME_CONFIG.gridConfig.availableSpots.every(
+    ({ row, col }) =>
+      !gameState.purchasedCells.has(`${row}-${col}`) || gameState.grid[row][col]
+  );
 }
 
 function updatePlaceButtonStates() {
@@ -455,34 +421,32 @@ function updatePlaceButtonStates() {
 }
 
 function placeAnimal(type) {
-  for (let i = 0; i < GAME_CONFIG.gridConfig.maxSize; i++) {
-    for (let j = 0; j < GAME_CONFIG.gridConfig.maxSize; j++) {
-      if (gameState.purchasedCells.has(`${i}-${j}`) && !gameState.grid[i][j]) {
-        gameState.grid[i][j] = type;
-        gameState.createdAnimals.add(type);
-        updateAnimalValues();
-        updateCell(i, j);
-        updateMergeablePairs();
+  for (const { row: i, col: j } of GAME_CONFIG.gridConfig.availableSpots) {
+    if (gameState.purchasedCells.has(`${i}-${j}`) && !gameState.grid[i][j]) {
+      gameState.grid[i][j] = type;
+      gameState.createdAnimals.add(type);
+      updateAnimalValues();
+      updateCell(i, j);
+      updateMergeablePairs();
 
-        // Enhanced spawn animation
-        const cell = document.getElementById(`cell-${i}-${j}`);
-        cell.classList.add("new-animal-spawn");
-        setTimeout(
-          () => cell.classList.remove("new-animal-spawn"),
-          GAME_CONFIG.animationConfig.spawnAnimationDuration
-        );
+      // Enhanced spawn animation
+      const cell = document.getElementById(`cell-${i}-${j}`);
+      cell.classList.add("new-animal-spawn");
+      setTimeout(
+        () => cell.classList.remove("new-animal-spawn"),
+        GAME_CONFIG.animationConfig.spawnAnimationDuration
+      );
 
-        // Create particles
-        createParticles(cell);
+      // Create particles
+      createParticles(cell);
 
-        const animalType = GAME_CONFIG.animalTypes[type];
-        updateStatus(
-          gameState.createdAnimals.size === 1 && animalType.sellPrice > 0
-            ? `${GAME_CONFIG.animalEmojis[type]} created! You can sell it for 💰${animalType.sellPrice}`
-            : `Placed ${GAME_CONFIG.animalEmojis[type]}`
-        );
-        return true;
-      }
+      const animalType = GAME_CONFIG.animalTypes[type];
+      updateStatus(
+        gameState.createdAnimals.size === 1 && animalType.sellPrice > 0
+          ? `${GAME_CONFIG.animalEmojis[type]} created! You can sell it for 💰${animalType.sellPrice}`
+          : `Placed ${GAME_CONFIG.animalEmojis[type]}`
+      );
+      return true;
     }
   }
   updateStatus("No available space! Purchase more grid squares! 🌱");
@@ -516,7 +480,6 @@ function buyAnimal(type, cost) {
     }
   } else {
     updateStatus(`Not enough money for ${GAME_CONFIG.animalEmojis[type]}! 😕`);
-    // Screen shake for failure
     document.body.classList.add("screen-shake");
     setTimeout(() => document.body.classList.remove("screen-shake"), 500);
   }
@@ -1025,51 +988,48 @@ function autoMergeCheck() {
 
 // Visual Helper Functions
 function highlightValidTargets(i, j) {
-  for (let di = 0; di < GAME_CONFIG.gridConfig.maxSize; di++) {
-    for (let dj = 0; dj < GAME_CONFIG.gridConfig.maxSize; dj++) {
-      if (di === i && dj === j) continue;
-      if (!gameState.purchasedCells.has(`${di}-${dj}`)) continue;
+  GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: di, col: dj }) => {
+    if (di === i && dj === j) return;
+    if (!gameState.purchasedCells.has(`${di}-${dj}`)) return;
 
-      const targetCell = document.getElementById(`cell-${di}-${dj}`);
-      if (
-        gameState.grid[di][dj] === gameState.grid[i][j] &&
-        GAME_CONFIG.animalTypes[gameState.grid[i][j]].mergeTo
-      ) {
-        targetCell.classList.add("drag-valid-target");
-      } else if (gameState.grid[di][dj]) {
-        targetCell.classList.add("drag-invalid-target");
-      }
+    const targetCell = document.getElementById(`cell-${di}-${dj}`);
+    if (
+      gameState.grid[di][dj] === gameState.grid[i][j] &&
+      GAME_CONFIG.animalTypes[gameState.grid[i][j]].mergeTo
+    ) {
+      targetCell.classList.add("drag-valid-target");
+    } else if (gameState.grid[di][dj]) {
+      targetCell.classList.add("drag-invalid-target");
     }
-  }
+  });
 }
 
 function clearValidTargets() {
-  for (let i = 0; i < GAME_CONFIG.gridConfig.maxSize; i++) {
-    for (let j = 0; j < GAME_CONFIG.gridConfig.maxSize; j++) {
-      const cell = document.getElementById(`cell-${i}-${j}`);
+  GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+    const cell = document.getElementById(`cell-${i}-${j}`);
+    if (cell) {
       cell.classList.remove("drag-valid-target", "drag-invalid-target");
     }
-  }
+  });
 }
 
 function clearWiggleGlow() {
-  for (let i = 0; i < GAME_CONFIG.gridConfig.maxSize; i++) {
-    for (let j = 0; j < GAME_CONFIG.gridConfig.maxSize; j++) {
-      if (gameState.purchasedCells.has(`${i}-${j}`)) {
-        document
-          .getElementById(`cell-${i}-${j}`)
-          .classList.remove("wiggle", "glow");
+  GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+    if (gameState.purchasedCells.has(`${i}-${j}`)) {
+      const cell = document.getElementById(`cell-${i}-${j}`);
+      if (cell) {
+        cell.classList.remove("wiggle", "glow");
       }
     }
-  }
+  });
   gameState.recentlyAnimatedCells = [];
 }
 
 function clearAutoMergeHighlight() {
-  for (let i = 0; i < GAME_CONFIG.gridConfig.maxSize; i++) {
-    for (let j = 0; j < GAME_CONFIG.gridConfig.maxSize; j++) {
-      if (gameState.purchasedCells.has(`${i}-${j}`)) {
-        const cell = document.getElementById(`cell-${i}-${j}`);
+  GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+    if (gameState.purchasedCells.has(`${i}-${j}`)) {
+      const cell = document.getElementById(`cell-${i}-${j}`);
+      if (cell) {
         cell.classList.remove(
           "border-purple-500",
           "border-2",
@@ -1078,12 +1038,13 @@ function clearAutoMergeHighlight() {
         );
       }
     }
-  }
+  });
 }
 
 // UI Update Functions
 function updateCell(i, j) {
   const cell = document.getElementById(`cell-${i}-${j}`);
+  if (!cell) return;
   const animal = gameState.grid[i][j];
   cell.textContent = animal ? GAME_CONFIG.animalEmojis[animal] : "";
 
@@ -1204,7 +1165,7 @@ function startGameTimers() {
     if (gameState.chickenCoop.owned) {
       gameState.chickenCoop.timer -= 1;
       const timerElement = document.getElementById("chickenCoopTimer");
-      timerElement.textContent = `Next Chicken 🐔: ${gameState.chickenCoop.timer.toFixed(
+      timerElement.textContent = `Next Chicken 🐕: ${gameState.chickenCoop.timer.toFixed(
         1
       )}s`;
 
@@ -1310,17 +1271,15 @@ function startWiggleAnimation() {
       return;
     clearWiggleGlow();
     const nonEmptyCells = [];
-    for (let i = 0; i < GAME_CONFIG.gridConfig.maxSize; i++) {
-      for (let j = 0; j < GAME_CONFIG.gridConfig.maxSize; j++) {
-        if (
-          gameState.purchasedCells.has(`${i}-${j}`) &&
-          gameState.grid[i][j] &&
-          !gameState.recentlyAnimatedCells.includes(`${i}-${j}`)
-        ) {
-          nonEmptyCells.push({ i, j });
-        }
+    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+      if (
+        gameState.purchasedCells.has(`${i}-${j}`) &&
+        gameState.grid[i][j] &&
+        !gameState.recentlyAnimatedCells.includes(`${i}-${j}`)
+      ) {
+        nonEmptyCells.push({ i, j });
       }
-    }
+    });
     if (nonEmptyCells.length === 0) return;
     const count = Math.min(
       Math.floor(Math.random() * 3) + 1,
@@ -1333,13 +1292,17 @@ function startWiggleAnimation() {
     }
     selectedCells.forEach(({ i, j }) => {
       const cell = document.getElementById(`cell-${i}-${j}`);
-      cell.classList.add("wiggle", "glow");
-      gameState.recentlyAnimatedCells.push(`${i}-{j}`);
-      setTimeout(() => {
-        cell.classList.remove("wiggle", "glow");
-        gameState.recentlyAnimatedCells =
-          gameState.recentlyAnimatedCells.filter((c) => c !== `${i}-${j}`);
-      }, GAME_CONFIG.animationConfig.wiggleDuration);
+      if (cell) {
+        cell.classList.add("wiggle", "glow");
+        gameState.recentlyAnimatedCells.push(`${i}-${j}`);
+        setTimeout(() => {
+          if (cell) {
+            cell.classList.remove("wiggle", "glow");
+            gameState.recentlyAnimatedCells =
+              gameState.recentlyAnimatedCells.filter((c) => c !== `${i}-${j}`);
+          }
+        }, GAME_CONFIG.animationConfig.wiggleDuration);
+      }
     });
   }, GAME_CONFIG.animationConfig.wiggleInterval);
 }
