@@ -190,7 +190,7 @@ const gridManager = {
     e.dataTransfer.dropEffect = "move";
   },
 
-  // Handle drag enter - FIXED: Support both merge and swap feedback
+  // Handle drag enter - FIXED: Support merge, swap, and move to empty space
   handleDragEnter(e, i, j) {
     e.preventDefault();
 
@@ -210,6 +210,9 @@ const gridManager = {
     } else if (this.canSwap(sourceI, sourceJ, i, j)) {
       cell.classList.add("drag-valid-target");
       cell.classList.remove("drag-invalid-target");
+    } else if (this.canMoveToEmpty(sourceI, sourceJ, i, j)) {
+      cell.classList.add("drag-valid-target");
+      cell.classList.remove("drag-invalid-target");
     } else {
       cell.classList.add("drag-invalid-target");
       cell.classList.remove("drag-valid-target");
@@ -222,7 +225,7 @@ const gridManager = {
     cell.classList.remove("drag-valid-target", "drag-invalid-target");
   },
 
-  // Handle drop - FIXED: Support both merge and swap
+  // Handle drop - FIXED: Support merge, swap, and move to empty space
   handleDrop(e, i, j) {
     e.preventDefault();
 
@@ -247,8 +250,13 @@ const gridManager = {
     else if (this.canSwap(sourceI, sourceJ, i, j)) {
       console.log("✅ Swap is valid, executing...");
       this.swapAnimals(sourceI, sourceJ, i, j);
+    }
+    // Check if this is a valid move to empty space
+    else if (this.canMoveToEmpty(sourceI, sourceJ, i, j)) {
+      console.log("✅ Move to empty space is valid, executing...");
+      this.moveToEmpty(sourceI, sourceJ, i, j);
     } else {
-      console.log("❌ Neither merge nor swap is valid");
+      console.log("❌ No valid action possible");
       updateStatus("Cannot perform this action! 😕");
     }
 
@@ -318,6 +326,34 @@ const gridManager = {
         )
       ) {
         mergeAnimals(
+          gameState.draggedCell.i,
+          gameState.draggedCell.j,
+          targetI,
+          targetJ
+        );
+      } else if (
+        this.canSwap(
+          gameState.draggedCell.i,
+          gameState.draggedCell.j,
+          targetI,
+          targetJ
+        )
+      ) {
+        this.swapAnimals(
+          gameState.draggedCell.i,
+          gameState.draggedCell.j,
+          targetI,
+          targetJ
+        );
+      } else if (
+        this.canMoveToEmpty(
+          gameState.draggedCell.i,
+          gameState.draggedCell.j,
+          targetI,
+          targetJ
+        )
+      ) {
+        this.moveToEmpty(
           gameState.draggedCell.i,
           gameState.draggedCell.j,
           targetI,
@@ -409,19 +445,52 @@ const gridManager = {
     return false;
   },
 
+  // Check if move to empty space is possible
+  canMoveToEmpty(sourceI, sourceJ, targetI, targetJ) {
+    console.log(
+      `🔍 Checking if move to empty is possible: ${sourceI}-${sourceJ} -> ${targetI}-${targetJ}`
+    );
+
+    // Check if target cell is purchased
+    if (!gameState.purchasedCells.has(`${targetI}-${targetJ}`)) {
+      console.log("❌ Target cell not purchased");
+      return false;
+    }
+
+    const sourceType = gameState.grid[sourceI][sourceJ];
+    const targetType = gameState.grid[targetI][targetJ];
+
+    console.log(`🔍 Source type: ${sourceType}, Target type: ${targetType}`);
+
+    // Check if source has animal and target is empty
+    if (!sourceType) {
+      console.log("❌ Source cell empty");
+      return false;
+    }
+
+    if (targetType) {
+      console.log("❌ Target cell not empty");
+      return false;
+    }
+
+    console.log("✅ Move to empty space is valid!");
+    return true;
+  },
+
   // Show valid merge targets - FIXED: Show all valid targets (not just adjacent)
   showValidTargets(sourceI, sourceJ) {
     console.log(`🎯 Showing valid targets for ${sourceI}-${sourceJ}`);
 
-    // Check all cells on the grid for valid merge or swap targets
+    // Check all cells on the grid for valid merge, swap, or move targets
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
-      if (gameState.purchasedCells.has(`${i}-${j}`) && gameState.grid[i][j]) {
+      if (gameState.purchasedCells.has(`${i}-${j}`)) {
         // Skip the source cell
         if (i === sourceI && j === sourceJ) return;
 
         if (
           this.canMerge(sourceI, sourceJ, i, j) ||
-          this.canSwap(sourceI, sourceJ, i, j)
+          this.canSwap(sourceI, sourceJ, i, j) ||
+          this.canMoveToEmpty(sourceI, sourceJ, i, j)
         ) {
           const cell = document.getElementById(`cell-${i}-${j}`);
           if (cell) {
@@ -431,6 +500,30 @@ const gridManager = {
         }
       }
     });
+  },
+
+  // Move animal to empty space
+  moveToEmpty(sourceI, sourceJ, targetI, targetJ) {
+    console.log(
+      `🔄 Moving animal: ${sourceI}-${sourceJ} -> ${targetI}-${targetJ}`
+    );
+
+    const sourceType = gameState.grid[sourceI][sourceJ];
+
+    // Move the animal to the empty space
+    gameState.grid[sourceI][sourceJ] = null;
+    gameState.grid[targetI][targetJ] = sourceType;
+
+    // Update both cells
+    this.updateCell(sourceI, sourceJ);
+    this.updateCell(targetI, targetJ);
+
+    // Update mergeable pairs after moving
+    updateMergeablePairs();
+
+    updateStatus(
+      `Moved ${GAME_CONFIG.animalEmojis[sourceType]} to empty space! 📦`
+    );
   },
 
   // Swap two animals

@@ -15,6 +15,17 @@ let gameState = {
     baseInterval: 10,
     currentInterval: 10,
     timer: 10,
+    enabled: true,
+    diagonal: false,
+    magic: false,
+  },
+  shuffle: {
+    owned: false,
+    level: 1,
+    baseInterval: 30,
+    currentInterval: 30,
+    timer: 30,
+    enabled: true,
   },
   slaughterHouses: [],
 };
@@ -100,29 +111,72 @@ function generateMainHTML() {
                 </div>
             </div>
             
-            <!-- Auto-Merge -->
-            <div class="flex-shrink-0 bg-white m-4 p-4 rounded-xl shadow-lg min-w-[220px]">
-                <h3 class="text-lg font-bold text-purple-800 mb-2">⚙️ Auto-Merge</h3>
-                <div class="space-y-2 text-sm">
-                    <p id="autoMergeLevel" class="font-semibold">Level: 1</p>
-                    <p id="autoMergeTimer" class="timer-display">Check Interval: 10s</p>
-                    <!-- Progress Bar Container -->
-                    <div id="autoMergeProgressContainer" class="hidden">
-                        <div class="coop-progress-container">
-                            <div class="coop-progress-label">Next Auto-Merge</div>
-                            <div class="coop-progress-bar">
-                                <div id="autoMergeProgress" class="coop-progress-fill" style="width: 0%"></div>
+            <!-- Bottom Panel - Auto-Merge and Shuffle -->
+            <div class="flex-shrink-0 bg-white m-4 p-4 rounded-xl shadow-lg">
+                <div class="flex space-x-6">
+                    <!-- Auto-Merge -->
+                    <div class="flex-1 min-w-[220px]">
+                        <h3 class="text-lg font-bold text-purple-800 mb-2">⚙️ Auto-Merge</h3>
+                        <div class="space-y-2 text-sm">
+                            <p id="autoMergeLevel" class="font-semibold">Level: 1</p>
+                            <p id="autoMergeTimer" class="timer-display">Check Interval: 10s</p>
+                            <!-- Progress Bar Container -->
+                            <div id="autoMergeProgressContainer" class="hidden">
+                                <div class="coop-progress-container">
+                                    <div class="coop-progress-label">Next Auto-Merge</div>
+                                    <div class="coop-progress-bar">
+                                        <div id="autoMergeProgress" class="coop-progress-fill" style="width: 0%"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        <div class="mt-4 space-y-2">
+                            <button id="buyAutoMerge" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
+                                <i class="fas fa-cogs mr-1"></i>Auto-Merge ($1)
+                            </button>
+                            <button id="upgradeAutoMerge" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full hidden">
+                                <i class="fas fa-arrow-up mr-1"></i>Upgrade Auto-Merge ($5)
+                            </button>
+                            <button id="autoMergeToggle" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full hidden bg-green-500">
+                                🔵 ON
+                            </button>
+                            <button id="buyDiagonalUpgrade" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full hidden" style="background: linear-gradient(145deg, #f59e0b, #d97706);">
+                                <i class="fas fa-expand-arrows-alt mr-1"></i>Diagonal ($1,000)
+                            </button>
+                            <button id="buyMagicUpgrade" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full hidden" style="background: linear-gradient(145deg, #ec4899, #db2777);">
+                                <i class="fas fa-magic mr-1"></i>Magic ($100,000)
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div class="mt-4 space-y-2">
-                    <button id="buyAutoMerge" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
-                        <i class="fas fa-cogs mr-1"></i>Buy Auto-Merge ($1)
-                    </button>
-                    <button id="upgradeAutoMerge" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
-                        <i class="fas fa-arrow-up mr-1"></i>Upgrade Auto-Merge ($5)
-                    </button>
+
+                    <!-- Shuffle -->
+                    <div class="flex-1 min-w-[220px]">
+                        <h3 class="text-lg font-bold text-orange-800 mb-2">🔀 Shuffle</h3>
+                        <div class="space-y-2 text-sm">
+                            <p id="shuffleLevel" class="font-semibold">Level: 1</p>
+                            <p id="shuffleTimer" class="timer-display">Shuffle Interval: 30s</p>
+                            <!-- Progress Bar Container -->
+                            <div id="shuffleProgressContainer" class="hidden">
+                                <div class="coop-progress-container">
+                                    <div class="coop-progress-label">Next Shuffle</div>
+                                    <div class="coop-progress-bar">
+                                        <div id="shuffleProgress" class="coop-progress-fill" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 space-y-2">
+                            <button id="buyShuffle" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full" style="background: linear-gradient(145deg, #f59e0b, #d97706);">
+                                <i class="fas fa-random mr-1"></i>Shuffle ($10)
+                            </button>
+                            <button id="upgradeShuffle" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full hidden">
+                                <i class="fas fa-arrow-up mr-1"></i>Upgrade Shuffle ($50)
+                            </button>
+                            <button id="shuffleToggle" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full hidden bg-green-500">
+                                🔵 ON
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -360,9 +414,10 @@ function startGameTimers() {
     slaughterHouseManager.updateSlaughterHouseTimers();
   }, 1000);
 
-  // Separate timer for auto-merge with higher precision
+  // Separate timer for auto-merge and shuffle with higher precision
   setInterval(() => {
     coopManager.updateAutoMergeTimer();
+    coopManager.updateShuffleTimer();
   }, 100); // 100ms intervals for precise timing
 }
 

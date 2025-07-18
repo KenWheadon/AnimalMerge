@@ -49,7 +49,7 @@ const coopManager = {
 
       html += `
         <button id="buy${animalType}" class="enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white ${hiddenClass}">
-            <i class="${icon} mr-2"></i>Buy ${animalType} ${emoji} (${costText})
+            <i class="${icon} mr-2"></i>${animalType} ${emoji} (${costText})
         </button>
       `;
     }
@@ -92,7 +92,7 @@ const coopManager = {
             <div class="lock-icon">🔒</div>
             <p class="coop-name">${animalName} Coop</p>
             <button id="buy${animalName}Coop" class="enhanced-button buy-button coop-buy-btn">
-              <i class="fas fa-home mr-1"></i>Buy 🏡 ($${config.buyCost})
+              <i class="fas fa-home mr-1"></i>🏡 ($${config.buyCost})
             </button>
           </div>
 
@@ -532,6 +532,9 @@ const coopManager = {
       gameState.autoMerge.timer = gameState.autoMerge.currentInterval;
       document.getElementById("buyAutoMerge").classList.add("hidden");
       document.getElementById("upgradeAutoMerge").classList.remove("hidden");
+      document.getElementById("autoMergeToggle").classList.remove("hidden");
+      document.getElementById("buyDiagonalUpgrade").classList.remove("hidden");
+      document.getElementById("buyMagicUpgrade").classList.remove("hidden");
       document
         .getElementById("autoMergeProgressContainer")
         .classList.remove("hidden");
@@ -590,6 +593,234 @@ const coopManager = {
     }
   },
 
+  // Toggle auto-merge on/off
+  toggleAutoMerge() {
+    gameState.autoMerge.enabled = !gameState.autoMerge.enabled;
+    const button = document.getElementById("autoMergeToggle");
+    if (gameState.autoMerge.enabled) {
+      button.textContent = "🔵 ON";
+      button.classList.remove("bg-red-500");
+      button.classList.add("bg-green-500");
+    } else {
+      button.textContent = "🔴 OFF";
+      button.classList.remove("bg-green-500");
+      button.classList.add("bg-red-500");
+    }
+    updateStatus(
+      `Auto-Merge ${gameState.autoMerge.enabled ? "enabled" : "disabled"}`
+    );
+  },
+
+  // Buy diagonal upgrade for auto-merge
+  buyDiagonalUpgrade() {
+    if (gameState.money >= 1000) {
+      gameState.money -= 1000;
+      gameState.autoMerge.diagonal = true;
+      document.getElementById("buyDiagonalUpgrade").classList.add("hidden");
+      updateMoney();
+      eventManager.showAchievement("📐 Diagonal Auto-Merge Unlocked!");
+      updateStatus("Bought Diagonal Auto-Merge 📐");
+    } else {
+      updateStatus("Need $1000 for Diagonal Auto-Merge! 😕");
+      document.body.classList.add("screen-shake");
+      setTimeout(() => document.body.classList.remove("screen-shake"), 500);
+    }
+  },
+
+  // Buy magic upgrade for auto-merge
+  buyMagicUpgrade() {
+    if (gameState.money >= 100000) {
+      gameState.money -= 100000;
+      gameState.autoMerge.magic = true;
+      document.getElementById("buyMagicUpgrade").classList.add("hidden");
+      updateMoney();
+      eventManager.showAchievement("✨ Magic Auto-Merge Unlocked!");
+      updateStatus("Bought Magic Auto-Merge ✨");
+    } else {
+      updateStatus("Need $100,000 for Magic Auto-Merge! 😕");
+      document.body.classList.add("screen-shake");
+      setTimeout(() => document.body.classList.remove("screen-shake"), 500);
+    }
+  },
+
+  // SHUFFLE FUNCTIONS
+
+  // Buy shuffle system
+  buyShuffle() {
+    if (gameState.money >= GAME_CONFIG.shuffleConfig.buyCost) {
+      gameState.money -= GAME_CONFIG.shuffleConfig.buyCost;
+      gameState.shuffle.owned = true;
+      gameState.shuffle.timer = gameState.shuffle.currentInterval;
+      document.getElementById("buyShuffle").classList.add("hidden");
+      document.getElementById("upgradeShuffle").classList.remove("hidden");
+      document.getElementById("shuffleToggle").classList.remove("hidden");
+      document
+        .getElementById("shuffleProgressContainer")
+        .classList.remove("hidden");
+      updateMoney();
+      eventManager.showAchievement("🔀 Shuffle Activated!");
+      updateStatus("Bought Shuffle 🔀");
+    } else {
+      updateStatus("Not enough money for Shuffle! 😕");
+      document.body.classList.add("screen-shake");
+      setTimeout(() => document.body.classList.remove("screen-shake"), 500);
+    }
+  },
+
+  // Upgrade shuffle system
+  upgradeShuffle() {
+    const cost =
+      GAME_CONFIG.shuffleConfig.upgradeCostMultiplier * gameState.shuffle.level;
+    if (gameState.money >= cost) {
+      gameState.money -= cost;
+      gameState.shuffle.level += 1;
+      gameState.shuffle.currentInterval =
+        GAME_CONFIG.shuffleConfig.baseInterval *
+        Math.pow(
+          GAME_CONFIG.shuffleConfig.intervalReductionFactor,
+          gameState.shuffle.level - 1
+        );
+      gameState.shuffle.timer = gameState.shuffle.currentInterval;
+
+      document.getElementById(
+        "shuffleLevel"
+      ).textContent = `Level: ${gameState.shuffle.level}`;
+      document.getElementById(
+        "shuffleTimer"
+      ).textContent = `Shuffle Interval: ${gameState.shuffle.currentInterval.toFixed(
+        1
+      )}s`;
+      document.getElementById(
+        "upgradeShuffle"
+      ).innerHTML = `<i class="fas fa-arrow-up mr-1"></i>Upgrade Shuffle ($${
+        GAME_CONFIG.shuffleConfig.upgradeCostMultiplier *
+        gameState.shuffle.level
+      })`;
+
+      updateMoney();
+      eventManager.showAchievement(
+        `🆙 Shuffle Level ${gameState.shuffle.level}!`
+      );
+      updateStatus(`Upgraded Shuffle to level ${gameState.shuffle.level} 🆙`);
+    } else {
+      updateStatus("Not enough money to upgrade Shuffle! 😕");
+      document.body.classList.add("screen-shake");
+      setTimeout(() => document.body.classList.remove("screen-shake"), 500);
+    }
+  },
+
+  // Toggle shuffle on/off
+  toggleShuffle() {
+    gameState.shuffle.enabled = !gameState.shuffle.enabled;
+    const button = document.getElementById("shuffleToggle");
+    if (gameState.shuffle.enabled) {
+      button.textContent = "🔵 ON";
+      button.classList.remove("bg-red-500");
+      button.classList.add("bg-green-500");
+    } else {
+      button.textContent = "🔴 OFF";
+      button.classList.remove("bg-green-500");
+      button.classList.add("bg-red-500");
+    }
+    updateStatus(
+      `Shuffle ${gameState.shuffle.enabled ? "enabled" : "disabled"}`
+    );
+  },
+
+  // Perform shuffle
+  performShuffle() {
+    console.log("🔀 Starting shuffle...");
+
+    // Get all animals on the grid and clear all cells
+    const animals = [];
+    const occupiedCells = [];
+
+    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+      if (gameState.purchasedCells.has(`${i}-${j}`)) {
+        if (gameState.grid[i][j]) {
+          animals.push(gameState.grid[i][j]);
+          occupiedCells.push({ i, j });
+          gameState.grid[i][j] = null;
+        }
+      }
+    });
+
+    console.log(`Found ${animals.length} animals to shuffle:`, animals);
+    console.log(`Occupied cells:`, occupiedCells);
+
+    if (animals.length === 0) return;
+
+    // Update all cells to clear visual representation
+    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+      if (gameState.purchasedCells.has(`${i}-${j}`)) {
+        gridManager.updateCell(i, j);
+      }
+    });
+
+    // Shuffle the animals array
+    for (let i = animals.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [animals[i], animals[j]] = [animals[j], animals[i]];
+    }
+
+    console.log(`Shuffled animals:`, animals);
+
+    // Place animals back on the grid
+    let animalIndex = 0;
+    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+      if (
+        gameState.purchasedCells.has(`${i}-${j}`) &&
+        animalIndex < animals.length
+      ) {
+        gameState.grid[i][j] = animals[animalIndex];
+        gridManager.updateCell(i, j);
+        console.log(`Placed ${animals[animalIndex]} at ${i}-${j}`);
+        animalIndex++;
+      }
+    });
+
+    console.log("🔀 Shuffle complete!");
+    updateMergeablePairs();
+    updateStatus("Animals shuffled! 🔀");
+  },
+
+  // Update shuffle timer
+  updateShuffleTimer() {
+    if (gameState.shuffle.owned && gameState.shuffle.enabled) {
+      gameState.shuffle.timer -= 0.1;
+
+      // Update progress bar
+      const progressElement = document.getElementById("shuffleProgress");
+      if (progressElement) {
+        const progress =
+          ((gameState.shuffle.currentInterval - gameState.shuffle.timer) /
+            gameState.shuffle.currentInterval) *
+          100;
+        progressElement.style.width = `${Math.max(0, progress)}%`;
+
+        // Add urgent class when close to completion
+        if (gameState.shuffle.timer <= 3) {
+          progressElement.classList.add("urgent");
+        } else {
+          progressElement.classList.remove("urgent");
+        }
+      }
+
+      // Execute shuffle when timer reaches 0
+      if (gameState.shuffle.timer <= 0) {
+        this.performShuffle();
+        // Reset timer for next cycle
+        gameState.shuffle.timer = gameState.shuffle.currentInterval;
+
+        // Reset progress bar
+        if (progressElement) {
+          progressElement.style.width = "0%";
+          progressElement.classList.remove("urgent");
+        }
+      }
+    }
+  },
+
   // Clear all auto-merge visual effects
   clearAutoMergeHighlight() {
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
@@ -617,7 +848,7 @@ const coopManager = {
     this.clearAutoMergeHighlight();
 
     // Make sure we have the latest mergeable pairs
-    updateMergeablePairs();
+    this.updateMergeablePairsForAutoMerge();
     console.log("Updated mergeable pairs:", gameState.mergeablePairs);
 
     // Add glow to all cells that are part of mergeable pairs
@@ -648,8 +879,109 @@ const coopManager = {
     }
   },
 
+  // Update mergeable pairs for auto-merge (with diagonal and magic support)
+  updateMergeablePairsForAutoMerge() {
+    console.log("🔍 UPDATING MERGEABLE PAIRS FOR AUTO-MERGE...");
+    gameState.mergeablePairs = [];
+
+    // Define neighbor patterns based on upgrades
+    let neighbors = [
+      { di: 0, dj: 1 }, // Right
+      { di: 1, dj: 0 }, // Down
+      { di: 0, dj: -1 }, // Left
+      { di: -1, dj: 0 }, // Up
+    ];
+
+    // Add diagonal neighbors if diagonal upgrade is owned
+    if (gameState.autoMerge.diagonal) {
+      neighbors.push(
+        { di: 1, dj: 1 }, // Down-right
+        { di: 1, dj: -1 }, // Down-left
+        { di: -1, dj: 1 }, // Up-right
+        { di: -1, dj: -1 } // Up-left
+      );
+    }
+
+    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+      if (
+        gameState.purchasedCells.has(`${i}-${j}`) &&
+        gameState.grid[i][j] &&
+        GAME_CONFIG.animalTypes[gameState.grid[i][j]].mergeTo
+      ) {
+        if (gameState.autoMerge.magic) {
+          // Magic upgrade: check all other cells
+          GAME_CONFIG.gridConfig.availableSpots.forEach(
+            ({ row: ni, col: nj }) => {
+              if (
+                ni !== i ||
+                (nj !== j && // Don't check the same cell
+                  gameState.purchasedCells.has(`${ni}-${nj}`) &&
+                  gameState.grid[ni][nj] === gameState.grid[i][j])
+              ) {
+                const pairExists = gameState.mergeablePairs.some(
+                  (pair) =>
+                    (pair.source.i === i &&
+                      pair.source.j === j &&
+                      pair.target.i === ni &&
+                      pair.target.j === nj) ||
+                    (pair.source.i === ni &&
+                      pair.source.j === nj &&
+                      pair.target.i === i &&
+                      pair.target.j === j)
+                );
+
+                if (!pairExists) {
+                  gameState.mergeablePairs.push({
+                    source: { i, j },
+                    target: { i: ni, j: nj },
+                  });
+                }
+              }
+            }
+          );
+        } else {
+          // Regular or diagonal checking
+          for (const { di, dj } of neighbors) {
+            const ni = i + di;
+            const nj = j + dj;
+            if (
+              GAME_CONFIG.gridConfig.availableSpots.some(
+                (spot) => spot.row === ni && spot.col === nj
+              ) &&
+              gameState.purchasedCells.has(`${ni}-${nj}`) &&
+              gameState.grid[ni][nj] === gameState.grid[i][j]
+            ) {
+              const pairExists = gameState.mergeablePairs.some(
+                (pair) =>
+                  (pair.source.i === i &&
+                    pair.source.j === j &&
+                    pair.target.i === ni &&
+                    pair.target.j === nj) ||
+                  (pair.source.i === ni &&
+                    pair.source.j === nj &&
+                    pair.target.i === i &&
+                    pair.target.j === j)
+              );
+
+              if (!pairExists) {
+                gameState.mergeablePairs.push({
+                  source: { i, j },
+                  target: { i: ni, j: nj },
+                });
+              }
+            }
+          }
+        }
+      }
+    });
+
+    console.log("Final mergeable pairs:", gameState.mergeablePairs);
+  },
+
   // Perform auto-merge check and execution
   autoMergeCheck() {
+    if (!gameState.autoMerge.enabled) return;
+
     // Clear any existing highlights
     this.clearAutoMergeHighlight();
 
@@ -717,7 +1049,7 @@ const coopManager = {
     });
 
     // Update mergeable pairs after all merges are complete
-    updateMergeablePairs();
+    this.updateMergeablePairsForAutoMerge();
 
     // Clear highlights after a delay
     setTimeout(() => this.clearAutoMergeHighlight(), 1500);
@@ -737,7 +1069,7 @@ const coopManager = {
 
   // Update auto-merge timer with high precision
   updateAutoMergeTimer() {
-    if (gameState.autoMerge.owned) {
+    if (gameState.autoMerge.owned && gameState.autoMerge.enabled) {
       gameState.autoMerge.timer -= 0.1; // Decrement by 0.1 seconds for precision
 
       // Update progress bar

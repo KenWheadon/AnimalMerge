@@ -10,6 +10,14 @@ const eventManager = {
     // Auto-merge buttons
     const buyAutoMergeBtn = document.getElementById("buyAutoMerge");
     const upgradeAutoMergeBtn = document.getElementById("upgradeAutoMerge");
+    const autoMergeToggleBtn = document.getElementById("autoMergeToggle");
+    const buyDiagonalBtn = document.getElementById("buyDiagonalUpgrade");
+    const buyMagicBtn = document.getElementById("buyMagicUpgrade");
+
+    // Shuffle buttons
+    const buyShuffleBtn = document.getElementById("buyShuffle");
+    const upgradeShuffleBtn = document.getElementById("upgradeShuffle");
+    const shuffleToggleBtn = document.getElementById("shuffleToggle");
 
     if (buyAutoMergeBtn) {
       buyAutoMergeBtn.addEventListener("click", () =>
@@ -20,6 +28,40 @@ const eventManager = {
     if (upgradeAutoMergeBtn) {
       upgradeAutoMergeBtn.addEventListener("click", () =>
         coopManager.upgradeAutoMerge()
+      );
+    }
+
+    if (autoMergeToggleBtn) {
+      autoMergeToggleBtn.addEventListener("click", () =>
+        coopManager.toggleAutoMerge()
+      );
+    }
+
+    if (buyDiagonalBtn) {
+      buyDiagonalBtn.addEventListener("click", () =>
+        coopManager.buyDiagonalUpgrade()
+      );
+    }
+
+    if (buyMagicBtn) {
+      buyMagicBtn.addEventListener("click", () =>
+        coopManager.buyMagicUpgrade()
+      );
+    }
+
+    if (buyShuffleBtn) {
+      buyShuffleBtn.addEventListener("click", () => coopManager.buyShuffle());
+    }
+
+    if (upgradeShuffleBtn) {
+      upgradeShuffleBtn.addEventListener("click", () =>
+        coopManager.upgradeShuffle()
+      );
+    }
+
+    if (shuffleToggleBtn) {
+      shuffleToggleBtn.addEventListener("click", () =>
+        coopManager.toggleShuffle()
       );
     }
   },
@@ -140,7 +182,7 @@ const eventManager = {
       if (
         gameState.draggedCell ||
         gameState.selectedCell ||
-        !gameState.autoMerge.owned
+        (!gameState.autoMerge.owned && !gameState.shuffle.owned)
       )
         return;
       this.clearWiggleGlow();

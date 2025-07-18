@@ -183,6 +183,14 @@ const GAME_CONFIG = {
     upgradeCostMultiplier: 5,
     // Timing for auto-merge glow effects
     glowTriggerTimes: [2, 1, 0.5, 0.25], // Times when glow should appear
+    diagonalCost: 1000,
+    magicCost: 100000,
+  },
+  shuffleConfig: {
+    buyCost: 10,
+    baseInterval: 30,
+    intervalReductionFactor: 0.9,
+    upgradeCostMultiplier: 5,
   },
   animationConfig: {
     wiggleInterval: 3000,
