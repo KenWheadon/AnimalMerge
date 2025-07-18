@@ -599,7 +599,7 @@ h1 {
 }
 
 #slaughterHousesContainer .flex {
-  align-items: stretch;
+  align-items: center;
 }
 
 .money-display {
