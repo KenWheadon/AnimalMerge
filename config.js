@@ -190,5 +190,13 @@ const GAME_CONFIG = {
     achievementDuration: 3000,
     floatingNumberDuration: 1000,
     particleCount: 12,
+    // New animation settings for slaughter house
+    processingSpinDuration: 2000,
+    processingParticleInterval: 200,
+    processingParticleLifetime: 1000,
+    processingBurstDuration: 800,
+    coinFlyDuration: 1000,
+    coinFlyDelay: 50,
+    moneyValueFadeDuration: 2000,
   },
 };

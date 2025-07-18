@@ -313,7 +313,7 @@ h1 {
   animation: animalBounce 0.6s ease-in-out infinite;
 }
 
-/* Enhanced Slaughter House Styles - Compact & Horizontal */
+/* Compact Slaughter House Styles */
 .slaughter-house {
   background: linear-gradient(145deg, #fee2e2, #fecaca);
   border: 2px dashed var(--accent-red);
@@ -322,8 +322,14 @@ h1 {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  min-height: 64px; /* Reduced from h-24 */
+  height: 80px;
   width: 100%;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.drop-zone-text {
+  margin-top: 5px;
 }
 
 .slaughter-house::before {
@@ -332,58 +338,241 @@ h1 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 1.5rem; /* Reduced from 2rem */
+  font-size: 1.2rem;
   opacity: 0.08;
   animation: skullSpin 6s linear infinite;
 }
 
 .slaughter-house:hover,
 .slaughter-house.drag-over {
-  transform: scale(1.02); /* Reduced from 1.05 */
+  transform: scale(1.02);
   background: linear-gradient(145deg, #fca5a5, #f87171);
   border-color: var(--accent-red-dark);
   box-shadow: 0 8px 25px rgba(239, 68, 68, 0.25),
     inset 0 2px 4px rgba(239, 68, 68, 0.15);
-  animation: slaughterPulse 0.8s ease-in-out infinite;
 }
 
-/* Slaughter House Container - Compact Layout */
+/* Processing Progress Bar */
+.processing-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: var(--accent-red);
+  border-radius: 0 0 6px 6px;
+  transition: width 0.1s ease;
+  z-index: 10;
+}
+
+/* Processing Animal Animation */
+.processing-animal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  animation: processingSpinRed 2s linear infinite;
+  z-index: 5;
+}
+
+@keyframes processingSpinRed {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+    filter: hue-rotate(0deg) brightness(1);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+    filter: hue-rotate(360deg) brightness(1.2);
+  }
+}
+
+/* Processing Particles */
+.processing-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--accent-red);
+  border-radius: 50%;
+  animation: processingParticle 1s linear infinite;
+  z-index: 3;
+}
+
+@keyframes processingParticle {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Processing Burst Effect */
+.processing-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  animation: processingBurst 0.8s ease-out forwards;
+  z-index: 20;
+}
+
+@keyframes processingBurst {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* Money Flying Animation */
+.flying-coin {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(45deg, #fbbf24, #f59e0b);
+  border: 2px solid #d97706;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+  z-index: 1000;
+  animation: coinSpin 0.5s linear infinite;
+}
+
+.flying-coin::before {
+  content: "💰";
+}
+
+@keyframes coinFlyToMoney {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Money Value Display */
+.flying-money-value {
+  position: absolute;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--secondary-yellow);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  animation: moneyValueFade 2s ease-out forwards;
+  z-index: 1001;
+  pointer-events: none;
+}
+
+@keyframes moneyValueFade {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-60px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Compact Slaughter House Container */
 .slaughter-house-container {
   position: relative;
   transition: all 0.3s ease;
   height: fit-content;
-  max-height: 138px; /* Constrain height */
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  overflow: visible;
 }
 
 .slaughter-house-container:hover {
-  transform: translateY(-1px); /* Reduced from -2px */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); /* Reduced shadow */
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Hover Controls */
+.slaughter-house-hover-controls {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  z-index: 100;
+  min-width: 120px;
+}
+
+.slaughter-house-container:hover .slaughter-house-hover-controls {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slaughter-house-hover-controls .level-display {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: var(--secondary-yellow);
 }
 
 /* Compact Queue Display */
-.queue-display {
-  max-height: 24px; /* Reduced from 30px */
-  overflow: hidden; /* Changed from overflow-y: auto */
-  min-height: 16px; /* Reduced from 20px */
-  line-height: 1.2;
-}
-
-.queue-display .text-xs {
-  font-size: 0.65rem; /* Even smaller queue items */
-  padding: 1px 3px; /* Reduced padding */
-  margin: 0 1px; /* Tighter margins */
+.compact-queue-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-red-dark);
+  min-width: 40px;
 }
 
 /* Slaughter Houses Container - Horizontal Layout */
 #slaughterHousesContainer {
-  max-height: 140px; /* Constrain container height */
+  max-height: 140px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 8px; /* Reduced padding */
+  padding-bottom: 8px;
 }
 
 #slaughterHousesContainer .flex {
-  align-items: stretch; /* All containers same height */
+  align-items: stretch;
 }
 
 .money-display {
@@ -500,16 +689,6 @@ h1 {
   }
   50% {
     transform: translateY(-5px);
-  }
-}
-
-@keyframes slaughterPulse {
-  0%,
-  100% {
-    transform: scale(1.02);
-  }
-  50% {
-    transform: scale(1.04);
   }
 }
 
@@ -850,12 +1029,12 @@ h1 {
 .timer-display {
   background: linear-gradient(145deg, #e0f2fe, #bae6fd);
   border: 2px solid #0ea5e9;
-  border-radius: 4px; /* Reduced from 8px */
-  padding: 0.125rem 0.375rem; /* Reduced padding */
+  border-radius: 4px;
+  padding: 0.125rem 0.375rem;
   font-weight: 600;
   color: #0c4a6e;
-  box-shadow: 0 1px 4px rgba(14, 165, 233, 0.08); /* Reduced shadow */
-  font-size: 0.75rem; /* Smaller font */
+  box-shadow: 0 1px 4px rgba(14, 165, 233, 0.08);
+  font-size: 0.75rem;
   line-height: 1.2;
 }
 
@@ -901,7 +1080,7 @@ h1 {
 
 /* Horizontal scroll styling */
 .overflow-x-auto::-webkit-scrollbar {
-  height: 4px; /* Reduced from 6px */
+  height: 4px;
 }
 
 .overflow-x-auto::-webkit-scrollbar-track {
@@ -921,16 +1100,17 @@ h1 {
 /* Responsive adjustments for very small screens - but keep grid cells fixed */
 @media (max-width: 768px) {
   .slaughter-house-container {
-    min-width: 240px;
-    max-width: 280px;
+    min-width: 200px;
+    max-width: 200px;
+    width: 200px;
   }
 
   .slaughter-house {
-    min-height: 56px;
+    height: 70px;
   }
 
   #slaughterHousesContainer {
-    max-height: 120px;
+    max-height: 100px;
   }
 
   /* Keep grid cells exactly the same size on mobile */
