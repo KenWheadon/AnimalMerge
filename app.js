@@ -28,8 +28,11 @@ function initializeGame() {
   // Initialize grid state
   gridManager.initializeGridState();
 
-  // Initialize slaughter houses
+  // Initialize slaughter houses FIRST
   slaughterHouseManager.initializeSlaughterHouses();
+
+  // Debug log to check if slaughter house is initialized
+  console.log("Slaughter houses initialized:", gameState.slaughterHouses);
 
   // Inject HTML structure
   document.getElementById("gameContainer").innerHTML = generateMainHTML();
@@ -108,18 +111,22 @@ function generateMainHTML() {
                 </div>
             </div>
 
-            <!-- Coops -->
-            <div class="p-4 bg-gray-50 border-b">
-                <h2 class="text-xl font-bold text-green-800 mb-3">🏡 Farm Buildings</h2>
-                <div class="flex space-x-4 overflow-x-auto pb-2">
-                    ${coopManager.generateCoopHTML()}
-                </div>
-            </div>
-
             <!-- Game Grid -->
             <div class="flex-1 p-4 overflow-auto">
                 <div class="flex justify-center">
                     ${gridManager.generateGridHTML()}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Farm Buildings -->
+        <div class="w-80 bg-white shadow-lg flex flex-col">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-bold text-green-800">🏡 Farm Buildings</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <div class="space-y-4">
+                    ${coopManager.generateCoopHTML()}
                 </div>
             </div>
         </div>

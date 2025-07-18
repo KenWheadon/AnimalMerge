@@ -2,10 +2,16 @@
 const slaughterHouseManager = {
   // Generate slaughter house HTML
   generateSlaughterHouseHTML() {
+    console.log(
+      "Generating slaughter house HTML, houses:",
+      gameState.slaughterHouses
+    );
+
     let html = '<div class="flex space-x-4 overflow-x-auto pb-4">';
 
     // Generate existing slaughter houses
     gameState.slaughterHouses.forEach((house, index) => {
+      console.log(`Generating house ${index}:`, house);
       html += `
         <div class="slaughter-house-container flex-shrink-0 bg-white p-4 rounded-xl shadow-lg min-w-[200px]">
           <h3 class="text-lg font-bold text-red-800 mb-2">🗡️ Slaughter House ${
@@ -31,9 +37,7 @@ const slaughterHouseManager = {
           </div>
           <div class="mt-2 space-y-1">
             <button id="upgradeSlaughterHouse${index}" class="enhanced-button upgrade-button w-full px-2 py-1 rounded-lg font-bold text-white text-sm">
-              <i class="fas fa-arrow-up mr-1"></i>Upgrade ($${
-                house.upgradeCost
-              })
+              <i class="fas fa-arrow-up mr-1"></i>Upgrade (${house.upgradeCost})
             </button>
           </div>
           <div class="queue-display mt-2 flex flex-wrap gap-1" id="queue${index}">
@@ -58,18 +62,19 @@ const slaughterHouseManager = {
           <p>Expand your operation!</p>
         </div>
         <button id="buySlaughterHouse" class="enhanced-button buy-button w-full px-2 py-2 rounded-lg font-bold text-white text-sm mt-4">
-          <i class="fas fa-plus mr-1"></i>Buy Slaughter House ($${this.getNextSlaughterHouseCost()})
+          <i class="fas fa-plus mr-1"></i>Buy Slaughter House (${this.getNextSlaughterHouseCost()})
         </button>
       </div>
     `;
 
     html += "</div>";
+    console.log("Generated HTML:", html);
     return html;
   },
 
   // Initialize slaughter house system
   initializeSlaughterHouses() {
-    if (!gameState.slaughterHouses) {
+    if (!gameState.slaughterHouses || gameState.slaughterHouses.length === 0) {
       gameState.slaughterHouses = [
         {
           level: 1,
