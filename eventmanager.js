@@ -1,5 +1,10 @@
 // Event Manager - Handles events, animations, and visual effects
 const eventManager = {
+  // Notification queue system
+  notificationQueue: [],
+  isShowingNotification: false,
+  notificationOffset: 0,
+
   // Initialize button event listeners - now handles dynamic buttons
   initializeButtonEventListeners() {
     // Auto-merge buttons
@@ -19,6 +24,59 @@ const eventManager = {
     }
   },
 
+  // Enhanced notification queue system
+  queueNotification(message) {
+    this.notificationQueue.push(message);
+    this.processNotificationQueue();
+  },
+
+  processNotificationQueue() {
+    if (this.isShowingNotification || this.notificationQueue.length === 0) {
+      return;
+    }
+
+    this.isShowingNotification = true;
+    const message = this.notificationQueue.shift();
+    this.showNotification(message);
+  },
+
+  showNotification(message) {
+    const notification = document.createElement("div");
+    notification.className = "achievement-popup";
+    notification.style.top = `${20 + this.notificationOffset}px`;
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <div class="text-2xl">🏆</div>
+            <div class="font-bold text-yellow-800">${message}</div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+
+    // Animate in
+    requestAnimationFrame(() => {
+      notification.style.transform = "translateX(0)";
+      notification.style.opacity = "1";
+    });
+
+    // Update offset for next notification
+    this.notificationOffset += 80;
+
+    setTimeout(() => {
+      // Animate out
+      notification.style.transform = "translateX(100%)";
+      notification.style.opacity = "0";
+
+      setTimeout(() => {
+        notification.remove();
+        this.notificationOffset -= 80;
+        this.isShowingNotification = false;
+
+        // Process next notification in queue
+        this.processNotificationQueue();
+      }, 500);
+    }, GAME_CONFIG.animationConfig.achievementDuration);
+  },
+
   // Visual Helper Functions
   clearWiggleGlow() {
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
@@ -34,21 +92,7 @@ const eventManager = {
 
   // Animation and Effect Functions
   showAchievement(message) {
-    const achievement = document.createElement("div");
-    achievement.className = "achievement-popup";
-    achievement.innerHTML = `
-        <div class="flex items-center space-x-2">
-            <div class="text-2xl">🏆</div>
-            <div class="font-bold text-yellow-800">${message}</div>
-        </div>
-    `;
-    document.body.appendChild(achievement);
-
-    setTimeout(() => {
-      achievement.style.transform = "translateX(100%)";
-      achievement.style.opacity = "0";
-      setTimeout(() => achievement.remove(), 500);
-    }, GAME_CONFIG.animationConfig.achievementDuration);
+    this.queueNotification(message);
   },
 
   showFloatingNumber(text, parent) {

@@ -27,8 +27,13 @@ const slaughterHouseManager = {
               <h3 class="text-sm font-bold text-red-800">Slaughter House ${
                 index + 1
               }</h3>
-              <div class="compact-queue-display">
-                <span id="queueCount${index}">${house.queue.length}</span>
+              <div class="flex items-center space-x-2">
+                <div class="compact-queue-display">
+                  <span id="queueCount${index}">${house.queue.length}</span>
+                </div>
+                <button id="slaughterInfo${index}" class="info-button">
+                  <i class="fas fa-info-circle"></i>
+                </button>
               </div>
             </div>
             
@@ -128,6 +133,13 @@ const slaughterHouseManager = {
       updateStatus(
         `Upgraded slaughter house ${index + 1} to level ${house.level}! 🆙`
       );
+
+      // Update tooltip if it's currently showing
+      const existingTooltip = document.getElementById("mergedSlaughterTooltip");
+      if (existingTooltip) {
+        this.hideMergedTooltip();
+        setTimeout(() => this.showMergedTooltip(index), 100);
+      }
     } else {
       updateStatus(`Need $${house.upgradeCost} to upgrade slaughter house! 😕`);
       document.body.classList.add("screen-shake");
@@ -513,16 +525,12 @@ const slaughterHouseManager = {
         };
         const dropHandler = (e) => this.handleSlaughterDrop(e, index);
         const touchEndHandler = (e) => this.handleSlaughterTouchEnd(e, index);
-        const mouseEnterHandler = () => this.showMergedTooltip(index);
-        const mouseLeaveHandler = () => this.hideMergedTooltip();
 
         // Add event listeners
         slaughterHouse.addEventListener("dragover", dragOverHandler);
         slaughterHouse.addEventListener("dragleave", dragLeaveHandler);
         slaughterHouse.addEventListener("drop", dropHandler);
         slaughterHouse.addEventListener("touchend", touchEndHandler);
-        slaughterHouse.addEventListener("mouseenter", mouseEnterHandler);
-        slaughterHouse.addEventListener("mouseleave", mouseLeaveHandler);
 
         // Cache event listeners for cleanup
         this.eventListeners.set(slaughterHouse, [
@@ -530,8 +538,21 @@ const slaughterHouseManager = {
           { event: "dragleave", handler: dragLeaveHandler },
           { event: "drop", handler: dropHandler },
           { event: "touchend", handler: touchEndHandler },
-          { event: "mouseenter", handler: mouseEnterHandler },
-          { event: "mouseleave", handler: mouseLeaveHandler },
+        ]);
+      }
+
+      // Info button event listener
+      const infoButton = document.getElementById(`slaughterInfo${index}`);
+      if (infoButton) {
+        const infoHandler = (e) => {
+          e.stopPropagation();
+          this.toggleMergedTooltip(index);
+        };
+        infoButton.addEventListener("click", infoHandler);
+
+        // Cache event listener
+        this.eventListeners.set(infoButton, [
+          { event: "click", handler: infoHandler },
         ]);
       }
     });
@@ -599,14 +620,22 @@ const slaughterHouseManager = {
     gameState.draggedCell = null;
   },
 
-  // Show merged tooltip with upgrade information and animal values
+  // Toggle merged tooltip visibility
+  toggleMergedTooltip(houseIndex) {
+    const existingTooltip = document.getElementById("mergedSlaughterTooltip");
+    if (existingTooltip) {
+      this.hideMergedTooltip();
+    } else {
+      this.showMergedTooltip(houseIndex);
+    }
+  },
+
+  // Show merged tooltip with upgrade information and animal values - now positioned fixed from document body
   showMergedTooltip(houseIndex) {
     const house = gameState.slaughterHouses[houseIndex];
-    const slaughterHouse = document.getElementById(
-      `slaughterHouse${houseIndex}`
-    );
+    const infoButton = document.getElementById(`slaughterInfo${houseIndex}`);
 
-    if (!slaughterHouse) return;
+    if (!infoButton) return;
 
     // Remove any existing tooltip
     this.hideMergedTooltip();
@@ -657,17 +686,16 @@ const slaughterHouseManager = {
 
     tooltip.innerHTML = tooltipContent;
 
-    // Position tooltip below the slaughter house
-    // We need to append to body to avoid clipping issues
+    // Append to body for proper positioning
     document.body.appendChild(tooltip);
 
-    // Calculate position relative to viewport
-    const rect = slaughterHouse.getBoundingClientRect();
+    // Calculate position relative to the info button
+    const buttonRect = infoButton.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
 
-    // Position below the slaughter house
-    let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
-    let top = rect.bottom + 10; // 10px gap below
+    // Position to the left of the info button
+    let left = buttonRect.left - tooltipRect.width - 10;
+    let top = buttonRect.top + (buttonRect.height - tooltipRect.height) / 2;
 
     // Ensure tooltip stays within viewport bounds
     const viewportWidth = window.innerWidth;
@@ -675,15 +703,16 @@ const slaughterHouseManager = {
 
     // Adjust horizontal position if tooltip would go off-screen
     if (left < 10) {
-      left = 10;
+      left = buttonRect.right + 10;
     } else if (left + tooltipRect.width > viewportWidth - 10) {
       left = viewportWidth - tooltipRect.width - 10;
     }
 
     // Adjust vertical position if tooltip would go off-screen
-    if (top + tooltipRect.height > viewportHeight - 10) {
-      // Show above instead of below
-      top = rect.top - tooltipRect.height - 10;
+    if (top < 10) {
+      top = 10;
+    } else if (top + tooltipRect.height > viewportHeight - 10) {
+      top = viewportHeight - tooltipRect.height - 10;
     }
 
     tooltip.style.left = `${left}px`;
@@ -691,6 +720,17 @@ const slaughterHouseManager = {
 
     // Cache the tooltip
     this.tooltipCache = tooltip;
+
+    // Add click outside listener to close tooltip
+    setTimeout(() => {
+      const clickOutsideHandler = (e) => {
+        if (!tooltip.contains(e.target) && e.target !== infoButton) {
+          this.hideMergedTooltip();
+          document.removeEventListener("click", clickOutsideHandler);
+        }
+      };
+      document.addEventListener("click", clickOutsideHandler);
+    }, 100);
   },
 
   // Hide merged tooltip

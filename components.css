@@ -102,6 +102,33 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
+/* Info Button Styles */
+.info-button {
+  background: linear-gradient(145deg, #6b7280, #4b5563);
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.info-button:hover {
+  background: linear-gradient(145deg, #374151, #1f2937);
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.info-button:active {
+  transform: scale(0.95);
+}
+
 /* Display Components */
 .money-display {
   background: linear-gradient(145deg, #fffbeb, #fef3c7);
@@ -534,6 +561,23 @@
   border-left-color: rgba(0, 0, 0, 0.9);
 }
 
+/* Fixed positioning tooltip for coops */
+.coop-tooltip-fixed {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.95);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  min-width: 160px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  opacity: 0;
+  animation: tooltipFadeIn 0.2s ease-out forwards;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .tooltip-header {
   margin-bottom: 8px;
   padding-bottom: 4px;
@@ -691,7 +735,14 @@
   padding: 1rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   z-index: 10000;
-  animation: achievementSlideIn 0.5s ease-out;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.5s ease-out;
+}
+
+.achievement-popup.show {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* Floating numbers for rewards */

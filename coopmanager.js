@@ -1,5 +1,8 @@
 // Coop Manager - Handles all coop-related functionality
 const coopManager = {
+  // Track which coops have been unlocked to prevent duplicate notifications
+  unlockedCoops: new Set(),
+
   // Initialize coop states dynamically based on config
   initializeCoopStates() {
     // Initialize coop states for all animals in coopConfig
@@ -76,7 +79,12 @@ const coopManager = {
         <!-- ${animalName} Coop -->
         <div id="${animalType}Coop" class="compact-coop hidden">
           <div class="coop-header">
-            <h3 class="coop-title">${animalEmoji} ${animalName} Coop</h3>
+            <div class="flex justify-between items-center">
+              <h3 class="coop-title">${animalEmoji} ${animalName} Coop</h3>
+              <button id="coopInfo${animalType}" class="info-button">
+                <i class="fas fa-info-circle"></i>
+              </button>
+            </div>
           </div>
           
           <!-- Unlocked but not purchased state -->
@@ -152,15 +160,13 @@ const coopManager = {
         );
       }
 
-      // Add hover tooltip functionality
-      const coopElement = document.getElementById(`${animalType}Coop`);
-      if (coopElement) {
-        coopElement.addEventListener("mouseenter", () =>
-          this.showCoopTooltip(animalType)
-        );
-        coopElement.addEventListener("mouseleave", () =>
-          this.hideCoopTooltip()
-        );
+      // Info button for tooltip
+      const infoButton = document.getElementById(`coopInfo${animalType}`);
+      if (infoButton) {
+        infoButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.toggleCoopTooltip(animalType);
+        });
       }
     }
   },
@@ -255,9 +261,12 @@ const coopManager = {
       );
       updateStatus(`Upgraded ${animalType} coop to level ${coop.level} 🆙`);
 
-      // Hide tooltip and show it again to update the content
-      this.hideCoopTooltip();
-      setTimeout(() => this.showCoopTooltip(animalType), 100);
+      // Update tooltip if it's currently showing
+      const existingTooltip = document.getElementById("coopTooltip");
+      if (existingTooltip) {
+        this.hideCoopTooltip();
+        setTimeout(() => this.showCoopTooltip(animalType), 100);
+      }
     } else {
       updateStatus(`Not enough money to upgrade ${animalType} coop! 😕`);
       document.body.classList.add("screen-shake");
@@ -265,22 +274,32 @@ const coopManager = {
     }
   },
 
-  // Show coop tooltip with upgrade information
+  // Toggle coop tooltip visibility
+  toggleCoopTooltip(animalType) {
+    const existingTooltip = document.getElementById("coopTooltip");
+    if (existingTooltip) {
+      this.hideCoopTooltip();
+    } else {
+      this.showCoopTooltip(animalType);
+    }
+  },
+
+  // Show coop tooltip with upgrade information - now positioned fixed from document body
   showCoopTooltip(animalType) {
     const coop = gameState[`${animalType}Coop`];
     const config = GAME_CONFIG.coopConfig[animalType];
     const animalName = animalType.charAt(0).toUpperCase() + animalType.slice(1);
-    const coopElement = document.getElementById(`${animalType}Coop`);
+    const infoButton = document.getElementById(`coopInfo${animalType}`);
 
-    // Only show tooltip if coop is owned
-    if (!coop.owned || !coopElement) return;
+    // Only show tooltip if coop is owned and info button exists
+    if (!coop.owned || !infoButton) return;
 
     // Remove existing tooltip
     this.hideCoopTooltip();
 
     const tooltip = document.createElement("div");
     tooltip.id = "coopTooltip";
-    tooltip.className = "coop-tooltip";
+    tooltip.className = "coop-tooltip-fixed";
 
     const upgradeCost = config.upgradeCostMultiplier * coop.level;
     const currentTime = (
@@ -304,7 +323,48 @@ const coopManager = {
       </div>
     `;
 
-    coopElement.appendChild(tooltip);
+    // Append to body for proper positioning
+    document.body.appendChild(tooltip);
+
+    // Calculate position relative to the info button
+    const buttonRect = infoButton.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+
+    // Position to the left of the info button
+    let left = buttonRect.left - tooltipRect.width - 10;
+    let top = buttonRect.top + (buttonRect.height - tooltipRect.height) / 2;
+
+    // Ensure tooltip stays within viewport bounds
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Adjust horizontal position if tooltip would go off-screen
+    if (left < 10) {
+      left = buttonRect.right + 10;
+    } else if (left + tooltipRect.width > viewportWidth - 10) {
+      left = viewportWidth - tooltipRect.width - 10;
+    }
+
+    // Adjust vertical position if tooltip would go off-screen
+    if (top < 10) {
+      top = 10;
+    } else if (top + tooltipRect.height > viewportHeight - 10) {
+      top = viewportHeight - tooltipRect.height - 10;
+    }
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+
+    // Add click outside listener to close tooltip
+    setTimeout(() => {
+      const clickOutsideHandler = (e) => {
+        if (!tooltip.contains(e.target) && e.target !== infoButton) {
+          this.hideCoopTooltip();
+          document.removeEventListener("click", clickOutsideHandler);
+        }
+      };
+      document.addEventListener("click", clickOutsideHandler);
+    }, 100);
   },
 
   // Hide coop tooltip
@@ -378,12 +438,18 @@ const coopManager = {
     }
   },
 
-  // Check for new unlocks when animals are created
+  // Check for new unlocks when animals are created - FIXED: Only show notification once
   checkForNewUnlocks(newAnimalType) {
     // Check if we need to unlock coop visibility
     if (GAME_CONFIG.coopConfig[newAnimalType.toLowerCase()]) {
-      this.updateCoopVisibility();
-      eventManager.showAchievement(`🏡 ${newAnimalType} Coop Unlocked!`);
+      const coopKey = newAnimalType.toLowerCase();
+
+      // Only show notification if this coop hasn't been unlocked before
+      if (!this.unlockedCoops.has(coopKey)) {
+        this.unlockedCoops.add(coopKey);
+        this.updateCoopVisibility();
+        eventManager.showAchievement(`🏡 ${newAnimalType} Coop Unlocked!`);
+      }
     }
   },
 
