@@ -69,6 +69,10 @@ function generateMainHTML() {
                 <div id="money" class="money-display text-center">Money: 💰${
                   gameState.money
                 }</div>
+                <!-- Status Display -->
+                <div class="mt-6">
+                    <div id="status" class="status-display text-sm">Drag or click 'Buy Egg 🥚' to start!</div>
+                </div>
             </div>
             
             <!-- Buy Buttons -->
@@ -85,11 +89,6 @@ function generateMainHTML() {
                         <i class="fas fa-feather mr-2"></i>Buy Rooster 🦃 ($20)
                     </button>
                 </div>
-                
-                <!-- Status Display -->
-                <div class="mt-6">
-                    <div id="status" class="status-display text-sm">Drag or click 'Buy Egg 🥚' to start!</div>
-                </div>
             </div>
         </div>
 
@@ -103,11 +102,28 @@ function generateMainHTML() {
             </div>
 
             <!-- Game Grid -->
-            <div class="flex-1 p-4 overflow-auto">
+            <div class="p-4 overflow-auto">
                 <div class="flex justify-center">
                     ${gridManager.generateGridHTML()}
                 </div>
             </div>
+                      <!-- Auto-Merge -->
+      <div class="flex-shrink-0 bg-white m-4 p-4 rounded-xl shadow-lg min-w-[220px]">
+          <h3 class="text-lg font-bold text-purple-800 mb-2">⚙️ Auto-Merge</h3>
+          <div class="space-y-2 text-sm">
+              <p id="autoMergeLevel" class="font-semibold">Level: 1</p>
+              <p id="autoMergeTimer" class="timer-display">Check Interval: 10s</p>
+              <p id="autoMergeCountdown" class="timer-display hidden">Next Auto-Merge: 10.0s</p>
+          </div>
+          <div class="mt-4 space-y-2">
+              <button id="buyAutoMerge" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
+                  <i class="fas fa-cogs mr-1"></i>Buy Auto-Merge ($1)
+              </button>
+              <button id="upgradeAutoMerge" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
+                  <i class="fas fa-arrow-up mr-1"></i>Upgrade Auto-Merge ($5)
+              </button>
+          </div>
+      </div>
         </div>
 
         <!-- Right Panel - Farm Buildings -->

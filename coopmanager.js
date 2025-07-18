@@ -3,23 +3,6 @@ const coopManager = {
   // Generate coop HTML
   generateCoopHTML() {
     return `
-          <!-- Auto-Merge -->
-      <div class="flex-shrink-0 bg-white p-4 rounded-xl shadow-lg min-w-[220px]">
-          <h3 class="text-lg font-bold text-purple-800 mb-2">⚙️ Auto-Merge</h3>
-          <div class="space-y-2 text-sm">
-              <p id="autoMergeLevel" class="font-semibold">Level: 1</p>
-              <p id="autoMergeTimer" class="timer-display">Check Interval: 10s</p>
-              <p id="autoMergeCountdown" class="timer-display hidden">Next Auto-Merge: 10.0s</p>
-          </div>
-          <div class="mt-4 space-y-2">
-              <button id="buyAutoMerge" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
-                  <i class="fas fa-cogs mr-1"></i>Buy Auto-Merge ($1)
-              </button>
-              <button id="upgradeAutoMerge" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
-                  <i class="fas fa-arrow-up mr-1"></i>Upgrade Auto-Merge ($5)
-              </button>
-          </div>
-      </div>
       <!-- Chicken Coop -->
       <div id="chickenCoop" class="hidden flex-shrink-0 bg-white p-4 rounded-xl shadow-lg min-w-[220px]">
           <h3 class="text-lg font-bold text-green-800 mb-2">🐔 Chicken Coop</h3>
