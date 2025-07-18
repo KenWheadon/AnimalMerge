@@ -127,6 +127,7 @@ function generateMainHTML() {
 
 // Game Logic Functions
 function updateMergeablePairs() {
+  console.log("🔍 UPDATING MERGEABLE PAIRS...");
   gameState.mergeablePairs = [];
   const neighbors = [
     { di: 0, dj: 1 }, // Right
@@ -135,12 +136,23 @@ function updateMergeablePairs() {
     { di: -1, dj: 0 }, // Up
   ];
 
+  console.log("Current grid state:");
+  for (let i = 0; i < gameState.grid.length; i++) {
+    console.log(`Row ${i}:`, gameState.grid[i]);
+  }
+
   GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
     if (
       gameState.purchasedCells.has(`${i}-${j}`) &&
       gameState.grid[i][j] &&
       GAME_CONFIG.animalTypes[gameState.grid[i][j]].mergeTo
     ) {
+      console.log(
+        `Checking cell ${i}-${j}: ${gameState.grid[i][j]} (can merge to ${
+          GAME_CONFIG.animalTypes[gameState.grid[i][j]].mergeTo
+        })`
+      );
+
       for (const { di, dj } of neighbors) {
         const ni = i + di;
         const nj = j + dj;
@@ -151,6 +163,10 @@ function updateMergeablePairs() {
           gameState.purchasedCells.has(`${ni}-${nj}`) &&
           gameState.grid[ni][nj] === gameState.grid[i][j]
         ) {
+          console.log(
+            `Found matching neighbor at ${ni}-${nj}: ${gameState.grid[ni][nj]}`
+          );
+
           // Only add unique pairs (avoid duplicates)
           const pairExists = gameState.mergeablePairs.some(
             (pair) =>
@@ -165,15 +181,20 @@ function updateMergeablePairs() {
           );
 
           if (!pairExists) {
+            console.log(`➕ Adding mergeable pair: ${i}-${j} + ${ni}-${nj}`);
             gameState.mergeablePairs.push({
               source: { i, j },
               target: { i: ni, j: nj },
             });
+          } else {
+            console.log(`⚠️ Pair already exists: ${i}-${j} + ${ni}-${nj}`);
           }
         }
       }
     }
   });
+
+  console.log("Final mergeable pairs:", gameState.mergeablePairs);
 }
 
 function isGridFull() {
@@ -325,12 +346,17 @@ function updateAnimalValues() {
 
 // Game Timer Functions
 function startGameTimers() {
+  // Use 100ms intervals for more precise timing
   setInterval(() => {
     coopManager.updateCoopTimers();
-    coopManager.updateAutoMergeTimer();
     coopManager.updatePlaceButtonStates();
     slaughterHouseManager.updateSlaughterHouseTimers();
   }, 1000);
+
+  // Separate timer for auto-merge with higher precision
+  setInterval(() => {
+    coopManager.updateAutoMergeTimer();
+  }, 100); // 100ms intervals for precise timing
 }
 
 // Initialize game when DOM is loaded

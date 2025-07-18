@@ -288,23 +288,42 @@ const coopManager = {
 
   // Show glow effect on cells that will be merged
   showAutoMergeGlow() {
+    console.log("🔍 GLOW TRIGGERED - Checking mergeable pairs...");
+    console.log("Current mergeable pairs:", gameState.mergeablePairs);
+
     // First clear any existing glow
     this.clearAutoMergeHighlight();
+
+    // Make sure we have the latest mergeable pairs
+    updateMergeablePairs();
+    console.log("Updated mergeable pairs:", gameState.mergeablePairs);
 
     // Add glow to all cells that are part of mergeable pairs
     const glowCells = new Set();
 
     gameState.mergeablePairs.forEach(({ source, target }) => {
+      console.log(
+        `Adding glow to cells: ${source.i}-${source.j} and ${target.i}-${target.j}`
+      );
       glowCells.add(`${source.i}-${source.j}`);
       glowCells.add(`${target.i}-${target.j}`);
     });
 
+    console.log("Total cells to glow:", glowCells);
+
     glowCells.forEach((cellKey) => {
       const cell = document.getElementById(`cell-${cellKey}`);
       if (cell) {
+        console.log(`✨ Adding glow to cell: ${cellKey}`);
         cell.classList.add("auto-merge-glow");
+      } else {
+        console.log(`❌ Cell not found: ${cellKey}`);
       }
     });
+
+    if (glowCells.size === 0) {
+      console.log("⚠️ No cells to glow - no mergeable pairs found!");
+    }
   },
 
   autoMergeCheck() {
@@ -474,7 +493,7 @@ const coopManager = {
 
   updateAutoMergeTimer() {
     if (gameState.autoMerge.owned) {
-      gameState.autoMerge.timer -= 1;
+      gameState.autoMerge.timer -= 0.1; // Decrement by 0.1 seconds for precision
       const countdownElement = document.getElementById("autoMergeCountdown");
       const displayTime = Math.max(0, gameState.autoMerge.timer);
       countdownElement.textContent = `Next Auto-Merge: ${displayTime.toFixed(
@@ -482,13 +501,18 @@ const coopManager = {
       )}s`;
 
       // Show glow effects at specific countdown times
-      if (gameState.autoMerge.timer === 2) {
+      // Using Math.abs to handle floating point precision issues
+      if (Math.abs(gameState.autoMerge.timer - 2) < 0.05) {
+        console.log("🔥 Triggering glow at 2s");
         this.showAutoMergeGlow();
-      } else if (gameState.autoMerge.timer === 1) {
+      } else if (Math.abs(gameState.autoMerge.timer - 1) < 0.05) {
+        console.log("🔥 Triggering glow at 1s");
         this.showAutoMergeGlow();
-      } else if (gameState.autoMerge.timer === 0.5) {
+      } else if (Math.abs(gameState.autoMerge.timer - 0.5) < 0.05) {
+        console.log("🔥 Triggering glow at 0.5s");
         this.showAutoMergeGlow();
-      } else if (gameState.autoMerge.timer === 0.25) {
+      } else if (Math.abs(gameState.autoMerge.timer - 0.25) < 0.05) {
+        console.log("🔥 Triggering glow at 0.25s");
         this.showAutoMergeGlow();
       }
 
@@ -500,6 +524,7 @@ const coopManager = {
 
       // Execute auto-merge when timer reaches 0, regardless of drag/select state
       if (gameState.autoMerge.timer <= 0) {
+        console.log("🚀 Auto-merge triggered at 0s");
         this.autoMergeCheck();
         // Reset timer for next cycle
         gameState.autoMerge.timer = gameState.autoMerge.currentInterval;
