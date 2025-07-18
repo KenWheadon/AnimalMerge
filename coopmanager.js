@@ -1,159 +1,259 @@
 // Coop Manager - Handles all coop-related functionality
 const coopManager = {
-  // Generate coop HTML
-  generateCoopHTML() {
-    return `
-      <!-- Chicken Coop -->
-      <div id="chickenCoop" class="hidden flex-shrink-0 bg-white p-4 rounded-xl shadow-lg min-w-[220px]">
-          <h3 class="text-lg font-bold text-green-800 mb-2">🐔 Chicken Coop</h3>
-          <div class="space-y-2 text-sm">
-              <p id="chickenCoopLevel" class="font-semibold">Level: 1</p>
-              <p id="chickenCoopTimer" class="timer-display">Next Chicken 🐔: 60s</p>
-              <p id="chickenCoopStored" class="font-semibold">Stored: 0</p>
-          </div>
-          <div class="mt-4 space-y-2">
-              <button id="placeChicken" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
-                  <i class="fas fa-plus mr-1"></i>Place Chicken 🐔
-              </button>
-              <button id="buyChickenCoop" class="enhanced-button buy-button px-3 py-2 rounded-lg font-bold text-white text-sm">
-                  <i class="fas fa-home mr-1"></i>Buy Chicken Coop 🏡 ($10)
-              </button>
-              <button id="upgradeChickenCoop" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
-                  <i class="fas fa-arrow-up mr-1"></i>Upgrade Coop ($3)
-              </button>
-          </div>
-      </div>
-
-      <!-- Chicken Coop Placeholder -->
-      <div id="chickenCoopPlaceholder" class="flex-shrink-0 bg-gray-200 opacity-50 p-4 rounded-xl min-w-[220px]" title="Merge to Chicken to unlock!">
-          <h3 class="text-lg font-semibold text-gray-600">🔒 Chicken Coop</h3>
-          <p class="text-sm text-gray-600 mt-2">Merge to Chicken to unlock!</p>
-      </div>
-
-      <!-- Rooster Coop -->
-      <div id="roosterCoop" class="hidden flex-shrink-0 bg-white p-4 rounded-xl shadow-lg min-w-[220px]">
-          <h3 class="text-lg font-bold text-green-800 mb-2">🦃 Rooster Coop</h3>
-          <div class="space-y-2 text-sm">
-              <p id="roosterCoopLevel" class="font-semibold">Level: 1</p>
-              <p id="roosterCoopTimer" class="timer-display">Next Rooster 🦃: 120s</p>
-              <p id="roosterCoopStored" class="font-semibold">Stored: 0</p>
-          </div>
-          <div class="mt-4 space-y-2">
-              <button id="placeRooster" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
-                  <i class="fas fa-plus mr-1"></i>Place Rooster 🦃
-              </button>
-              <button id="buyRoosterCoop" class="enhanced-button buy-button px-3 py-2 rounded-lg font-bold text-white text-sm">
-                  <i class="fas fa-home mr-1"></i>Buy Rooster Coop 🏡 ($50)
-              </button>
-              <button id="upgradeRoosterCoop" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
-                  <i class="fas fa-arrow-up mr-1"></i>Upgrade Coop ($3)
-              </button>
-          </div>
-      </div>
-
-      <!-- Rooster Coop Placeholder -->
-      <div id="roosterCoopPlaceholder" class="flex-shrink-0 bg-gray-200 opacity-50 p-4 rounded-xl min-w-[220px]" title="Merge to Rooster to unlock!">
-          <h3 class="text-lg font-semibold text-gray-600">🔒 Rooster Coop</h3>
-          <p class="text-sm text-gray-600 mt-2">Merge to Rooster to unlock!</p>
-      </div>
-    `;
+  // Initialize coop states dynamically based on config
+  initializeCoopStates() {
+    // Initialize coop states for all animals in coopConfig
+    for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
+      const coopKey = `${animalType}Coop`;
+      if (!gameState[coopKey]) {
+        gameState[coopKey] = {
+          owned: false,
+          level: 1,
+          baseTime: config.baseTime,
+          timer: config.baseTime,
+          stored: 0,
+        };
+      }
+    }
   },
 
-  // Coop Functions
-  buyCoop(type) {
-    const cost = GAME_CONFIG.coopConfig[type].buyCost;
+  // Generate buy animal buttons dynamically from config
+  generateBuyAnimalButtons() {
+    let html = "";
+
+    for (const [animalType, config] of Object.entries(
+      GAME_CONFIG.purchaseConfig
+    )) {
+      const emoji = GAME_CONFIG.animalEmojis[animalType];
+      const costText = config.cost === 0 ? "Free" : `$${config.cost}`;
+      const hiddenClass = config.unlocked ? "" : "hidden";
+
+      // Get appropriate icon based on animal type
+      let icon = "fas fa-egg";
+      if (animalType.toLowerCase().includes("chicken"))
+        icon = "fas fa-drumstick-bite";
+      else if (animalType.toLowerCase().includes("rooster"))
+        icon = "fas fa-feather";
+      else if (animalType.toLowerCase().includes("goat"))
+        icon = "fas fa-mountain";
+      else if (animalType.toLowerCase().includes("sheep"))
+        icon = "fas fa-sheep";
+      else if (animalType.toLowerCase().includes("pig")) icon = "fas fa-pig";
+      else if (animalType.toLowerCase().includes("llama"))
+        icon = "fas fa-horse";
+      else if (animalType.toLowerCase().includes("cow")) icon = "fas fa-cow";
+      else if (animalType.toLowerCase().includes("bull")) icon = "fas fa-bull";
+
+      html += `
+        <button id="buy${animalType}" class="enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white ${hiddenClass}">
+            <i class="${icon} mr-2"></i>Buy ${animalType} ${emoji} (${costText})
+        </button>
+      `;
+    }
+
+    return html;
+  },
+
+  // Generate farm building HTML dynamically from config
+  generateCoopHTML() {
+    let html = "";
+
+    // Generate farm buildings for each animal type in coopConfig
+    for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
+      const animalName =
+        animalType.charAt(0).toUpperCase() + animalType.slice(1);
+      const animalEmoji = GAME_CONFIG.animalEmojis[animalName];
+      const coopState = gameState[`${animalType}Coop`] || {
+        level: 1,
+        stored: 0,
+      };
+
+      // Calculate current upgrade cost
+      const currentUpgradeCost = config.upgradeCostMultiplier * coopState.level;
+
+      // Generate the actual coop HTML (hidden by default)
+      html += `
+        <!-- ${animalName} Coop -->
+        <div id="${animalType}Coop" class="hidden flex-shrink-0 bg-white p-4 rounded-xl shadow-lg min-w-[220px]">
+            <h3 class="text-lg font-bold text-green-800 mb-2">${animalEmoji} ${animalName} Coop</h3>
+            <div class="space-y-2 text-sm">
+                <p id="${animalType}CoopLevel" class="font-semibold">Level: ${coopState.level}</p>
+                <p id="${animalType}CoopTimer" class="timer-display">Next ${animalName} ${animalEmoji}: ${config.baseTime}s</p>
+                <p id="${animalType}CoopStored" class="font-semibold">Stored: ${coopState.stored}</p>
+            </div>
+            <div class="mt-4 space-y-2">
+                <button id="place${animalName}" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
+                    <i class="fas fa-plus mr-1"></i>Place ${animalName} ${animalEmoji}
+                </button>
+                <button id="buy${animalName}Coop" class="enhanced-button buy-button px-3 py-2 rounded-lg font-bold text-white text-sm">
+                    <i class="fas fa-home mr-1"></i>Buy ${animalName} Coop 🏡 ($${config.buyCost})
+                </button>
+                <button id="upgrade${animalName}Coop" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
+                    <i class="fas fa-arrow-up mr-1"></i>Upgrade Coop ($${currentUpgradeCost})
+                </button>
+            </div>
+        </div>
+
+        <!-- ${animalName} Coop Placeholder -->
+        <div id="${animalType}CoopPlaceholder" class="flex-shrink-0 bg-gray-200 opacity-50 p-4 rounded-xl min-w-[220px]" title="Merge to ${animalName} to unlock!">
+            <h3 class="text-lg font-semibold text-gray-600">🔒 ${animalName} Coop</h3>
+            <p class="text-sm text-gray-600 mt-2">Merge to ${animalName} to unlock!</p>
+        </div>
+      `;
+    }
+
+    return html;
+  },
+
+  // Initialize all event listeners for dynamic farm buildings and buy buttons
+  initializeFarmBuildingEventListeners() {
+    // Initialize buy animal button event listeners
+    for (const [animalType, config] of Object.entries(
+      GAME_CONFIG.purchaseConfig
+    )) {
+      const buyButton = document.getElementById(`buy${animalType}`);
+      if (buyButton) {
+        if (config.cost === 0) {
+          buyButton.addEventListener("click", () => placeAnimal(animalType));
+        } else {
+          buyButton.addEventListener("click", () =>
+            buyAnimal(animalType, config.cost)
+          );
+        }
+      }
+    }
+
+    // Initialize coop event listeners
+    for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
+      const animalName =
+        animalType.charAt(0).toUpperCase() + animalType.slice(1);
+
+      // Buy coop button
+      const buyButton = document.getElementById(`buy${animalName}Coop`);
+      if (buyButton) {
+        buyButton.addEventListener("click", () => this.buyCoop(animalType));
+      }
+
+      // Upgrade coop button
+      const upgradeButton = document.getElementById(`upgrade${animalName}Coop`);
+      if (upgradeButton) {
+        upgradeButton.addEventListener("click", () =>
+          this.upgradeCoop(animalType)
+        );
+      }
+
+      // Place animal button
+      const placeButton = document.getElementById(`place${animalName}`);
+      if (placeButton) {
+        placeButton.addEventListener("click", () =>
+          this.placeStoredAnimal(animalName)
+        );
+      }
+    }
+  },
+
+  // Update visibility of buy animal buttons based on unlocked status
+  updateBuyAnimalButtons() {
+    for (const [animalType, config] of Object.entries(
+      GAME_CONFIG.purchaseConfig
+    )) {
+      const button = document.getElementById(`buy${animalType}`);
+      if (button) {
+        if (config.unlocked) {
+          button.classList.remove("hidden");
+        } else {
+          button.classList.add("hidden");
+        }
+      }
+    }
+  },
+
+  // Buy a coop for the specified animal type
+  buyCoop(animalType) {
+    const config = GAME_CONFIG.coopConfig[animalType];
+    const cost = config.buyCost;
+    const animalName = animalType.charAt(0).toUpperCase() + animalType.slice(1);
+
     if (gameState.money >= cost) {
       gameState.money -= cost;
-      if (type === "chicken") {
-        gameState.chickenCoop.owned = true;
-        document.getElementById("buyChickenCoop").classList.add("hidden");
-        document.getElementById("buyChicken").classList.remove("hidden");
-        document
-          .getElementById("upgradeChickenCoop")
-          .classList.remove("hidden");
-      } else {
-        gameState.roosterCoop.owned = true;
-        document.getElementById("buyRoosterCoop").classList.add("hidden");
-        document.getElementById("buyRooster").classList.remove("hidden");
-        document
-          .getElementById("upgradeRoosterCoop")
-          .classList.remove("hidden");
+      gameState[`${animalType}Coop`].owned = true;
+
+      // Hide buy button, show upgrade button
+      document.getElementById(`buy${animalName}Coop`).classList.add("hidden");
+      document
+        .getElementById(`upgrade${animalName}Coop`)
+        .classList.remove("hidden");
+
+      // Unlock the purchase button for this animal
+      if (GAME_CONFIG.purchaseConfig[animalName]) {
+        GAME_CONFIG.purchaseConfig[animalName].unlocked = true;
+        this.updateBuyAnimalButtons();
       }
+
       updateMoney();
-      eventManager.showAchievement(
-        `🏡 ${type.charAt(0).toUpperCase() + type.slice(1)} Coop Purchased!`
-      );
-      updateStatus(`Bought ${type} coop 🏡`);
+      eventManager.showAchievement(`🏡 ${animalName} Coop Purchased!`);
+      updateStatus(`Bought ${animalType} coop 🏡`);
     } else {
-      updateStatus(`Not enough money for ${type} coop! 😕`);
+      updateStatus(`Not enough money for ${animalType} coop! 😕`);
       document.body.classList.add("screen-shake");
       setTimeout(() => document.body.classList.remove("screen-shake"), 500);
     }
   },
 
-  updateCoopVisibility() {
-    if (gameState.hasChicken) {
-      document.getElementById("chickenCoop").classList.remove("hidden");
-      document.getElementById("chickenCoop").classList.add("bounce-in");
-      document.getElementById("chickenCoopPlaceholder").classList.add("hidden");
-    }
-    if (gameState.hasRooster) {
-      document.getElementById("roosterCoop").classList.remove("hidden");
-      document.getElementById("roosterCoop").classList.add("bounce-in");
-      document.getElementById("roosterCoopPlaceholder").classList.add("hidden");
-    }
-  },
+  // Upgrade a coop
+  upgradeCoop(animalType) {
+    const coop = gameState[`${animalType}Coop`];
+    const config = GAME_CONFIG.coopConfig[animalType];
+    const cost = config.upgradeCostMultiplier * coop.level;
+    const animalName = animalType.charAt(0).toUpperCase() + animalType.slice(1);
 
-  upgradeCoop(type) {
-    const coop =
-      type === "chicken" ? gameState.chickenCoop : gameState.roosterCoop;
-    const cost =
-      GAME_CONFIG.coopConfig[type].upgradeCostMultiplier * coop.level;
     if (gameState.money >= cost) {
       gameState.money -= cost;
       coop.level += 1;
       coop.timer =
-        GAME_CONFIG.coopConfig[type].baseTime *
-        Math.pow(
-          GAME_CONFIG.coopConfig[type].timeReductionFactor,
-          coop.level - 1
-        );
+        config.baseTime * Math.pow(config.timeReductionFactor, coop.level - 1);
+
+      // Update display elements
       document.getElementById(
-        `${type}CoopLevel`
+        `${animalType}CoopLevel`
       ).textContent = `Level: ${coop.level}`;
-      document.getElementById(`${type}CoopTimer`).textContent = `Next ${
-        type === "chicken" ? "Chicken 🐔" : "Rooster 🦃"
+      document.getElementById(
+        `${animalType}CoopTimer`
+      ).textContent = `Next ${animalName} ${
+        GAME_CONFIG.animalEmojis[animalName]
       }: ${coop.timer.toFixed(1)}s`;
       document.getElementById(
-        `upgrade${type.charAt(0).toUpperCase() + type.slice(1)}Coop`
+        `upgrade${animalName}Coop`
       ).innerHTML = `<i class="fas fa-arrow-up mr-1"></i>Upgrade Coop ($${
-        GAME_CONFIG.coopConfig[type].upgradeCostMultiplier * coop.level
+        config.upgradeCostMultiplier * coop.level
       })`;
+
       updateMoney();
       eventManager.showAchievement(
-        `🆙 ${type.charAt(0).toUpperCase() + type.slice(1)} Coop Level ${
-          coop.level
-        }!`
+        `🆙 ${animalName} Coop Level ${coop.level}!`
       );
-      updateStatus(`Upgraded ${type} coop to level ${coop.level} 🆙`);
+      updateStatus(`Upgraded ${animalType} coop to level ${coop.level} 🆙`);
     } else {
-      updateStatus(`Not enough money to upgrade ${type} coop! 😕`);
+      updateStatus(`Not enough money to upgrade ${animalType} coop! 😕`);
       document.body.classList.add("screen-shake");
       setTimeout(() => document.body.classList.remove("screen-shake"), 500);
     }
   },
 
-  placeStoredAnimal(type) {
-    const coop =
-      type === "Chicken" ? gameState.chickenCoop : gameState.roosterCoop;
-    if (coop.stored > 0 && placeAnimal(type)) {
+  // Place a stored animal on the grid
+  placeStoredAnimal(animalName) {
+    const animalType = animalName.toLowerCase();
+    const coop = gameState[`${animalType}Coop`];
+
+    if (coop.stored > 0 && placeAnimal(animalName)) {
       coop.stored -= 1;
       document.getElementById(
-        `${type.toLowerCase()}CoopStored`
+        `${animalType}CoopStored`
       ).textContent = `Stored: ${coop.stored}`;
+
       if (coop.stored === 0) {
-        document.getElementById(`place${type}`).classList.add("hidden");
-        document.getElementById(`place${type}`).classList.remove("pulse");
+        document.getElementById(`place${animalName}`).classList.add("hidden");
+        document.getElementById(`place${animalName}`).classList.remove("pulse");
       }
       this.updatePlaceButtonStates();
     } else {
@@ -161,26 +261,113 @@ const coopManager = {
     }
   },
 
-  updatePlaceButtonStates() {
-    document.getElementById("placeChicken").disabled =
-      isGridFull() || gameState.chickenCoop.stored === 0;
-    document.getElementById("placeRooster").disabled =
-      isGridFull() || gameState.roosterCoop.stored === 0;
+  // Update coop visibility based on unlocked animals
+  updateCoopVisibility() {
+    for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
+      const animalName =
+        animalType.charAt(0).toUpperCase() + animalType.slice(1);
 
-    if (!document.getElementById("placeChicken").disabled) {
-      document.getElementById("placeChicken").classList.add("pulse");
-    } else {
-      document.getElementById("placeChicken").classList.remove("pulse");
-    }
+      // Check if this animal has been created
+      if (gameState.createdAnimals.has(animalName)) {
+        const coopElement = document.getElementById(`${animalType}Coop`);
+        const placeholderElement = document.getElementById(
+          `${animalType}CoopPlaceholder`
+        );
 
-    if (!document.getElementById("placeRooster").disabled) {
-      document.getElementById("placeRooster").classList.add("pulse");
-    } else {
-      document.getElementById("placeRooster").classList.remove("pulse");
+        if (coopElement && placeholderElement) {
+          coopElement.classList.remove("hidden");
+          coopElement.classList.add("bounce-in");
+          placeholderElement.classList.add("hidden");
+        }
+      }
     }
   },
 
-  // Auto-Merge Functions
+  // Update state of place buttons based on grid status and stored animals
+  updatePlaceButtonStates() {
+    for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
+      const animalName =
+        animalType.charAt(0).toUpperCase() + animalType.slice(1);
+      const placeButton = document.getElementById(`place${animalName}`);
+      const coop = gameState[`${animalType}Coop`];
+
+      if (placeButton && coop) {
+        placeButton.disabled = isGridFull() || coop.stored === 0;
+
+        if (!placeButton.disabled) {
+          placeButton.classList.add("pulse");
+        } else {
+          placeButton.classList.remove("pulse");
+        }
+      }
+    }
+  },
+
+  // Check for new unlocks when animals are created
+  checkForNewUnlocks(newAnimalType) {
+    // Check if we need to unlock coop visibility
+    if (GAME_CONFIG.coopConfig[newAnimalType.toLowerCase()]) {
+      this.updateCoopVisibility();
+      eventManager.showAchievement(`🏡 ${newAnimalType} Coop Unlocked!`);
+    }
+  },
+
+  // Update timers for all coops
+  updateCoopTimers() {
+    for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
+      const coop = gameState[`${animalType}Coop`];
+      const animalName =
+        animalType.charAt(0).toUpperCase() + animalType.slice(1);
+
+      if (coop.owned) {
+        coop.timer -= 1;
+        const timerElement = document.getElementById(`${animalType}CoopTimer`);
+        if (timerElement) {
+          timerElement.textContent = `Next ${animalName} ${
+            GAME_CONFIG.animalEmojis[animalName]
+          }: ${coop.timer.toFixed(1)}s`;
+
+          if (coop.timer <= 3) {
+            timerElement.classList.add("urgent");
+          } else {
+            timerElement.classList.remove("urgent");
+          }
+        }
+
+        if (coop.timer <= 0) {
+          coop.stored += 1;
+          const storedElement = document.getElementById(
+            `${animalType}CoopStored`
+          );
+          if (storedElement) {
+            storedElement.textContent = `Stored: ${coop.stored}`;
+          }
+
+          const placeButton = document.getElementById(`place${animalName}`);
+          if (placeButton) {
+            placeButton.classList.remove("hidden");
+            placeButton.classList.add("pulse");
+            if (!isGridFull()) {
+              placeButton.disabled = false;
+            }
+          }
+
+          coop.timer =
+            config.baseTime *
+            Math.pow(config.timeReductionFactor, coop.level - 1);
+
+          // Achievement effect
+          eventManager.showAchievement(
+            `${GAME_CONFIG.animalEmojis[animalName]} ${animalName} Ready!`
+          );
+        }
+      }
+    }
+  },
+
+  // AUTO-MERGE FUNCTIONS - Keeping existing functionality intact
+
+  // Buy auto-merge system
   buyAutoMerge() {
     if (gameState.money >= GAME_CONFIG.autoMergeConfig.buyCost) {
       gameState.money -= GAME_CONFIG.autoMergeConfig.buyCost;
@@ -204,6 +391,7 @@ const coopManager = {
     }
   },
 
+  // Upgrade auto-merge system
   upgradeAutoMerge() {
     const cost =
       GAME_CONFIG.autoMergeConfig.upgradeCostMultiplier *
@@ -218,6 +406,7 @@ const coopManager = {
           gameState.autoMerge.level - 1
         );
       gameState.autoMerge.timer = gameState.autoMerge.currentInterval;
+
       document.getElementById(
         "autoMergeLevel"
       ).textContent = `Level: ${gameState.autoMerge.level}`;
@@ -237,6 +426,7 @@ const coopManager = {
         GAME_CONFIG.autoMergeConfig.upgradeCostMultiplier *
         gameState.autoMerge.level
       })`;
+
       updateMoney();
       eventManager.showAchievement(
         `🆙 Auto-Merge Level ${gameState.autoMerge.level}!`
@@ -309,6 +499,7 @@ const coopManager = {
     }
   },
 
+  // Perform auto-merge check and execution
   autoMergeCheck() {
     // Clear any existing highlights
     this.clearAutoMergeHighlight();
@@ -371,20 +562,12 @@ const coopManager = {
         if (!mergedTypes.includes(newType)) mergedTypes.push(newType);
         mergesMade = true;
 
-        if (newType === "Chicken" && !gameState.hasChicken) {
-          gameState.hasChicken = true;
-          this.updateCoopVisibility();
-          eventManager.showAchievement("🐔 Chicken Coop Unlocked!");
-        } else if (newType === "Rooster" && !gameState.hasRooster) {
-          gameState.hasRooster = true;
-          this.updateCoopVisibility();
-          eventManager.showAchievement("🦃 Rooster Coop Unlocked!");
-        }
+        // Check for new unlocks
+        this.checkForNewUnlocks(newType);
       }
     });
 
     // Update mergeable pairs after all merges are complete
-    // This ensures we don't recursively merge in the same cycle
     updateMergeablePairs();
 
     // Clear highlights after a delay
@@ -403,77 +586,7 @@ const coopManager = {
     this.updatePlaceButtonStates();
   },
 
-  // Timer update functions
-  updateCoopTimers() {
-    if (gameState.chickenCoop.owned) {
-      gameState.chickenCoop.timer -= 1;
-      const timerElement = document.getElementById("chickenCoopTimer");
-      timerElement.textContent = `Next Chicken 🐔: ${gameState.chickenCoop.timer.toFixed(
-        1
-      )}s`;
-
-      if (gameState.chickenCoop.timer <= 3) {
-        timerElement.classList.add("urgent");
-      } else {
-        timerElement.classList.remove("urgent");
-      }
-
-      if (gameState.chickenCoop.timer <= 0) {
-        gameState.chickenCoop.stored += 1;
-        document.getElementById(
-          "chickenCoopStored"
-        ).textContent = `Stored: ${gameState.chickenCoop.stored}`;
-        document.getElementById("placeChicken").classList.remove("hidden");
-        document.getElementById("placeChicken").classList.add("pulse");
-        if (!isGridFull())
-          document.getElementById("placeChicken").disabled = false;
-        gameState.chickenCoop.timer =
-          GAME_CONFIG.coopConfig.chicken.baseTime *
-          Math.pow(
-            GAME_CONFIG.coopConfig.chicken.timeReductionFactor,
-            gameState.chickenCoop.level - 1
-          );
-
-        // Achievement effect
-        eventManager.showAchievement("🐔 Chicken Ready!");
-      }
-    }
-
-    if (gameState.roosterCoop.owned) {
-      gameState.roosterCoop.timer -= 1;
-      const timerElement = document.getElementById("roosterCoopTimer");
-      timerElement.textContent = `Next Rooster 🦃: ${gameState.roosterCoop.timer.toFixed(
-        1
-      )}s`;
-
-      if (gameState.roosterCoop.timer <= 3) {
-        timerElement.classList.add("urgent");
-      } else {
-        timerElement.classList.remove("urgent");
-      }
-
-      if (gameState.roosterCoop.timer <= 0) {
-        gameState.roosterCoop.stored += 1;
-        document.getElementById(
-          "roosterCoopStored"
-        ).textContent = `Stored: ${gameState.roosterCoop.stored}`;
-        document.getElementById("placeRooster").classList.remove("hidden");
-        document.getElementById("placeRooster").classList.add("pulse");
-        if (!isGridFull())
-          document.getElementById("placeRooster").disabled = false;
-        gameState.roosterCoop.timer =
-          GAME_CONFIG.coopConfig.rooster.baseTime *
-          Math.pow(
-            GAME_CONFIG.coopConfig.rooster.timeReductionFactor,
-            gameState.roosterCoop.level - 1
-          );
-
-        // Achievement effect
-        eventManager.showAchievement("🦃 Rooster Ready!");
-      }
-    }
-  },
-
+  // Update auto-merge timer with high precision
   updateAutoMergeTimer() {
     if (gameState.autoMerge.owned) {
       gameState.autoMerge.timer -= 0.1; // Decrement by 0.1 seconds for precision
@@ -505,7 +618,7 @@ const coopManager = {
         countdownElement.classList.remove("urgent", "pulse");
       }
 
-      // Execute auto-merge when timer reaches 0, regardless of drag/select state
+      // Execute auto-merge when timer reaches 0
       if (gameState.autoMerge.timer <= 0) {
         console.log("🚀 Auto-merge triggered at 0s");
         this.autoMergeCheck();

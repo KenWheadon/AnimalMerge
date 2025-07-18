@@ -122,6 +122,8 @@ const gridManager = {
       cell.addEventListener("dragover", (e) => this.handleDragOver(e, i, j));
       cell.addEventListener("drop", (e) => this.handleDrop(e, i, j));
       cell.addEventListener("dragend", (e) => this.handleDragEnd(e, i, j));
+      cell.addEventListener("dragenter", (e) => this.handleDragEnter(e, i, j));
+      cell.addEventListener("dragleave", (e) => this.handleDragLeave(e, i, j));
 
       // Touch events for mobile
       cell.addEventListener("touchstart", (e) =>
@@ -145,21 +147,35 @@ const gridManager = {
     }
   },
 
-  // Handle drag start
+  // Handle drag start - FIXED: Better data transfer and state management
   handleDragStart(e, i, j) {
     if (!gameState.purchasedCells.has(`${i}-${j}`) || !gameState.grid[i][j]) {
       e.preventDefault();
       return;
     }
 
+    console.log(
+      `🎯 Drag started on cell ${i}-${j} with animal: ${gameState.grid[i][j]}`
+    );
+
+    // Set drag data - CRITICAL for proper drag/drop
+    e.dataTransfer.setData("text/plain", `${i}-${j}`);
+    e.dataTransfer.effectAllowed = "move";
+
+    // Set game state
     gameState.draggedCell = { i, j };
+
+    // Add visual feedback
     const cell = document.getElementById(`cell-${i}-${j}`);
     cell.classList.add("drag-preview");
+
+    // Show valid merge targets
     this.showValidTargets(i, j);
   },
 
-  // Handle drag over
+  // Handle drag over - FIXED: Proper event prevention
   handleDragOver(e, i, j) {
+    // CRITICAL: Must prevent default to allow drop
     e.preventDefault();
 
     if (!gameState.draggedCell) return;
@@ -167,40 +183,93 @@ const gridManager = {
     const sourceI = gameState.draggedCell.i;
     const sourceJ = gameState.draggedCell.j;
 
+    // Don't highlight the source cell
+    if (sourceI === i && sourceJ === j) return;
+
+    // Set the drop effect
+    e.dataTransfer.dropEffect = "move";
+  },
+
+  // Handle drag enter - FIXED: Support both merge and swap feedback
+  handleDragEnter(e, i, j) {
+    e.preventDefault();
+
+    if (!gameState.draggedCell) return;
+
+    const sourceI = gameState.draggedCell.i;
+    const sourceJ = gameState.draggedCell.j;
+
+    // Don't highlight the source cell
     if (sourceI === i && sourceJ === j) return;
 
     const cell = document.getElementById(`cell-${i}-${j}`);
 
     if (this.canMerge(sourceI, sourceJ, i, j)) {
       cell.classList.add("drag-valid-target");
+      cell.classList.remove("drag-invalid-target");
+    } else if (this.canSwap(sourceI, sourceJ, i, j)) {
+      cell.classList.add("drag-valid-target");
+      cell.classList.remove("drag-invalid-target");
     } else {
       cell.classList.add("drag-invalid-target");
+      cell.classList.remove("drag-valid-target");
     }
   },
 
-  // Handle drop
+  // Handle drag leave - FIXED: Clean up visual feedback
+  handleDragLeave(e, i, j) {
+    const cell = document.getElementById(`cell-${i}-${j}`);
+    cell.classList.remove("drag-valid-target", "drag-invalid-target");
+  },
+
+  // Handle drop - FIXED: Support both merge and swap
   handleDrop(e, i, j) {
     e.preventDefault();
 
-    if (!gameState.draggedCell) return;
+    console.log(`🎯 Drop attempted on cell ${i}-${j}`);
+
+    if (!gameState.draggedCell) {
+      console.log("❌ No dragged cell found");
+      return;
+    }
 
     const sourceI = gameState.draggedCell.i;
     const sourceJ = gameState.draggedCell.j;
 
+    console.log(`🎯 Attempting action from ${sourceI}-${sourceJ} to ${i}-${j}`);
+
+    // Check if this is a valid merge
     if (this.canMerge(sourceI, sourceJ, i, j)) {
+      console.log("✅ Merge is valid, executing...");
       mergeAnimals(sourceI, sourceJ, i, j);
     }
+    // Check if this is a valid swap
+    else if (this.canSwap(sourceI, sourceJ, i, j)) {
+      console.log("✅ Swap is valid, executing...");
+      this.swapAnimals(sourceI, sourceJ, i, j);
+    } else {
+      console.log("❌ Neither merge nor swap is valid");
+      updateStatus("Cannot perform this action! 😕");
+    }
 
+    // Clean up
     this.clearValidTargets();
     const sourceCell = document.getElementById(`cell-${sourceI}-${sourceJ}`);
-    sourceCell.classList.remove("drag-preview");
+    if (sourceCell) {
+      sourceCell.classList.remove("drag-preview");
+    }
     gameState.draggedCell = null;
   },
 
-  // Handle drag end
+  // Handle drag end - FIXED: Better cleanup
   handleDragEnd(e, i, j) {
+    console.log(`🎯 Drag ended on cell ${i}-${j}`);
+
     const cell = document.getElementById(`cell-${i}-${j}`);
-    cell.classList.remove("drag-preview");
+    if (cell) {
+      cell.classList.remove("drag-preview");
+    }
+
     this.clearValidTargets();
     gameState.draggedCell = null;
   },
@@ -261,46 +330,132 @@ const gridManager = {
     const sourceCell = document.getElementById(
       `cell-${gameState.draggedCell.i}-${gameState.draggedCell.j}`
     );
-    sourceCell.classList.remove("drag-preview");
+    if (sourceCell) {
+      sourceCell.classList.remove("drag-preview");
+    }
     gameState.draggedCell = null;
   },
 
-  // Check if merge is possible
+  // Check if merge is possible - FIXED: Manual merge allows any distance
   canMerge(sourceI, sourceJ, targetI, targetJ) {
-    if (!gameState.purchasedCells.has(`${targetI}-${targetJ}`)) return false;
+    console.log(
+      `🔍 Checking if merge is possible: ${sourceI}-${sourceJ} -> ${targetI}-${targetJ}`
+    );
+
+    // Check if target cell is purchased
+    if (!gameState.purchasedCells.has(`${targetI}-${targetJ}`)) {
+      console.log("❌ Target cell not purchased");
+      return false;
+    }
 
     const sourceType = gameState.grid[sourceI][sourceJ];
     const targetType = gameState.grid[targetI][targetJ];
 
-    if (!sourceType || !targetType) return false;
-    if (sourceType !== targetType) return false;
-    if (!GAME_CONFIG.animalTypes[sourceType].mergeTo) return false;
+    console.log(`🔍 Source type: ${sourceType}, Target type: ${targetType}`);
 
-    // Check if they're adjacent
-    const distance = Math.abs(sourceI - targetI) + Math.abs(sourceJ - targetJ);
-    return distance === 1;
+    // Check if both cells have animals
+    if (!sourceType || !targetType) {
+      console.log("❌ One or both cells empty");
+      return false;
+    }
+
+    // Check if animals are the same type
+    if (sourceType !== targetType) {
+      console.log("❌ Different animal types - will swap instead");
+      return false;
+    }
+
+    // Check if this animal type can merge
+    if (!GAME_CONFIG.animalTypes[sourceType].mergeTo) {
+      console.log("❌ Animal type cannot merge");
+      return false;
+    }
+
+    // Manual merge allows any distance (no adjacency requirement)
+    console.log("✅ Merge is valid!");
+    return true;
   },
 
-  // Show valid merge targets
+  // Check if swap is possible
+  canSwap(sourceI, sourceJ, targetI, targetJ) {
+    console.log(
+      `🔍 Checking if swap is possible: ${sourceI}-${sourceJ} -> ${targetI}-${targetJ}`
+    );
+
+    // Check if target cell is purchased
+    if (!gameState.purchasedCells.has(`${targetI}-${targetJ}`)) {
+      console.log("❌ Target cell not purchased");
+      return false;
+    }
+
+    const sourceType = gameState.grid[sourceI][sourceJ];
+    const targetType = gameState.grid[targetI][targetJ];
+
+    console.log(`🔍 Source type: ${sourceType}, Target type: ${targetType}`);
+
+    // Check if both cells have animals
+    if (!sourceType || !targetType) {
+      console.log("❌ One or both cells empty");
+      return false;
+    }
+
+    // Can swap if animals are different types
+    if (sourceType !== targetType) {
+      console.log("✅ Swap is valid!");
+      return true;
+    }
+
+    console.log("❌ Same animal types - should merge instead");
+    return false;
+  },
+
+  // Show valid merge targets - FIXED: Show all valid targets (not just adjacent)
   showValidTargets(sourceI, sourceJ) {
-    const neighbors = [
-      { di: 0, dj: 1 }, // Right
-      { di: 1, dj: 0 }, // Down
-      { di: 0, dj: -1 }, // Left
-      { di: -1, dj: 0 }, // Up
-    ];
+    console.log(`🎯 Showing valid targets for ${sourceI}-${sourceJ}`);
 
-    neighbors.forEach(({ di, dj }) => {
-      const ni = sourceI + di;
-      const nj = sourceJ + dj;
+    // Check all cells on the grid for valid merge or swap targets
+    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+      if (gameState.purchasedCells.has(`${i}-${j}`) && gameState.grid[i][j]) {
+        // Skip the source cell
+        if (i === sourceI && j === sourceJ) return;
 
-      if (this.canMerge(sourceI, sourceJ, ni, nj)) {
-        const cell = document.getElementById(`cell-${ni}-${nj}`);
-        if (cell) {
-          cell.classList.add("drag-valid-target");
+        if (
+          this.canMerge(sourceI, sourceJ, i, j) ||
+          this.canSwap(sourceI, sourceJ, i, j)
+        ) {
+          const cell = document.getElementById(`cell-${i}-${j}`);
+          if (cell) {
+            cell.classList.add("drag-valid-target");
+            console.log(`✅ Marked ${i}-${j} as valid target`);
+          }
         }
       }
     });
+  },
+
+  // Swap two animals
+  swapAnimals(sourceI, sourceJ, targetI, targetJ) {
+    console.log(
+      `🔄 Swapping animals: ${sourceI}-${sourceJ} <-> ${targetI}-${targetJ}`
+    );
+
+    const sourceType = gameState.grid[sourceI][sourceJ];
+    const targetType = gameState.grid[targetI][targetJ];
+
+    // Swap the animals in the grid
+    gameState.grid[sourceI][sourceJ] = targetType;
+    gameState.grid[targetI][targetJ] = sourceType;
+
+    // Update both cells
+    this.updateCell(sourceI, sourceJ);
+    this.updateCell(targetI, targetJ);
+
+    // Update mergeable pairs after swapping
+    updateMergeablePairs();
+
+    updateStatus(
+      `Swapped ${GAME_CONFIG.animalEmojis[sourceType]} and ${GAME_CONFIG.animalEmojis[targetType]}! 🔄`
+    );
   },
 
   // Clear all drag target highlights

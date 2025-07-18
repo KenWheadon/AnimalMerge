@@ -1,48 +1,22 @@
 // Event Manager - Handles events, animations, and visual effects
 const eventManager = {
-  // Initialize button event listeners
+  // Initialize button event listeners - now handles dynamic buttons
   initializeButtonEventListeners() {
-    document
-      .getElementById("buyEgg")
-      .addEventListener("click", () => placeAnimal("Egg"));
-    document
-      .getElementById("buyChicken")
-      .addEventListener("click", () =>
-        buyAnimal("Chicken", GAME_CONFIG.purchaseConfig.chicken)
+    // Auto-merge buttons
+    const buyAutoMergeBtn = document.getElementById("buyAutoMerge");
+    const upgradeAutoMergeBtn = document.getElementById("upgradeAutoMerge");
+
+    if (buyAutoMergeBtn) {
+      buyAutoMergeBtn.addEventListener("click", () =>
+        coopManager.buyAutoMerge()
       );
-    document
-      .getElementById("buyRooster")
-      .addEventListener("click", () =>
-        buyAnimal("Rooster", GAME_CONFIG.purchaseConfig.rooster)
+    }
+
+    if (upgradeAutoMergeBtn) {
+      upgradeAutoMergeBtn.addEventListener("click", () =>
+        coopManager.upgradeAutoMerge()
       );
-    document
-      .getElementById("buyChickenCoop")
-      .addEventListener("click", () => coopManager.buyCoop("chicken"));
-    document
-      .getElementById("buyRoosterCoop")
-      .addEventListener("click", () => coopManager.buyCoop("rooster"));
-    document
-      .getElementById("upgradeChickenCoop")
-      .addEventListener("click", () => coopManager.upgradeCoop("chicken"));
-    document
-      .getElementById("upgradeRoosterCoop")
-      .addEventListener("click", () => coopManager.upgradeCoop("rooster"));
-    document
-      .getElementById("placeChicken")
-      .addEventListener("click", () =>
-        coopManager.placeStoredAnimal("Chicken")
-      );
-    document
-      .getElementById("placeRooster")
-      .addEventListener("click", () =>
-        coopManager.placeStoredAnimal("Rooster")
-      );
-    document
-      .getElementById("buyAutoMerge")
-      .addEventListener("click", () => coopManager.buyAutoMerge());
-    document
-      .getElementById("upgradeAutoMerge")
-      .addEventListener("click", () => coopManager.upgradeAutoMerge());
+    }
   },
 
   // Visual Helper Functions

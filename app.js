@@ -6,13 +6,9 @@ let gameState = {
   selectedCell: null,
   draggedCell: null,
   isSlaughterAnimating: false,
-  hasChicken: false,
-  hasRooster: false,
   createdAnimals: new Set(),
   recentlyAnimatedCells: [],
   mergeablePairs: [],
-  chickenCoop: { owned: false, level: 1, baseTime: 60, timer: 60, stored: 0 },
-  roosterCoop: { owned: false, level: 1, baseTime: 120, timer: 120, stored: 0 },
   autoMerge: {
     owned: false,
     level: 1,
@@ -31,12 +27,16 @@ function initializeGame() {
   // Initialize slaughter houses FIRST
   slaughterHouseManager.initializeSlaughterHouses();
 
+  // Initialize dynamic coop states
+  coopManager.initializeCoopStates();
+
   // Inject HTML structure
   document.getElementById("gameContainer").innerHTML = generateMainHTML();
 
   // Initialize all managers
   gridManager.initializeGridEventListeners();
   slaughterHouseManager.initializeSlaughterHouseEventListeners();
+  coopManager.initializeFarmBuildingEventListeners();
   eventManager.initializeButtonEventListeners();
 
   // Initialize game state
@@ -79,15 +79,7 @@ function generateMainHTML() {
             <div class="flex-1 overflow-y-auto p-4">
                 <h3 class="text-lg font-bold text-green-800 mb-4">🛒 Buy Animals</h3>
                 <div class="space-y-3">
-                    <button id="buyEgg" class="enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white">
-                        <i class="fas fa-egg mr-2"></i>Buy Egg 🥚 (Free)
-                    </button>
-                    <button id="buyChicken" class="enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white hidden">
-                        <i class="fas fa-drumstick-bite mr-2"></i>Buy Chicken 🐔 ($7)
-                    </button>
-                    <button id="buyRooster" class="enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white hidden">
-                        <i class="fas fa-feather mr-2"></i>Buy Rooster 🦃 ($20)
-                    </button>
+                    ${coopManager.generateBuyAnimalButtons()}
                 </div>
             </div>
         </div>
@@ -107,23 +99,24 @@ function generateMainHTML() {
                     ${gridManager.generateGridHTML()}
                 </div>
             </div>
-                      <!-- Auto-Merge -->
-      <div class="flex-shrink-0 bg-white m-4 p-4 rounded-xl shadow-lg min-w-[220px]">
-          <h3 class="text-lg font-bold text-purple-800 mb-2">⚙️ Auto-Merge</h3>
-          <div class="space-y-2 text-sm">
-              <p id="autoMergeLevel" class="font-semibold">Level: 1</p>
-              <p id="autoMergeTimer" class="timer-display">Check Interval: 10s</p>
-              <p id="autoMergeCountdown" class="timer-display hidden">Next Auto-Merge: 10.0s</p>
-          </div>
-          <div class="mt-4 space-y-2">
-              <button id="buyAutoMerge" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
-                  <i class="fas fa-cogs mr-1"></i>Buy Auto-Merge ($1)
-              </button>
-              <button id="upgradeAutoMerge" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
-                  <i class="fas fa-arrow-up mr-1"></i>Upgrade Auto-Merge ($5)
-              </button>
-          </div>
-      </div>
+            
+            <!-- Auto-Merge -->
+            <div class="flex-shrink-0 bg-white m-4 p-4 rounded-xl shadow-lg min-w-[220px]">
+                <h3 class="text-lg font-bold text-purple-800 mb-2">⚙️ Auto-Merge</h3>
+                <div class="space-y-2 text-sm">
+                    <p id="autoMergeLevel" class="font-semibold">Level: 1</p>
+                    <p id="autoMergeTimer" class="timer-display">Check Interval: 10s</p>
+                    <p id="autoMergeCountdown" class="timer-display hidden">Next Auto-Merge: 10.0s</p>
+                </div>
+                <div class="mt-4 space-y-2">
+                    <button id="buyAutoMerge" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
+                        <i class="fas fa-cogs mr-1"></i>Buy Auto-Merge ($1)
+                    </button>
+                    <button id="upgradeAutoMerge" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
+                        <i class="fas fa-arrow-up mr-1"></i>Upgrade Auto-Merge ($5)
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Right Panel - Farm Buildings -->
@@ -246,6 +239,10 @@ function placeAnimal(type) {
           ? `${GAME_CONFIG.animalEmojis[type]} created! You can sell it for 💰${animalType.sellPrice}`
           : `Placed ${GAME_CONFIG.animalEmojis[type]}`
       );
+
+      // Check for new unlocks
+      coopManager.checkForNewUnlocks(type);
+
       return true;
     }
   }
@@ -316,28 +313,14 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   eventManager.createParticles(targetCell);
 
   // Check for unlocks
-  if (newType === "Chicken" && !gameState.hasChicken) {
-    gameState.hasChicken = true;
-    coopManager.updateCoopVisibility();
-    eventManager.showAchievement("🐔 Chicken Coop Unlocked!");
-    updateStatus(
-      `Merged into ${GAME_CONFIG.animalEmojis[newType]}. Unlocked Chicken Coop!`
-    );
-  } else if (newType === "Rooster" && !gameState.hasRooster) {
-    gameState.hasRooster = true;
-    coopManager.updateCoopVisibility();
-    eventManager.showAchievement("🦃 Rooster Coop Unlocked!");
-    updateStatus(
-      `Merged into ${GAME_CONFIG.animalEmojis[newType]}. Unlocked Rooster Coop!`
-    );
-  } else {
-    const sellPrice = GAME_CONFIG.animalTypes[newType].sellPrice;
-    updateStatus(
-      sellPrice > 0
-        ? `Merged into ${GAME_CONFIG.animalEmojis[newType]}! You can sell it for 💰${sellPrice}`
-        : `Merged into ${GAME_CONFIG.animalEmojis[newType]}!`
-    );
-  }
+  coopManager.checkForNewUnlocks(newType);
+
+  const sellPrice = GAME_CONFIG.animalTypes[newType].sellPrice;
+  updateStatus(
+    sellPrice > 0
+      ? `Merged into ${GAME_CONFIG.animalEmojis[newType]}! You can sell it for 💰${sellPrice}`
+      : `Merged into ${GAME_CONFIG.animalEmojis[newType]}!`
+  );
 }
 
 // UI Update Functions

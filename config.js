@@ -116,14 +116,15 @@ const GAME_CONFIG = {
     Bull4: "🐂4",
   },
   purchaseConfig: {
-    chicken: 5,
-    rooster: 15,
-    goat: 50,
-    sheep: 200,
-    pig: 800,
-    llama: 3200,
-    cow: 12800,
-    bull: 51200,
+    Egg: { cost: 0, unlocked: true }, // Always unlocked
+    Chicken: { cost: 7, unlocked: false }, // Unlocked when chicken coop is owned
+    Rooster: { cost: 20, unlocked: false }, // Unlocked when rooster coop is owned
+    Goat: { cost: 50, unlocked: false }, // Unlocked when goat coop is owned
+    Sheep: { cost: 200, unlocked: false }, // Unlocked when sheep coop is owned
+    Pig: { cost: 800, unlocked: false }, // Unlocked when pig coop is owned
+    Llama: { cost: 3200, unlocked: false }, // Unlocked when llama coop is owned
+    Cow: { cost: 12800, unlocked: false }, // Unlocked when cow coop is owned
+    Bull: { cost: 51200, unlocked: false }, // Unlocked when bull coop is owned
   },
   coopConfig: {
     chicken: {

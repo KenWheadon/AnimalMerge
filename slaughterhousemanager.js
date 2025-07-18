@@ -634,7 +634,7 @@ const slaughterHouseManager = {
     gameState.draggedCell = null;
   },
 
-  // Show animal values tooltip (now cached)
+  // Show animal values tooltip (now cached) - FIXED: Position below instead of above
   showAnimalValuesTooltip(element) {
     // Reuse cached tooltip if available
     if (this.tooltipCache) {
@@ -647,8 +647,8 @@ const slaughterHouseManager = {
     tooltip.className =
       "absolute bg-black text-white p-2 rounded shadow-lg z-50 text-xs";
     tooltip.style.left = "50%";
-    tooltip.style.top = "-10px";
-    tooltip.style.transform = "translateX(-50%) translateY(-100%)";
+    tooltip.style.top = "100%"; // Changed from "-10px" to "100%" to position below
+    tooltip.style.transform = "translateX(-50%) translateY(10px)"; // Changed from translateY(-100%) to translateY(10px)
 
     let tooltipContent = "<strong>Animal Values:</strong><br>";
     for (const [type, { sellPrice }] of Object.entries(
