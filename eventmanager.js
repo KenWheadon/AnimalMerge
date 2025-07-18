@@ -1,20 +1,6 @@
 // Event Manager - Handles events, animations, and visual effects
 const eventManager = {
-  // Event Listeners for Slaughter House
-  initializeSlaughterHouseEventListeners() {
-    const slaughterHouse = document.getElementById("slaughterHouse");
-    slaughterHouse.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      slaughterHouse.classList.add("drag-over");
-    });
-    slaughterHouse.addEventListener("dragleave", () => {
-      slaughterHouse.classList.remove("drag-over");
-    });
-    slaughterHouse.addEventListener("drop", this.handleSlaughterDrop);
-    slaughterHouse.addEventListener("touchmove", (e) => e.preventDefault());
-    slaughterHouse.addEventListener("touchend", this.handleSlaughterTouchEnd);
-  },
-
+  // Initialize button event listeners
   initializeButtonEventListeners() {
     document
       .getElementById("buyEgg")
@@ -57,51 +43,6 @@ const eventManager = {
     document
       .getElementById("upgradeAutoMerge")
       .addEventListener("click", () => coopManager.upgradeAutoMerge());
-    document
-      .getElementById("toggleCoops")
-      .addEventListener("click", toggleCoops);
-  },
-
-  handleSlaughterDrop(e) {
-    e.preventDefault();
-    const slaughterHouse = document.getElementById("slaughterHouse");
-    slaughterHouse.classList.remove("drag-over");
-    if (!gameState.draggedCell || gameState.isSlaughterAnimating) return;
-
-    const { i, j } = gameState.draggedCell;
-    const type = gameState.grid[i][j];
-
-    if (GAME_CONFIG.animalTypes[type].sellPrice > 0) {
-      sellAnimal(i, j, type);
-    } else {
-      updateStatus(`${GAME_CONFIG.animalEmojis[type]} cannot be sold! 😕`);
-    }
-
-    const sourceCell = document.getElementById(`cell-${i}-${j}`);
-    sourceCell.classList.remove("drag-preview");
-    gridManager.clearValidTargets();
-    gameState.draggedCell = null;
-  },
-
-  handleSlaughterTouchEnd(e) {
-    e.preventDefault();
-    const slaughterHouse = document.getElementById("slaughterHouse");
-    slaughterHouse.classList.remove("drag-over");
-    if (!gameState.draggedCell || gameState.isSlaughterAnimating) return;
-
-    const { i, j } = gameState.draggedCell;
-    const type = gameState.grid[i][j];
-
-    if (GAME_CONFIG.animalTypes[type].sellPrice > 0) {
-      sellAnimal(i, j, type);
-    } else {
-      updateStatus(`${GAME_CONFIG.animalEmojis[type]} cannot be sold! 😕`);
-    }
-
-    const sourceCell = document.getElementById(`cell-${i}-${j}`);
-    sourceCell.classList.remove("drag-preview");
-    gridManager.clearValidTargets();
-    gameState.draggedCell = null;
   },
 
   // Visual Helper Functions

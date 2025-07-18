@@ -154,10 +154,12 @@ const gridManager = {
         .classList.remove("bg-blue-200");
 
       if (prev.i === i && prev.j === j) {
-        // Sell animal
+        // Sell animal using first available slaughter house
         const type = gameState.grid[i][j];
         if (GAME_CONFIG.animalTypes[type].sellPrice > 0) {
-          sellAnimal(i, j, type);
+          if (gameState.slaughterHouses.length > 0) {
+            slaughterHouseManager.addAnimalToQueue(0, type, i, j);
+          }
         } else {
           updateStatus(`${GAME_CONFIG.animalEmojis[type]} cannot be sold! 😕`);
         }
@@ -233,10 +235,17 @@ const gridManager = {
     const touch = e.changedTouches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
 
-    if (element && element.id === "slaughterHouse") {
+    // Check if dropped on any slaughter house
+    if (element && element.id && element.id.startsWith("slaughterHouse")) {
+      const houseIndex = parseInt(element.getAttribute("data-house-index"));
       const type = gameState.grid[source.i][source.j];
       if (GAME_CONFIG.animalTypes[type].sellPrice > 0) {
-        sellAnimal(source.i, source.j, type);
+        slaughterHouseManager.addAnimalToQueue(
+          houseIndex,
+          type,
+          source.i,
+          source.j
+        );
       } else {
         updateStatus(`${GAME_CONFIG.animalEmojis[type]} cannot be sold! 😕`);
       }

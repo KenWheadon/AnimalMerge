@@ -4,72 +4,72 @@ const coopManager = {
   generateCoopHTML() {
     return `
       <!-- Chicken Coop -->
-      <div id="chickenCoop" class="hidden flex-1 bg-white p-4 rounded-xl shadow-lg">
-          <h2 class="text-xl font-bold text-green-800 mb-2">🐔 Chicken Coop</h2>
+      <div id="chickenCoop" class="hidden flex-shrink-0 bg-white p-4 rounded-xl shadow-lg min-w-[220px]">
+          <h3 class="text-lg font-bold text-green-800 mb-2">🐔 Chicken Coop</h3>
           <div class="space-y-2 text-sm">
               <p id="chickenCoopLevel" class="font-semibold">Level: 1</p>
               <p id="chickenCoopTimer" class="timer-display">Next Chicken 🐔: 60s</p>
               <p id="chickenCoopStored" class="font-semibold">Stored: 0</p>
           </div>
           <div class="mt-4 space-y-2">
-              <button id="placeChicken" class="enhanced-button px-4 py-2 rounded-lg font-bold text-white hidden">
+              <button id="placeChicken" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
                   <i class="fas fa-plus mr-1"></i>Place Chicken 🐔
               </button>
-              <button id="buyChickenCoop" class="enhanced-button buy-button px-4 py-2 rounded-lg font-bold text-white">
+              <button id="buyChickenCoop" class="enhanced-button buy-button px-3 py-2 rounded-lg font-bold text-white text-sm">
                   <i class="fas fa-home mr-1"></i>Buy Chicken Coop 🏡 ($10)
               </button>
-              <button id="upgradeChickenCoop" class="enhanced-button upgrade-button px-4 py-2 rounded-lg font-bold text-white hidden">
+              <button id="upgradeChickenCoop" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
                   <i class="fas fa-arrow-up mr-1"></i>Upgrade Coop ($3)
               </button>
           </div>
       </div>
 
       <!-- Chicken Coop Placeholder -->
-      <div id="chickenCoopPlaceholder" class="flex-1 bg-gray-200 opacity-50 p-4 rounded-xl" title="Merge to Chicken to unlock!">
-          <h2 class="text-xl font-semibold text-gray-600">🔒 Chicken Coop</h2>
+      <div id="chickenCoopPlaceholder" class="flex-shrink-0 bg-gray-200 opacity-50 p-4 rounded-xl min-w-[220px]" title="Merge to Chicken to unlock!">
+          <h3 class="text-lg font-semibold text-gray-600">🔒 Chicken Coop</h3>
           <p class="text-sm text-gray-600 mt-2">Merge to Chicken to unlock!</p>
       </div>
 
       <!-- Rooster Coop -->
-      <div id="roosterCoop" class="hidden flex-1 bg-white p-4 rounded-xl shadow-lg">
-          <h2 class="text-xl font-bold text-green-800 mb-2">🦃 Rooster Coop</h2>
+      <div id="roosterCoop" class="hidden flex-shrink-0 bg-white p-4 rounded-xl shadow-lg min-w-[220px]">
+          <h3 class="text-lg font-bold text-green-800 mb-2">🦃 Rooster Coop</h3>
           <div class="space-y-2 text-sm">
               <p id="roosterCoopLevel" class="font-semibold">Level: 1</p>
               <p id="roosterCoopTimer" class="timer-display">Next Rooster 🦃: 120s</p>
               <p id="roosterCoopStored" class="font-semibold">Stored: 0</p>
           </div>
           <div class="mt-4 space-y-2">
-              <button id="placeRooster" class="enhanced-button px-4 py-2 rounded-lg font-bold text-white hidden">
+              <button id="placeRooster" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
                   <i class="fas fa-plus mr-1"></i>Place Rooster 🦃
               </button>
-              <button id="buyRoosterCoop" class="enhanced-button buy-button px-4 py-2 rounded-lg font-bold text-white">
+              <button id="buyRoosterCoop" class="enhanced-button buy-button px-3 py-2 rounded-lg font-bold text-white text-sm">
                   <i class="fas fa-home mr-1"></i>Buy Rooster Coop 🏡 ($50)
               </button>
-              <button id="upgradeRoosterCoop" class="enhanced-button upgrade-button px-4 py-2 rounded-lg font-bold text-white hidden">
+              <button id="upgradeRoosterCoop" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
                   <i class="fas fa-arrow-up mr-1"></i>Upgrade Coop ($3)
               </button>
           </div>
       </div>
 
       <!-- Rooster Coop Placeholder -->
-      <div id="roosterCoopPlaceholder" class="flex-1 bg-gray-200 opacity-50 p-4 rounded-xl" title="Merge to Rooster to unlock!">
-          <h2 class="text-xl font-semibold text-gray-600">🔒 Rooster Coop</h2>
+      <div id="roosterCoopPlaceholder" class="flex-shrink-0 bg-gray-200 opacity-50 p-4 rounded-xl min-w-[220px]" title="Merge to Rooster to unlock!">
+          <h3 class="text-lg font-semibold text-gray-600">🔒 Rooster Coop</h3>
           <p class="text-sm text-gray-600 mt-2">Merge to Rooster to unlock!</p>
       </div>
 
       <!-- Auto-Merge -->
-      <div class="flex-1 bg-white p-4 rounded-xl shadow-lg">
-          <h2 class="text-xl font-bold text-purple-800 mb-2">⚙️ Auto-Merge</h2>
+      <div class="flex-shrink-0 bg-white p-4 rounded-xl shadow-lg min-w-[220px]">
+          <h3 class="text-lg font-bold text-purple-800 mb-2">⚙️ Auto-Merge</h3>
           <div class="space-y-2 text-sm">
               <p id="autoMergeLevel" class="font-semibold">Level: 1</p>
               <p id="autoMergeTimer" class="timer-display">Check Interval: 10s</p>
               <p id="autoMergeCountdown" class="timer-display hidden">Next Auto-Merge: 10.0s</p>
           </div>
           <div class="mt-4 space-y-2">
-              <button id="buyAutoMerge" class="enhanced-button px-4 py-2 rounded-lg font-bold text-white" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
+              <button id="buyAutoMerge" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
                   <i class="fas fa-cogs mr-1"></i>Buy Auto-Merge ($1)
               </button>
-              <button id="upgradeAutoMerge" class="enhanced-button upgrade-button px-4 py-2 rounded-lg font-bold text-white hidden">
+              <button id="upgradeAutoMerge" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
                   <i class="fas fa-arrow-up mr-1"></i>Upgrade Auto-Merge ($5)
               </button>
           </div>
@@ -144,7 +144,7 @@ const coopManager = {
       }: ${coop.timer.toFixed(1)}s`;
       document.getElementById(
         `upgrade${type.charAt(0).toUpperCase() + type.slice(1)}Coop`
-      ).innerHTML = `<i class="fas fa-arrow-up mr-1"></i>Upgrade Coop (${
+      ).innerHTML = `<i class="fas fa-arrow-up mr-1"></i>Upgrade Coop ($${
         GAME_CONFIG.coopConfig[type].upgradeCostMultiplier * coop.level
       })`;
       updateMoney();
@@ -251,7 +251,7 @@ const coopManager = {
       )}s`;
       document.getElementById(
         "upgradeAutoMerge"
-      ).innerHTML = `<i class="fas fa-arrow-up mr-1"></i>Upgrade Auto-Merge (${
+      ).innerHTML = `<i class="fas fa-arrow-up mr-1"></i>Upgrade Auto-Merge ($${
         GAME_CONFIG.autoMergeConfig.upgradeCostMultiplier *
         gameState.autoMerge.level
       })`;

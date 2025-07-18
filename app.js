@@ -20,6 +20,7 @@ let gameState = {
     currentInterval: 10,
     timer: 10,
   },
+  slaughterHouses: [],
 };
 
 // Main initialization function
@@ -27,12 +28,15 @@ function initializeGame() {
   // Initialize grid state
   gridManager.initializeGridState();
 
+  // Initialize slaughter houses
+  slaughterHouseManager.initializeSlaughterHouses();
+
   // Inject HTML structure
   document.getElementById("gameContainer").innerHTML = generateMainHTML();
 
   // Initialize all managers
   gridManager.initializeGridEventListeners();
-  eventManager.initializeSlaughterHouseEventListeners();
+  slaughterHouseManager.initializeSlaughterHouseEventListeners();
   eventManager.initializeButtonEventListeners();
 
   // Initialize game state
@@ -57,62 +61,66 @@ function initializeGame() {
 // Generate main HTML structure
 function generateMainHTML() {
   return `
-    <div class="game-container container mx-auto p-4 flex flex-col lg:flex-row lg:space-x-8">
-        <!-- Main Game Area -->
-        <div class="flex-1">
-            <h1 class="text-5xl font-bold text-center mb-6">Animal Merge Farm 🐔</h1>
+    <div class="game-container flex h-screen">
+        <!-- Left Panel - Buy Options -->
+        <div class="w-64 bg-white shadow-lg flex flex-col">
+            <!-- Money Display -->
+            <div class="p-4 border-b">
+                <div id="money" class="money-display text-center">Money: 💰${
+                  gameState.money
+                }</div>
+            </div>
             
-            <!-- Game Stats -->
-            <div class="flex flex-col lg:flex-row justify-between items-center mb-6 space-y-4 lg:space-y-0 lg:space-x-4">
-                <div class="flex flex-col space-y-2">
-                    <div id="money" class="money-display">Money: 💰0</div>
-                    <div id="status" class="status-display">Drag or click 'Buy Egg 🥚' to start!</div>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="flex flex-wrap gap-3">
-                    <button id="buyEgg" class="enhanced-button buy-button px-6 py-3 rounded-xl shadow-lg font-bold text-white transition-all duration-200">
+            <!-- Buy Buttons -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <h3 class="text-lg font-bold text-green-800 mb-4">🛒 Buy Animals</h3>
+                <div class="space-y-3">
+                    <button id="buyEgg" class="enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white">
                         <i class="fas fa-egg mr-2"></i>Buy Egg 🥚 (Free)
                     </button>
-                    <button id="buyChicken" class="enhanced-button buy-button px-6 py-3 rounded-xl shadow-lg font-bold text-white transition-all duration-200 hidden">
+                    <button id="buyChicken" class="enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white hidden">
                         <i class="fas fa-drumstick-bite mr-2"></i>Buy Chicken 🐔 ($7)
                     </button>
-                    <button id="buyRooster" class="enhanced-button buy-button px-6 py-3 rounded-xl shadow-lg font-bold text-white transition-all duration-200 hidden">
+                    <button id="buyRooster" class="enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white hidden">
                         <i class="fas fa-feather mr-2"></i>Buy Rooster 🦃 ($20)
                     </button>
                 </div>
-            </div>
-
-            <!-- Game Grid -->
-            ${gridManager.generateGridHTML()}
-
-            <!-- Coop Toggle -->
-            <button id="toggleCoops" class="enhanced-button mt-6 px-6 py-3 rounded-xl shadow-lg font-bold text-white transition-all duration-200 w-full lg:w-auto">
-                <i class="fas fa-chevron-down mr-2"></i>Show Farm Buildings
-            </button>
-
-            <!-- Coop Drawer -->
-            <div id="coopDrawer" class="coop-drawer hidden mt-4">
-                <div class="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-6 coop-panel p-6 rounded-2xl">
-                    ${coopManager.generateCoopHTML()}
+                
+                <!-- Status Display -->
+                <div class="mt-6">
+                    <div id="status" class="status-display text-sm">Drag or click 'Buy Egg 🥚' to start!</div>
                 </div>
             </div>
         </div>
 
-        <!-- Sidebar -->
-        <div class="mt-6 lg:mt-0 lg:w-64">
-            <!-- Slaughter House -->
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-red-800 mb-3 text-center">🗡️ Slaughter House</h2>
-                <div id="slaughterHouse" class="slaughter-house rounded-xl p-6 text-center font-bold text-red-800 h-36 flex items-center justify-center cursor-pointer relative">
-                    <div class="z-10">Drag animals here to sell</div>
+        <!-- Main Game Area -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <div class="p-4 bg-white shadow-sm">
+                <h1 class="text-4xl font-bold text-center">Animal Merge Farm 🐔</h1>
+            </div>
+
+            <!-- Slaughter Houses -->
+            <div class="p-4 bg-gray-50 border-b">
+                <h2 class="text-xl font-bold text-red-800 mb-3">🗡️ Slaughter Houses</h2>
+                <div id="slaughterHousesContainer">
+                    ${slaughterHouseManager.generateSlaughterHouseHTML()}
                 </div>
             </div>
 
-            <!-- Animal Values -->
-            <div class="bg-white p-4 rounded-xl shadow-lg">
-                <h3 class="text-lg font-bold text-green-800 mb-3">💰 Animal Values</h3>
-                <ul id="animalValues" class="text-sm space-y-1"></ul>
+            <!-- Coops -->
+            <div class="p-4 bg-gray-50 border-b">
+                <h2 class="text-xl font-bold text-green-800 mb-3">🏡 Farm Buildings</h2>
+                <div class="flex space-x-4 overflow-x-auto pb-2">
+                    ${coopManager.generateCoopHTML()}
+                </div>
+            </div>
+
+            <!-- Game Grid -->
+            <div class="flex-1 p-4 overflow-auto">
+                <div class="flex justify-center">
+                    ${gridManager.generateGridHTML()}
+                </div>
             </div>
         </div>
     </div>
@@ -208,51 +216,12 @@ function buyAnimal(type, cost) {
   }
 }
 
+// Legacy sell function (kept for grid click functionality)
 function sellAnimal(i, j, type) {
-  if (gameState.isSlaughterAnimating) return;
-  gameState.isSlaughterAnimating = true;
-
-  const price = GAME_CONFIG.animalTypes[type].sellPrice;
-  gameState.money += price;
-  gameState.grid[i][j] = null;
-  gridManager.updateCell(i, j);
-  updateMoney();
-  updateMergeablePairs();
-
-  // Enhanced slaughter animation
-  const slaughterHouse = document.getElementById("slaughterHouse");
-  const tempEmoji = document.createElement("div");
-  tempEmoji.textContent = GAME_CONFIG.animalEmojis[type];
-  tempEmoji.classList.add(
-    "slaughter-anim",
-    "absolute",
-    "text-4xl",
-    "font-bold"
-  );
-  tempEmoji.style.left = "50%";
-  tempEmoji.style.top = "50%";
-  tempEmoji.style.transform = "translate(-50%, -50%)";
-  slaughterHouse.appendChild(tempEmoji);
-
-  // Enhanced coin burst
-  for (let k = 0; k < 8; k++) {
-    const coin = document.createElement("div");
-    coin.classList.add("coin-burst");
-    coin.style.left = `${Math.random() * 60 + 20}%`;
-    coin.style.top = `${Math.random() * 60 + 20}%`;
-    slaughterHouse.appendChild(coin);
-    setTimeout(() => coin.remove(), 1000);
+  // Use the first available slaughter house
+  if (gameState.slaughterHouses.length > 0) {
+    slaughterHouseManager.addAnimalToQueue(0, type, i, j);
   }
-
-  // Floating money number
-  eventManager.showFloatingNumber(`+💰${price}`, slaughterHouse);
-
-  setTimeout(() => {
-    tempEmoji.remove();
-    gameState.isSlaughterAnimating = false;
-  }, GAME_CONFIG.animationConfig.slaughterAnimationDuration);
-
-  updateStatus(`Sold ${GAME_CONFIG.animalEmojis[type]} for 💰${price}!`);
 }
 
 function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
@@ -336,36 +305,8 @@ function updateStatus(message) {
 }
 
 function updateAnimalValues() {
-  const animalValues = document.getElementById("animalValues");
-  animalValues.innerHTML = "";
-
-  if (gameState.createdAnimals.size === 0) {
-    const li = document.createElement("li");
-    li.textContent = "Create animals to see sell values!";
-    li.className = "text-gray-500 italic";
-    animalValues.appendChild(li);
-    return;
-  }
-
-  for (const [type, { sellPrice }] of Object.entries(GAME_CONFIG.animalTypes)) {
-    if (sellPrice > 0 && gameState.createdAnimals.has(type)) {
-      const li = document.createElement("li");
-      li.innerHTML = `<span class="font-semibold">${GAME_CONFIG.animalEmojis[type]} ${type}:</span> <span class="text-yellow-600 font-bold">💰${sellPrice}</span>`;
-      li.className =
-        "p-2 bg-yellow-50 rounded-lg border border-yellow-200 mb-1";
-      animalValues.appendChild(li);
-    }
-  }
-}
-
-function toggleCoops() {
-  const drawer = document.getElementById("coopDrawer");
-  drawer.classList.toggle("hidden");
-  document.getElementById("toggleCoops").innerHTML = drawer.classList.contains(
-    "hidden"
-  )
-    ? '<i class="fas fa-chevron-down mr-2"></i>Show Farm Buildings'
-    : '<i class="fas fa-chevron-up mr-2"></i>Hide Farm Buildings';
+  // This function is now primarily for maintaining compatibility
+  // Animal values are shown in slaughter house tooltips
 }
 
 // Game Timer Functions
@@ -374,6 +315,7 @@ function startGameTimers() {
     coopManager.updateCoopTimers();
     coopManager.updateAutoMergeTimer();
     coopManager.updatePlaceButtonStates();
+    slaughterHouseManager.updateSlaughterHouseTimers();
   }, 1000);
 }
 
