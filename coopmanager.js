@@ -268,13 +268,61 @@ const coopManager = {
     }
   },
 
+  // Clear all auto-merge visual effects
+  clearAutoMergeHighlight() {
+    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+      if (gameState.purchasedCells.has(`${i}-${j}`)) {
+        const cell = document.getElementById(`cell-${i}-${j}`);
+        if (cell) {
+          cell.classList.remove(
+            "border-purple-500",
+            "border-2",
+            "border-green-500",
+            "new-animal-spawn",
+            "auto-merge-glow"
+          );
+        }
+      }
+    });
+  },
+
+  // Show glow effect on cells that will be merged
+  showAutoMergeGlow() {
+    // First clear any existing glow
+    this.clearAutoMergeHighlight();
+
+    // Add glow to all cells that are part of mergeable pairs
+    const glowCells = new Set();
+
+    gameState.mergeablePairs.forEach(({ source, target }) => {
+      glowCells.add(`${source.i}-${source.j}`);
+      glowCells.add(`${target.i}-${target.j}`);
+    });
+
+    glowCells.forEach((cellKey) => {
+      const cell = document.getElementById(`cell-${cellKey}`);
+      if (cell) {
+        cell.classList.add("auto-merge-glow");
+      }
+    });
+  },
+
   autoMergeCheck() {
-    eventManager.clearAutoMergeHighlight();
+    // Clear any existing highlights
+    this.clearAutoMergeHighlight();
+
     let mergedTypes = [];
     let mergesMade = false;
 
-    for (const { source, target } of gameState.mergeablePairs) {
+    // Process all mergeable pairs in the current state
+    // Create a copy of the pairs to avoid modifying during iteration
+    const pairsToProcess = [...gameState.mergeablePairs];
+
+    pairsToProcess.forEach(({ source, target }) => {
+      // Verify the pair is still valid (cells might have changed during this cycle)
       if (
+        gameState.grid[source.i][source.j] &&
+        gameState.grid[target.i][target.j] &&
         gameState.grid[source.i][source.j] ===
           gameState.grid[target.i][target.j] &&
         GAME_CONFIG.animalTypes[gameState.grid[target.i][target.j]].mergeTo
@@ -330,12 +378,15 @@ const coopManager = {
           this.updateCoopVisibility();
           eventManager.showAchievement("🦃 Rooster Coop Unlocked!");
         }
-
-        updateMergeablePairs();
       }
-    }
+    });
 
-    setTimeout(() => eventManager.clearAutoMergeHighlight(), 1500);
+    // Update mergeable pairs after all merges are complete
+    // This ensures we don't recursively merge in the same cycle
+    updateMergeablePairs();
+
+    // Clear highlights after a delay
+    setTimeout(() => this.clearAutoMergeHighlight(), 1500);
     updateAnimalValues();
 
     if (mergesMade) {
@@ -425,10 +476,21 @@ const coopManager = {
     if (gameState.autoMerge.owned) {
       gameState.autoMerge.timer -= 1;
       const countdownElement = document.getElementById("autoMergeCountdown");
-      countdownElement.textContent = `Next Auto-Merge: ${Math.max(
-        0,
-        gameState.autoMerge.timer
-      ).toFixed(1)}s`;
+      const displayTime = Math.max(0, gameState.autoMerge.timer);
+      countdownElement.textContent = `Next Auto-Merge: ${displayTime.toFixed(
+        1
+      )}s`;
+
+      // Show glow effects at specific countdown times
+      if (gameState.autoMerge.timer === 2) {
+        this.showAutoMergeGlow();
+      } else if (gameState.autoMerge.timer === 1) {
+        this.showAutoMergeGlow();
+      } else if (gameState.autoMerge.timer === 0.5) {
+        this.showAutoMergeGlow();
+      } else if (gameState.autoMerge.timer === 0.25) {
+        this.showAutoMergeGlow();
+      }
 
       if (gameState.autoMerge.timer <= 3) {
         countdownElement.classList.add("urgent", "pulse");
@@ -436,12 +498,10 @@ const coopManager = {
         countdownElement.classList.remove("urgent", "pulse");
       }
 
-      if (
-        gameState.autoMerge.timer <= 0 &&
-        !gameState.selectedCell &&
-        !gameState.draggedCell
-      ) {
+      // Execute auto-merge when timer reaches 0, regardless of drag/select state
+      if (gameState.autoMerge.timer <= 0) {
         this.autoMergeCheck();
+        // Reset timer for next cycle
         gameState.autoMerge.timer = gameState.autoMerge.currentInterval;
         countdownElement.textContent = `Next Auto-Merge: ${gameState.autoMerge.timer.toFixed(
           1

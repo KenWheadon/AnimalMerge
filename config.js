@@ -180,6 +180,8 @@ const GAME_CONFIG = {
     baseInterval: 10,
     intervalReductionFactor: 0.9,
     upgradeCostMultiplier: 5,
+    // Timing for auto-merge glow effects
+    glowTriggerTimes: [2, 1, 0.5, 0.25], // Times when glow should appear
   },
   animationConfig: {
     wiggleInterval: 3000,
@@ -190,6 +192,9 @@ const GAME_CONFIG = {
     achievementDuration: 3000,
     floatingNumberDuration: 1000,
     particleCount: 12,
+    // Auto-merge specific animations
+    autoMergeGlowDuration: 500, // Duration of the glow effect
+    autoMergeGlowClearDelay: 1500, // How long to show merge results
     // New animation settings for slaughter house
     processingSpinDuration: 2000,
     processingParticleInterval: 200,

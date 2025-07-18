@@ -134,6 +134,7 @@ function updateMergeablePairs() {
     { di: 0, dj: -1 }, // Left
     { di: -1, dj: 0 }, // Up
   ];
+
   GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
     if (
       gameState.purchasedCells.has(`${i}-${j}`) &&
@@ -150,10 +151,25 @@ function updateMergeablePairs() {
           gameState.purchasedCells.has(`${ni}-${nj}`) &&
           gameState.grid[ni][nj] === gameState.grid[i][j]
         ) {
-          gameState.mergeablePairs.push({
-            source: { i, j },
-            target: { i: ni, j: nj },
-          });
+          // Only add unique pairs (avoid duplicates)
+          const pairExists = gameState.mergeablePairs.some(
+            (pair) =>
+              (pair.source.i === i &&
+                pair.source.j === j &&
+                pair.target.i === ni &&
+                pair.target.j === nj) ||
+              (pair.source.i === ni &&
+                pair.source.j === nj &&
+                pair.target.i === i &&
+                pair.target.j === j)
+          );
+
+          if (!pairExists) {
+            gameState.mergeablePairs.push({
+              source: { i, j },
+              target: { i: ni, j: nj },
+            });
+          }
         }
       }
     }
@@ -174,7 +190,7 @@ function placeAnimal(type) {
       gameState.createdAnimals.add(type);
       updateAnimalValues();
       gridManager.updateCell(i, j);
-      updateMergeablePairs();
+      updateMergeablePairs(); // Update mergeable pairs after placing animal
 
       // Enhanced spawn animation
       const cell = document.getElementById(`cell-${i}-${j}`);
@@ -249,7 +265,7 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   updateAnimalValues();
   gridManager.updateCell(sourceI, sourceJ);
   gridManager.updateCell(targetI, targetJ);
-  updateMergeablePairs();
+  updateMergeablePairs(); // Update mergeable pairs after merging
 
   // Enhanced target animation
   const targetCell = document.getElementById(`cell-${targetI}-${targetJ}`);

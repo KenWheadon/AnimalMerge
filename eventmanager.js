@@ -58,22 +58,6 @@ const eventManager = {
     gameState.recentlyAnimatedCells = [];
   },
 
-  clearAutoMergeHighlight() {
-    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
-      if (gameState.purchasedCells.has(`${i}-${j}`)) {
-        const cell = document.getElementById(`cell-${i}-${j}`);
-        if (cell) {
-          cell.classList.remove(
-            "border-purple-500",
-            "border-2",
-            "border-green-500",
-            "new-animal-spawn"
-          );
-        }
-      }
-    });
-  },
-
   // Animation and Effect Functions
   showAchievement(message) {
     const achievement = document.createElement("div");
