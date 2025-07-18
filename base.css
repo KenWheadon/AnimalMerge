@@ -1,0 +1,104 @@
+body {
+  font-family: "Nunito", sans-serif;
+  background: linear-gradient(135deg, #87ceeb 0%, #98fb98 50%, #90ee90 100%);
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+}
+
+/* Floating background particles */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(
+      circle at 20% 20%,
+      rgba(255, 255, 255, 0.1) 2px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(255, 255, 255, 0.1) 1px,
+      transparent 1px
+    );
+  background-size: 100px 100px, 50px 50px;
+  animation: float 20s infinite linear;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Main Game Area Container - Ensure tooltips aren't clipped */
+.game-container {
+  position: relative;
+  z-index: 2;
+  justify-content: center;
+  overflow: visible; /* Allow tooltips to extend beyond container */
+}
+
+/* Ensure slaughter house area doesn't clip tooltips */
+.p-3.bg-gray-50.border-b {
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+}
+
+h1 {
+  font-family: "Fredoka One", cursive;
+  background: linear-gradient(
+    45deg,
+    var(--primary-green),
+    var(--secondary-yellow)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  animation: titleBounce 3s ease-in-out infinite;
+}
+
+/* Left and Right panel scrollbar styling */
+.w-64::-webkit-scrollbar,
+.w-80::-webkit-scrollbar {
+  width: 6px;
+}
+
+.w-64::-webkit-scrollbar-track,
+.w-80::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.w-64::-webkit-scrollbar-thumb,
+.w-80::-webkit-scrollbar-thumb {
+  background: var(--primary-green);
+  border-radius: 10px;
+}
+
+.w-64::-webkit-scrollbar-thumb:hover,
+.w-80::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-green-dark);
+}
+
+/* Horizontal scroll styling */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 4px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: var(--primary-green);
+  border-radius: 10px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-green-dark);
+}
