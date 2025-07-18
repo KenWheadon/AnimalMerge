@@ -25,13 +25,38 @@ const slaughterHouseManager = {
               <h3 class="text-sm font-bold text-red-800">🗡️ House ${
                 index + 1
               }</h3>
+               <div class="gap-2 items-center">
+              <button id="upgradeSlaughterHouse${index}" class="enhanced-button upgrade-button flex-1 px-2 py-1 rounded-lg font-bold text-white text-xs">
+                <i class="fas fa-arrow-up mr-1"></i>Upgrade ($${
+                  house.upgradeCost
+                })
+              </button>
+              <div class="queue-display flex flex-wrap gap-1 flex-1 justify-end" id="queue${index}">
+                ${house.queue
+                  .slice(0, 6)
+                  .map(
+                    (animal) =>
+                      `<span class="text-xs bg-red-100 px-1 py-0.5 rounded">${
+                        GAME_CONFIG.animalEmojis[animal.type]
+                      }</span>`
+                  )
+                  .join("")}
+                ${
+                  house.queue.length > 6
+                    ? `<span class="text-xs text-gray-500">+${
+                        house.queue.length - 6
+                      }</span>`
+                    : ""
+                }
+              </div>
+            </div>
               <span class="text-xs bg-red-100 px-2 py-1 rounded-full">Lv.${
                 house.level
               }</span>
             </div>
             
             <!-- Main Content Row -->
-            <div class="flex gap-3 mb-2">
+            <div class="flex gap-3">
               <!-- Drop Zone -->
               <div id="slaughterHouse${index}" class="slaughter-house rounded-lg p-2 text-center font-bold text-red-800 flex-1 h-16 flex items-center justify-center cursor-pointer relative border-2 border-dashed border-red-500" 
                    data-house-index="${index}">
@@ -58,33 +83,6 @@ const slaughterHouseManager = {
                           1
                         )}s</span>
                       </div>`
-                    : ""
-                }
-              </div>
-            </div>
-            
-            <!-- Bottom Row -->
-            <div class="flex gap-2 items-center">
-              <button id="upgradeSlaughterHouse${index}" class="enhanced-button upgrade-button flex-1 px-2 py-1 rounded-lg font-bold text-white text-xs">
-                <i class="fas fa-arrow-up mr-1"></i>Upgrade ($${
-                  house.upgradeCost
-                })
-              </button>
-              <div class="queue-display flex flex-wrap gap-1 flex-1 justify-end" id="queue${index}">
-                ${house.queue
-                  .slice(0, 6)
-                  .map(
-                    (animal) =>
-                      `<span class="text-xs bg-red-100 px-1 py-0.5 rounded">${
-                        GAME_CONFIG.animalEmojis[animal.type]
-                      }</span>`
-                  )
-                  .join("")}
-                ${
-                  house.queue.length > 6
-                    ? `<span class="text-xs text-gray-500">+${
-                        house.queue.length - 6
-                      }</span>`
                     : ""
                 }
               </div>

@@ -94,7 +94,7 @@ function generateMainHTML() {
         </div>
 
         <!-- Main Game Area -->
-        <div class="flex-1 flex flex-col">
+        <div class="flex flex-col">
             <!-- Slaughter Houses -->
             <div class="p-3 bg-gray-50 border-b">
                 <div id="slaughterHousesContainer">
