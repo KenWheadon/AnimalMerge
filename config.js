@@ -192,11 +192,9 @@ const GAME_CONFIG = {
     mergeExplosionDuration: 800,
     achievementDuration: 3000,
     floatingNumberDuration: 1000,
-    particleCount: 12,
-    // Auto-merge specific animations
-    autoMergeGlowDuration: 500, // Duration of the glow effect
-    autoMergeGlowClearDelay: 1500, // How long to show merge results
-    // New animation settings for slaughter house
+    particleCount: 20,
+    autoMergeGlowDuration: 500,
+    autoMergeGlowClearDelay: 1500,
     processingSpinDuration: 2000,
     processingParticleInterval: 200,
     processingParticleLifetime: 1000,

@@ -71,33 +71,43 @@ const coopManager = {
       // Calculate current upgrade cost
       const currentUpgradeCost = config.upgradeCostMultiplier * coopState.level;
 
-      // Generate the actual coop HTML (hidden by default)
+      // Generate the actual coop HTML (hidden by default - only shown when unlocked)
       html += `
         <!-- ${animalName} Coop -->
-        <div id="${animalType}Coop" class="hidden flex-shrink-0 bg-white p-4 rounded-xl shadow-lg min-w-[220px]">
-            <h3 class="text-lg font-bold text-green-800 mb-2">${animalEmoji} ${animalName} Coop</h3>
-            <div class="space-y-2 text-sm">
-                <p id="${animalType}CoopLevel" class="font-semibold">Level: ${coopState.level}</p>
-                <p id="${animalType}CoopTimer" class="timer-display">Next ${animalName} ${animalEmoji}: ${config.baseTime}s</p>
-                <p id="${animalType}CoopStored" class="font-semibold">Stored: ${coopState.stored}</p>
-            </div>
-            <div class="mt-4 space-y-2">
-                <button id="place${animalName}" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
-                    <i class="fas fa-plus mr-1"></i>Place ${animalName} ${animalEmoji}
-                </button>
-                <button id="buy${animalName}Coop" class="enhanced-button buy-button px-3 py-2 rounded-lg font-bold text-white text-sm">
-                    <i class="fas fa-home mr-1"></i>Buy ${animalName} Coop 🏡 ($${config.buyCost})
-                </button>
-                <button id="upgrade${animalName}Coop" class="enhanced-button upgrade-button px-3 py-2 rounded-lg font-bold text-white text-sm hidden">
-                    <i class="fas fa-arrow-up mr-1"></i>Upgrade Coop ($${currentUpgradeCost})
-                </button>
-            </div>
-        </div>
+        <div id="${animalType}Coop" class="compact-coop hidden">
+          <div class="coop-header">
+            <h3 class="coop-title">${animalEmoji} ${animalName} Coop</h3>
+          </div>
+          
+          <!-- Unlocked but not purchased state -->
+          <div id="${animalType}CoopUnpurchased" class="coop-unpurchased">
+            <div class="lock-icon">🔒</div>
+            <p class="coop-name">${animalName} Coop</p>
+            <button id="buy${animalName}Coop" class="enhanced-button buy-button coop-buy-btn">
+              <i class="fas fa-home mr-1"></i>Buy 🏡 ($${config.buyCost})
+            </button>
+          </div>
 
-        <!-- ${animalName} Coop Placeholder -->
-        <div id="${animalType}CoopPlaceholder" class="flex-shrink-0 bg-gray-200 opacity-50 p-4 rounded-xl min-w-[220px]" title="Merge to ${animalName} to unlock!">
-            <h3 class="text-lg font-semibold text-gray-600">🔒 ${animalName} Coop</h3>
-            <p class="text-sm text-gray-600 mt-2">Merge to ${animalName} to unlock!</p>
+          <!-- Purchased state -->
+          <div id="${animalType}CoopPurchased" class="coop-purchased hidden">
+            <div class="coop-stats">
+              <div class="coop-progress-container">
+                <div class="coop-progress-label">Next ${animalName} ${animalEmoji}</div>
+                <div class="coop-progress-bar">
+                  <div id="${animalType}CoopProgress" class="coop-progress-fill" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="coop-stored-display">
+                <span id="${animalType}CoopStored">Stored: ${coopState.stored}</span>
+              </div>
+            </div>
+            
+            <div class="coop-actions">
+              <button id="place${animalName}" class="enhanced-button place-button hidden">
+                <i class="fas fa-plus mr-1"></i>Place ${animalName} ${animalEmoji}
+              </button>
+            </div>
+          </div>
         </div>
       `;
     }
@@ -134,19 +144,22 @@ const coopManager = {
         buyButton.addEventListener("click", () => this.buyCoop(animalType));
       }
 
-      // Upgrade coop button
-      const upgradeButton = document.getElementById(`upgrade${animalName}Coop`);
-      if (upgradeButton) {
-        upgradeButton.addEventListener("click", () =>
-          this.upgradeCoop(animalType)
-        );
-      }
-
       // Place animal button
       const placeButton = document.getElementById(`place${animalName}`);
       if (placeButton) {
         placeButton.addEventListener("click", () =>
           this.placeStoredAnimal(animalName)
+        );
+      }
+
+      // Add hover tooltip functionality
+      const coopElement = document.getElementById(`${animalType}Coop`);
+      if (coopElement) {
+        coopElement.addEventListener("mouseenter", () =>
+          this.showCoopTooltip(animalType)
+        );
+        coopElement.addEventListener("mouseleave", () =>
+          this.hideCoopTooltip()
         );
       }
     }
@@ -178,10 +191,12 @@ const coopManager = {
       gameState.money -= cost;
       gameState[`${animalType}Coop`].owned = true;
 
-      // Hide buy button, show upgrade button
-      document.getElementById(`buy${animalName}Coop`).classList.add("hidden");
+      // Hide unpurchased state, show purchased state
       document
-        .getElementById(`upgrade${animalName}Coop`)
+        .getElementById(`${animalType}CoopUnpurchased`)
+        .classList.add("hidden");
+      document
+        .getElementById(`${animalType}CoopPurchased`)
         .classList.remove("hidden");
 
       // Unlock the purchase button for this animal
@@ -200,7 +215,7 @@ const coopManager = {
     }
   },
 
-  // Upgrade a coop
+  // Upgrade a coop (now handled through tooltip)
   upgradeCoop(animalType) {
     const coop = gameState[`${animalType}Coop`];
     const config = GAME_CONFIG.coopConfig[animalType];
@@ -213,30 +228,69 @@ const coopManager = {
       coop.timer =
         config.baseTime * Math.pow(config.timeReductionFactor, coop.level - 1);
 
-      // Update display elements
-      document.getElementById(
-        `${animalType}CoopLevel`
-      ).textContent = `Level: ${coop.level}`;
-      document.getElementById(
-        `${animalType}CoopTimer`
-      ).textContent = `Next ${animalName} ${
-        GAME_CONFIG.animalEmojis[animalName]
-      }: ${coop.timer.toFixed(1)}s`;
-      document.getElementById(
-        `upgrade${animalName}Coop`
-      ).innerHTML = `<i class="fas fa-arrow-up mr-1"></i>Upgrade Coop ($${
-        config.upgradeCostMultiplier * coop.level
-      })`;
-
       updateMoney();
       eventManager.showAchievement(
         `🆙 ${animalName} Coop Level ${coop.level}!`
       );
       updateStatus(`Upgraded ${animalType} coop to level ${coop.level} 🆙`);
+
+      // Hide tooltip and show it again to update the content
+      this.hideCoopTooltip();
+      setTimeout(() => this.showCoopTooltip(animalType), 100);
     } else {
       updateStatus(`Not enough money to upgrade ${animalType} coop! 😕`);
       document.body.classList.add("screen-shake");
       setTimeout(() => document.body.classList.remove("screen-shake"), 500);
+    }
+  },
+
+  // Show coop tooltip with upgrade information
+  showCoopTooltip(animalType) {
+    const coop = gameState[`${animalType}Coop`];
+    const config = GAME_CONFIG.coopConfig[animalType];
+    const animalName = animalType.charAt(0).toUpperCase() + animalType.slice(1);
+    const coopElement = document.getElementById(`${animalType}Coop`);
+
+    // Only show tooltip if coop is owned
+    if (!coop.owned || !coopElement) return;
+
+    // Remove existing tooltip
+    this.hideCoopTooltip();
+
+    const tooltip = document.createElement("div");
+    tooltip.id = "coopTooltip";
+    tooltip.className = "coop-tooltip";
+
+    const upgradeCost = config.upgradeCostMultiplier * coop.level;
+    const currentTime = (
+      config.baseTime * Math.pow(config.timeReductionFactor, coop.level - 1)
+    ).toFixed(1);
+    const nextTime = (
+      config.baseTime * Math.pow(config.timeReductionFactor, coop.level)
+    ).toFixed(1);
+
+    tooltip.innerHTML = `
+      <div class="tooltip-header">
+        <strong>${animalName} Coop</strong>
+      </div>
+      <div class="tooltip-content">
+        <div class="tooltip-row">Level: ${coop.level}</div>
+        <div class="tooltip-row">Current time: ${currentTime}s</div>
+        <div class="tooltip-row">Next level: ${nextTime}s</div>
+        <button class="tooltip-upgrade-btn" onclick="coopManager.upgradeCoop('${animalType}')">
+          <i class="fas fa-arrow-up mr-1"></i>Upgrade ($${upgradeCost})
+        </button>
+      </div>
+    `;
+
+    coopElement.appendChild(tooltip);
+  },
+
+  // Hide coop tooltip
+  hideCoopTooltip() {
+    const tooltip = document.getElementById("coopTooltip");
+    if (tooltip) {
+      tooltip.remove();
     }
   },
 
@@ -270,14 +324,10 @@ const coopManager = {
       // Check if this animal has been created
       if (gameState.createdAnimals.has(animalName)) {
         const coopElement = document.getElementById(`${animalType}Coop`);
-        const placeholderElement = document.getElementById(
-          `${animalType}CoopPlaceholder`
-        );
 
-        if (coopElement && placeholderElement) {
+        if (coopElement) {
           coopElement.classList.remove("hidden");
           coopElement.classList.add("bounce-in");
-          placeholderElement.classList.add("hidden");
         }
       }
     }
@@ -291,13 +341,17 @@ const coopManager = {
       const placeButton = document.getElementById(`place${animalName}`);
       const coop = gameState[`${animalType}Coop`];
 
-      if (placeButton && coop) {
+      if (placeButton && coop && coop.owned) {
         placeButton.disabled = isGridFull() || coop.stored === 0;
 
-        if (!placeButton.disabled) {
+        if (coop.stored > 0 && !isGridFull()) {
+          placeButton.classList.remove("hidden");
           placeButton.classList.add("pulse");
         } else {
           placeButton.classList.remove("pulse");
+          if (coop.stored === 0) {
+            placeButton.classList.add("hidden");
+          }
         }
       }
     }
@@ -321,16 +375,23 @@ const coopManager = {
 
       if (coop.owned) {
         coop.timer -= 1;
-        const timerElement = document.getElementById(`${animalType}CoopTimer`);
-        if (timerElement) {
-          timerElement.textContent = `Next ${animalName} ${
-            GAME_CONFIG.animalEmojis[animalName]
-          }: ${coop.timer.toFixed(1)}s`;
 
+        // Update progress bar
+        const progressElement = document.getElementById(
+          `${animalType}CoopProgress`
+        );
+        if (progressElement) {
+          const maxTime =
+            config.baseTime *
+            Math.pow(config.timeReductionFactor, coop.level - 1);
+          const progress = ((maxTime - coop.timer) / maxTime) * 100;
+          progressElement.style.width = `${Math.max(0, progress)}%`;
+
+          // Add urgent class when close to completion
           if (coop.timer <= 3) {
-            timerElement.classList.add("urgent");
+            progressElement.classList.add("urgent");
           } else {
-            timerElement.classList.remove("urgent");
+            progressElement.classList.remove("urgent");
           }
         }
 
@@ -360,6 +421,15 @@ const coopManager = {
           eventManager.showAchievement(
             `${GAME_CONFIG.animalEmojis[animalName]} ${animalName} Ready!`
           );
+
+          // Reset progress bar
+          const progressElement = document.getElementById(
+            `${animalType}CoopProgress`
+          );
+          if (progressElement) {
+            progressElement.style.width = "0%";
+            progressElement.classList.remove("urgent");
+          }
         }
       }
     }

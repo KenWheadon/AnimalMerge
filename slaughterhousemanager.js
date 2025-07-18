@@ -21,14 +21,6 @@ const slaughterHouseManager = {
       console.log(`Generating house ${index}:`, house);
       html += `
         <div class="slaughter-house-container">
-          <!-- Hover Controls -->
-          <div class="slaughter-house-hover-controls">
-            <div class="level-display">Level ${house.level}</div>
-            <button id="upgradeSlaughterHouse${index}" class="enhanced-button upgrade-button px-2 py-1 rounded text-xs">
-              Upgrade ($${house.upgradeCost})
-            </button>
-          </div>
-
           <div class="p-3">
             <!-- Header -->
             <div class="flex justify-between items-center mb-2">
@@ -441,20 +433,8 @@ const slaughterHouseManager = {
   // Update only the data for a specific slaughter house (memory optimized)
   updateSlaughterHouseData(index) {
     const house = gameState.slaughterHouses[index];
-
-    // Update level in hover controls
-    const levelDisplay = document
-      .querySelector(`#upgradeSlaughterHouse${index}`)
-      .parentNode.querySelector(".level-display");
-    if (levelDisplay) {
-      levelDisplay.textContent = `Level ${house.level}`;
-    }
-
-    // Update upgrade button
-    const upgradeBtn = document.getElementById(`upgradeSlaughterHouse${index}`);
-    if (upgradeBtn) {
-      upgradeBtn.textContent = `Upgrade ($${house.upgradeCost})`;
-    }
+    // Data is now updated through the merged tooltip system
+    // No need to update separate hover controls since they're merged
   },
 
   // Update only the queue display (memory optimized)
@@ -533,9 +513,8 @@ const slaughterHouseManager = {
         };
         const dropHandler = (e) => this.handleSlaughterDrop(e, index);
         const touchEndHandler = (e) => this.handleSlaughterTouchEnd(e, index);
-        const mouseEnterHandler = () =>
-          this.showAnimalValuesTooltip(slaughterHouse);
-        const mouseLeaveHandler = () => this.hideAnimalValuesTooltip();
+        const mouseEnterHandler = () => this.showMergedTooltip(index);
+        const mouseLeaveHandler = () => this.hideMergedTooltip();
 
         // Add event listeners
         slaughterHouse.addEventListener("dragover", dragOverHandler);
@@ -553,20 +532,6 @@ const slaughterHouseManager = {
           { event: "touchend", handler: touchEndHandler },
           { event: "mouseenter", handler: mouseEnterHandler },
           { event: "mouseleave", handler: mouseLeaveHandler },
-        ]);
-      }
-
-      // Upgrade button
-      const upgradeButton = document.getElementById(
-        `upgradeSlaughterHouse${index}`
-      );
-      if (upgradeButton) {
-        const upgradeHandler = () => this.upgradeSlaughterHouse(index);
-        upgradeButton.addEventListener("click", upgradeHandler);
-
-        // Cache event listener
-        this.eventListeners.set(upgradeButton, [
-          { event: "click", handler: upgradeHandler },
         ]);
       }
     });
@@ -634,43 +599,106 @@ const slaughterHouseManager = {
     gameState.draggedCell = null;
   },
 
-  // Show animal values tooltip (now cached) - FIXED: Position below instead of above
-  showAnimalValuesTooltip(element) {
-    // Reuse cached tooltip if available
-    if (this.tooltipCache) {
-      element.appendChild(this.tooltipCache);
-      return;
-    }
+  // Show merged tooltip with upgrade information and animal values
+  showMergedTooltip(houseIndex) {
+    const house = gameState.slaughterHouses[houseIndex];
+    const slaughterHouse = document.getElementById(
+      `slaughterHouse${houseIndex}`
+    );
+
+    if (!slaughterHouse) return;
+
+    // Remove any existing tooltip
+    this.hideMergedTooltip();
 
     const tooltip = document.createElement("div");
-    tooltip.id = "animalValuesTooltip";
-    tooltip.className =
-      "absolute bg-black text-white p-2 rounded shadow-lg z-50 text-xs";
-    tooltip.style.left = "50%";
-    tooltip.style.top = "100%"; // Changed from "-10px" to "100%" to position below
-    tooltip.style.transform = "translateX(-50%) translateY(10px)"; // Changed from translateY(-100%) to translateY(10px)
+    tooltip.id = "mergedSlaughterTooltip";
+    tooltip.className = "merged-slaughter-tooltip";
 
-    let tooltipContent = "<strong>Animal Values:</strong><br>";
+    // Build tooltip content
+    let tooltipContent = `
+      <div class="tooltip-header">
+        <div class="tooltip-title">
+          <strong>Slaughter House ${houseIndex + 1}</strong>
+          <span class="tooltip-level">Level ${house.level}</span>
+        </div>
+        <button class="tooltip-upgrade-btn" onclick="slaughterHouseManager.upgradeSlaughterHouse(${houseIndex})">
+          <i class="fas fa-arrow-up mr-1"></i>Upgrade (${house.upgradeCost})
+        </button>
+      </div>
+      <div class="tooltip-divider"></div>
+      <div class="tooltip-content">
+        <div class="tooltip-section-title">Animal Values:</div>
+    `;
+
+    // Add animal values
+    let hasAnimals = false;
     for (const [type, { sellPrice }] of Object.entries(
       GAME_CONFIG.animalTypes
     )) {
       if (sellPrice > 0 && gameState.createdAnimals.has(type)) {
-        tooltipContent += `${GAME_CONFIG.animalEmojis[type]} ${type}: 💰${sellPrice}<br>`;
+        tooltipContent += `
+          <div class="tooltip-animal-row">
+            <span class="animal-info">${GAME_CONFIG.animalEmojis[type]} ${type}</span>
+            <span class="animal-value">💰${sellPrice}</span>
+          </div>
+        `;
+        hasAnimals = true;
       }
     }
 
+    if (!hasAnimals) {
+      tooltipContent += `<div class="tooltip-no-animals">No sellable animals created yet</div>`;
+    }
+
+    tooltipContent += `
+      </div>
+    `;
+
     tooltip.innerHTML = tooltipContent;
+
+    // Position tooltip below the slaughter house
+    // We need to append to body to avoid clipping issues
+    document.body.appendChild(tooltip);
+
+    // Calculate position relative to viewport
+    const rect = slaughterHouse.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+
+    // Position below the slaughter house
+    let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+    let top = rect.bottom + 10; // 10px gap below
+
+    // Ensure tooltip stays within viewport bounds
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Adjust horizontal position if tooltip would go off-screen
+    if (left < 10) {
+      left = 10;
+    } else if (left + tooltipRect.width > viewportWidth - 10) {
+      left = viewportWidth - tooltipRect.width - 10;
+    }
+
+    // Adjust vertical position if tooltip would go off-screen
+    if (top + tooltipRect.height > viewportHeight - 10) {
+      // Show above instead of below
+      top = rect.top - tooltipRect.height - 10;
+    }
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
 
     // Cache the tooltip
     this.tooltipCache = tooltip;
-    element.appendChild(tooltip);
   },
 
-  // Hide animal values tooltip
-  hideAnimalValuesTooltip() {
-    if (this.tooltipCache && this.tooltipCache.parentNode) {
-      this.tooltipCache.parentNode.removeChild(this.tooltipCache);
-      // Keep cached for reuse
+  // Hide merged tooltip
+  hideMergedTooltip() {
+    const tooltip = document.getElementById("mergedSlaughterTooltip");
+    if (tooltip) {
+      tooltip.remove();
     }
+    this.tooltipCache = null;
   },
 };
