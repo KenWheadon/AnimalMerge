@@ -31,9 +31,6 @@ function initializeGame() {
   // Initialize slaughter houses FIRST
   slaughterHouseManager.initializeSlaughterHouses();
 
-  // Debug log to check if slaughter house is initialized
-  console.log("Slaughter houses initialized:", gameState.slaughterHouses);
-
   // Inject HTML structure
   document.getElementById("gameContainer").innerHTML = generateMainHTML();
 
@@ -98,14 +95,8 @@ function generateMainHTML() {
 
         <!-- Main Game Area -->
         <div class="flex-1 flex flex-col">
-            <!-- Header -->
-            <div class="p-4 bg-white shadow-sm">
-                <h1 class="text-4xl font-bold text-center">Animal Merge Farm 🐔</h1>
-            </div>
-
             <!-- Slaughter Houses -->
-            <div class="p-4 bg-gray-50 border-b">
-                <h2 class="text-xl font-bold text-red-800 mb-3">🗡️ Slaughter Houses</h2>
+            <div class="p-3 bg-gray-50 border-b">
                 <div id="slaughterHousesContainer">
                     ${slaughterHouseManager.generateSlaughterHouseHTML()}
                 </div>
