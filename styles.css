@@ -163,7 +163,11 @@ h1 {
 }
 
 .place-button {
-  background: linear-gradient(145deg, var(--primary-green), var(--primary-green-dark));
+  background: linear-gradient(
+    145deg,
+    var(--primary-green),
+    var(--primary-green-dark)
+  );
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
@@ -419,7 +423,6 @@ h1 {
   padding: 8px 12px;
   border-radius: 6px;
   font-weight: bold;
-  text-white;
 }
 
 /* Purchased Coop State */
@@ -471,7 +474,12 @@ h1 {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   animation: progressShine 2s linear infinite;
 }
 
@@ -858,7 +866,12 @@ h1 {
 
 .merged-slaughter-tooltip .tooltip-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   margin: 8px 0;
 }
 
@@ -990,6 +1003,11 @@ h1 {
   font-weight: 600;
   color: #0c4a6e;
   animation: statusGlow 2s ease-in-out infinite;
+  min-height: 64px; /* Fixed height to prevent bouncing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .coop-panel {

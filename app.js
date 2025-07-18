@@ -69,13 +69,13 @@ function generateMainHTML() {
                 <div id="money" class="money-display text-center">Money: 💰${
                   gameState.money
                 }</div>
-                <!-- Status Display -->
+                <!-- Status Display with Fixed Height -->
                 <div class="mt-6">
-                    <div id="status" class="status-display text-sm">Drag or click 'Buy Egg 🥚' to start!</div>
+                    <div id="status" class="status-display text-sm h-16 flex items-center justify-center">Drag or click 'Buy Egg 🥚' to start!</div>
                 </div>
             </div>
             
-            <!-- Buy Buttons -->
+            <!-- Buy Buttons with overflow auto -->
             <div class="flex-1 overflow-y-auto p-4">
                 <h3 class="text-lg font-bold text-green-800 mb-4">🛒 Buy Animals</h3>
                 <div class="space-y-3">
@@ -106,7 +106,15 @@ function generateMainHTML() {
                 <div class="space-y-2 text-sm">
                     <p id="autoMergeLevel" class="font-semibold">Level: 1</p>
                     <p id="autoMergeTimer" class="timer-display">Check Interval: 10s</p>
-                    <p id="autoMergeCountdown" class="timer-display hidden">Next Auto-Merge: 10.0s</p>
+                    <!-- Progress Bar Container -->
+                    <div id="autoMergeProgressContainer" class="hidden">
+                        <div class="coop-progress-container">
+                            <div class="coop-progress-label">Next Auto-Merge</div>
+                            <div class="coop-progress-bar">
+                                <div id="autoMergeProgress" class="coop-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="mt-4 space-y-2">
                     <button id="buyAutoMerge" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">

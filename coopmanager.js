@@ -187,17 +187,38 @@ const coopManager = {
     const cost = config.buyCost;
     const animalName = animalType.charAt(0).toUpperCase() + animalType.slice(1);
 
+    console.log(`Attempting to buy ${animalType} coop for $${cost}`);
+
     if (gameState.money >= cost) {
       gameState.money -= cost;
       gameState[`${animalType}Coop`].owned = true;
 
+      console.log(`Successfully bought ${animalType} coop`);
+
       // Hide unpurchased state, show purchased state
-      document
-        .getElementById(`${animalType}CoopUnpurchased`)
-        .classList.add("hidden");
-      document
-        .getElementById(`${animalType}CoopPurchased`)
-        .classList.remove("hidden");
+      const unpurchasedElement = document.getElementById(
+        `${animalType}CoopUnpurchased`
+      );
+      const purchasedElement = document.getElementById(
+        `${animalType}CoopPurchased`
+      );
+
+      console.log(`Unpurchased element found:`, unpurchasedElement);
+      console.log(`Purchased element found:`, purchasedElement);
+
+      if (unpurchasedElement) {
+        unpurchasedElement.classList.add("hidden");
+        console.log(`Hidden unpurchased state for ${animalType}`);
+      } else {
+        console.error(`Could not find unpurchased element for ${animalType}`);
+      }
+
+      if (purchasedElement) {
+        purchasedElement.classList.remove("hidden");
+        console.log(`Shown purchased state for ${animalType}`);
+      } else {
+        console.error(`Could not find purchased element for ${animalType}`);
+      }
 
       // Unlock the purchase button for this animal
       if (GAME_CONFIG.purchaseConfig[animalName]) {
@@ -445,12 +466,9 @@ const coopManager = {
       gameState.autoMerge.timer = gameState.autoMerge.currentInterval;
       document.getElementById("buyAutoMerge").classList.add("hidden");
       document.getElementById("upgradeAutoMerge").classList.remove("hidden");
-      document.getElementById("autoMergeCountdown").classList.remove("hidden");
-      document.getElementById(
-        "autoMergeCountdown"
-      ).textContent = `Next Auto-Merge: ${gameState.autoMerge.timer.toFixed(
-        1
-      )}s`;
+      document
+        .getElementById("autoMergeProgressContainer")
+        .classList.remove("hidden");
       updateMoney();
       eventManager.showAchievement("⚙️ Auto-Merge Activated!");
       updateStatus("Bought Auto-Merge ⚙️");
@@ -483,11 +501,6 @@ const coopManager = {
       document.getElementById(
         "autoMergeTimer"
       ).textContent = `Check Interval: ${gameState.autoMerge.currentInterval.toFixed(
-        1
-      )}s`;
-      document.getElementById(
-        "autoMergeCountdown"
-      ).textContent = `Next Auto-Merge: ${gameState.autoMerge.timer.toFixed(
         1
       )}s`;
       document.getElementById(
@@ -660,11 +673,23 @@ const coopManager = {
   updateAutoMergeTimer() {
     if (gameState.autoMerge.owned) {
       gameState.autoMerge.timer -= 0.1; // Decrement by 0.1 seconds for precision
-      const countdownElement = document.getElementById("autoMergeCountdown");
-      const displayTime = Math.max(0, gameState.autoMerge.timer);
-      countdownElement.textContent = `Next Auto-Merge: ${displayTime.toFixed(
-        1
-      )}s`;
+
+      // Update progress bar
+      const progressElement = document.getElementById("autoMergeProgress");
+      if (progressElement) {
+        const progress =
+          ((gameState.autoMerge.currentInterval - gameState.autoMerge.timer) /
+            gameState.autoMerge.currentInterval) *
+          100;
+        progressElement.style.width = `${Math.max(0, progress)}%`;
+
+        // Add urgent class when close to completion
+        if (gameState.autoMerge.timer <= 3) {
+          progressElement.classList.add("urgent");
+        } else {
+          progressElement.classList.remove("urgent");
+        }
+      }
 
       // Show glow effects at specific countdown times
       // Using Math.abs to handle floating point precision issues
@@ -682,22 +707,18 @@ const coopManager = {
         this.showAutoMergeGlow();
       }
 
-      if (gameState.autoMerge.timer <= 3) {
-        countdownElement.classList.add("urgent", "pulse");
-      } else {
-        countdownElement.classList.remove("urgent", "pulse");
-      }
-
       // Execute auto-merge when timer reaches 0
       if (gameState.autoMerge.timer <= 0) {
         console.log("🚀 Auto-merge triggered at 0s");
         this.autoMergeCheck();
         // Reset timer for next cycle
         gameState.autoMerge.timer = gameState.autoMerge.currentInterval;
-        countdownElement.textContent = `Next Auto-Merge: ${gameState.autoMerge.timer.toFixed(
-          1
-        )}s`;
-        countdownElement.classList.remove("urgent", "pulse");
+
+        // Reset progress bar
+        if (progressElement) {
+          progressElement.style.width = "0%";
+          progressElement.classList.remove("urgent");
+        }
       }
     }
   },
