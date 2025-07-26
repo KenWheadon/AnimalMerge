@@ -31,16 +31,9 @@ const coopManager = {
       const costText = config.cost === 0 ? "Free" : `$${config.cost}`;
       const hiddenClass = config.unlocked ? "" : "hidden";
 
-      // Get appropriate icon based on animal type
-      let icon = "fas fa-egg";
-      if (animalType.toLowerCase().includes("cat")) icon = "fas fa-cat";
-      else if (animalType.toLowerCase().includes("panda")) icon = "fas fa-paw";
-      else if (animalType.toLowerCase().includes("vulture"))
-        icon = "fas fa-dove";
-
       html += `
         <button id="buy${animalType}" class="enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white ${hiddenClass}">
-            <i class="${icon} mr-2"></i>${animalType} <img src="${imageSrc}" alt="${animalType}" class="inline-animal-icon" /> (${costText})
+            <i mr-2"></i>${animalType} <img src="${imageSrc}" alt="${animalType}" class="inline-animal-icon" /> (${costText})
         </button>
       `;
     }

@@ -17,8 +17,8 @@
 }
 
 .game-grid td {
-  width: 100px !important;
-  height: 100px !important;
+  width: 130px !important;
+  height: 130px !important;
   padding: 0;
   border: none;
   vertical-align: middle;
