@@ -60,10 +60,10 @@ const GAME_CONFIG = {
     EndDemoAnimal: "images/enddemo-animal.png",
   },
   purchaseConfig: {
-    Egg: { cost: 0, unlocked: true }, // Always unlocked
-    Cat: { cost: 7, unlocked: false }, // Unlocked when cat coop is owned
-    Panda: { cost: 20, unlocked: false }, // Unlocked when panda coop is owned
-    Vulture: { cost: 50, unlocked: false }, // Unlocked when vulture coop is owned
+    Egg: { cost: 0, unlocked: true },
+    Cat: { cost: 7, unlocked: false },
+    Panda: { cost: 20, unlocked: false },
+    Vulture: { cost: 50, unlocked: false },
   },
   coopConfig: {
     cat: {
@@ -89,17 +89,12 @@ const GAME_CONFIG = {
     buyCost: 1,
     baseInterval: 10,
     intervalReductionFactor: 0.9,
-    upgradeCostMultiplier: 5,
-    // Timing for auto-merge glow effects
-    glowTriggerTimes: [2, 1, 0.5, 0.25], // Times when glow should appear
-    diagonalCost: 1000,
-    magicCost: 100000,
+    animalRequirements: [0, 6, 15, 30, 45, 65, 90, 115],
+    glowTriggerTimes: [2, 1, 0.5, 0.25],
   },
   shuffleConfig: {
     buyCost: 10,
-    baseInterval: 30,
-    intervalReductionFactor: 0.9,
-    upgradeCostMultiplier: 5,
+    delayAfterAutoMerge: 250,
   },
   animationConfig: {
     wiggleInterval: 3000,

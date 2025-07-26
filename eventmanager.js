@@ -1,33 +1,17 @@
-// Event Manager - Handles events, animations, and visual effects
 const eventManager = {
-  // Notification queue system
   notificationQueue: [],
   isShowingNotification: false,
   notificationOffset: 0,
 
-  // Initialize button event listeners - now handles dynamic buttons
   initializeButtonEventListeners() {
-    // Auto-merge buttons
     const buyAutoMergeBtn = document.getElementById("buyAutoMerge");
-    const upgradeAutoMergeBtn = document.getElementById("upgradeAutoMerge");
     const autoMergeToggleBtn = document.getElementById("autoMergeToggle");
-    const buyDiagonalBtn = document.getElementById("buyDiagonalUpgrade");
-    const buyMagicBtn = document.getElementById("buyMagicUpgrade");
-
-    // Shuffle buttons
     const buyShuffleBtn = document.getElementById("buyShuffle");
-    const upgradeShuffleBtn = document.getElementById("upgradeShuffle");
     const shuffleToggleBtn = document.getElementById("shuffleToggle");
 
     if (buyAutoMergeBtn) {
       buyAutoMergeBtn.addEventListener("click", () =>
         coopManager.buyAutoMerge()
-      );
-    }
-
-    if (upgradeAutoMergeBtn) {
-      upgradeAutoMergeBtn.addEventListener("click", () =>
-        coopManager.upgradeAutoMerge()
       );
     }
 
@@ -37,26 +21,8 @@ const eventManager = {
       );
     }
 
-    if (buyDiagonalBtn) {
-      buyDiagonalBtn.addEventListener("click", () =>
-        coopManager.buyDiagonalUpgrade()
-      );
-    }
-
-    if (buyMagicBtn) {
-      buyMagicBtn.addEventListener("click", () =>
-        coopManager.buyMagicUpgrade()
-      );
-    }
-
     if (buyShuffleBtn) {
       buyShuffleBtn.addEventListener("click", () => coopManager.buyShuffle());
-    }
-
-    if (upgradeShuffleBtn) {
-      upgradeShuffleBtn.addEventListener("click", () =>
-        coopManager.upgradeShuffle()
-      );
     }
 
     if (shuffleToggleBtn) {
@@ -66,9 +32,7 @@ const eventManager = {
     }
   },
 
-  // Show demo ended popup
   showDemoEndedPopup() {
-    // Create backdrop
     const backdrop = document.createElement("div");
     backdrop.className = "demo-ended-backdrop";
     backdrop.style.cssText = `
@@ -84,7 +48,6 @@ const eventManager = {
       justify-content: center;
     `;
 
-    // Create popup
     const popup = document.createElement("div");
     popup.className = "demo-ended-popup";
     popup.style.cssText = `
@@ -124,7 +87,6 @@ const eventManager = {
       </button>
     `;
 
-    // Add CSS animation keyframes if not already added
     if (!document.querySelector("#popup-animations")) {
       const style = document.createElement("style");
       style.id = "popup-animations";
@@ -146,20 +108,17 @@ const eventManager = {
     backdrop.appendChild(popup);
     document.body.appendChild(backdrop);
 
-    // Add close functionality
     const closeButton = document.getElementById("closeDemoPopup");
     closeButton.addEventListener("click", () => {
       backdrop.remove();
     });
 
-    // Close on backdrop click
     backdrop.addEventListener("click", (e) => {
       if (e.target === backdrop) {
         backdrop.remove();
       }
     });
 
-    // Close on Escape key
     const escapeHandler = (e) => {
       if (e.key === "Escape") {
         backdrop.remove();
@@ -169,7 +128,6 @@ const eventManager = {
     document.addEventListener("keydown", escapeHandler);
   },
 
-  // Enhanced notification queue system
   queueNotification(message) {
     this.notificationQueue.push(message);
     this.processNotificationQueue();
@@ -197,17 +155,14 @@ const eventManager = {
     `;
     document.body.appendChild(notification);
 
-    // Animate in
     requestAnimationFrame(() => {
       notification.style.transform = "translateX(0)";
       notification.style.opacity = "1";
     });
 
-    // Update offset for next notification
     this.notificationOffset += 80;
 
     setTimeout(() => {
-      // Animate out
       notification.style.transform = "translateX(100%)";
       notification.style.opacity = "0";
 
@@ -215,14 +170,11 @@ const eventManager = {
         notification.remove();
         this.notificationOffset -= 80;
         this.isShowingNotification = false;
-
-        // Process next notification in queue
         this.processNotificationQueue();
       }, 500);
     }, GAME_CONFIG.animationConfig.achievementDuration);
   },
 
-  // Visual Helper Functions
   clearWiggleGlow() {
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
       if (gameState.purchasedCells.has(`${i}-${j}`)) {
@@ -235,7 +187,6 @@ const eventManager = {
     gameState.recentlyAnimatedCells = [];
   },
 
-  // Animation and Effect Functions
   showAchievement(message) {
     this.queueNotification(message);
   },
@@ -267,7 +218,6 @@ const eventManager = {
       particle.style.animationDelay = `${Math.random() * 0.5}s`;
       particle.style.animationDuration = `${1 + Math.random() * 1}s`;
 
-      // Random direction
       const angle =
         (Math.PI * 2 * i) / GAME_CONFIG.animationConfig.particleCount;
       const distance = 50 + Math.random() * 50;
@@ -279,7 +229,6 @@ const eventManager = {
     }
   },
 
-  // Wiggle Animation
   startWiggleAnimation() {
     setInterval(() => {
       if (
