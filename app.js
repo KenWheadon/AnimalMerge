@@ -97,7 +97,6 @@ function initializeGame() {
   });
 
   startGameTimers();
-  eventManager.startWiggleAnimation();
 
   // Start initial egg button animation
   eventManager.startInitialEggButtonAnimation();
@@ -318,8 +317,7 @@ function updateMergeablePairs() {
     }
   });
 
-  // Check for new pairs and trigger animation
-  eventManager.checkForNewMergeablePairs();
+  // Removed the check for new mergeable pairs animation
 }
 
 function isGridFull() {
@@ -339,11 +337,7 @@ function placeAnimal(type) {
       updateMergeablePairs();
 
       const cell = document.getElementById(`cell-${i}-${j}`);
-      cell.classList.add("new-animal-spawn");
-      setTimeout(
-        () => cell.classList.remove("new-animal-spawn"),
-        GAME_CONFIG.animationConfig.spawnAnimationDuration
-      );
+      // Removed the spawn animation
 
       eventManager.createParticles(cell);
 
@@ -422,11 +416,7 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   updateMergeablePairs();
 
   const targetCell = document.getElementById(`cell-${targetI}-${targetJ}`);
-  targetCell.classList.add("new-animal-spawn");
-  setTimeout(
-    () => targetCell.classList.remove("new-animal-spawn"),
-    GAME_CONFIG.animationConfig.spawnAnimationDuration
-  );
+  // Removed the spawn animation
 
   eventManager.createParticles(targetCell);
   coopManager.checkForNewUnlocks(newType);

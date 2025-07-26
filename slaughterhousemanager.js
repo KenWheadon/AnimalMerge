@@ -12,6 +12,8 @@ const slaughterHouseManager = {
     if (!shouldShowSlaughterHouse) {
       // Return placeholder that maintains layout but is invisible/empty
       return `
+        <div id="slaughterHousePlaceholder" class="hidden">
+        </div>
       `;
     }
 

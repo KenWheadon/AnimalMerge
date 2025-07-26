@@ -57,63 +57,9 @@ const eventManager = {
     }
   },
 
-  checkForNewMergeablePairs() {
-    // Compare current pairs with previous pairs to find new ones
-    const newPairs = gameState.mergeablePairs.filter((currentPair) => {
-      return !gameState.previousMergeablePairs.some((previousPair) => {
-        return (
-          (currentPair.source.i === previousPair.source.i &&
-            currentPair.source.j === previousPair.source.j &&
-            currentPair.target.i === previousPair.target.i &&
-            currentPair.target.j === previousPair.target.j) ||
-          (currentPair.source.i === previousPair.target.i &&
-            currentPair.source.j === previousPair.target.j &&
-            currentPair.target.i === previousPair.source.i &&
-            currentPair.target.j === previousPair.source.j)
-        );
-      });
-    });
+  // Removed checkForNewMergeablePairs method entirely
 
-    // Animate new pairs ONLY - not all animals
-    if (newPairs.length > 0) {
-      newPairs.forEach((pair) => {
-        this.animateNewMergeablePair(pair);
-      });
-    }
-  },
-
-  animateNewMergeablePair(pair) {
-    const sourceCell = document.getElementById(
-      `cell-${pair.source.i}-${pair.source.j}`
-    );
-    const targetCell = document.getElementById(
-      `cell-${pair.target.i}-${pair.target.j}`
-    );
-
-    if (sourceCell && targetCell) {
-      // Add to recently animated to prevent regular wiggle from interfering
-      const sourceCellKey = `${pair.source.i}-${pair.source.j}`;
-      const targetCellKey = `${pair.target.i}-${pair.target.j}`;
-
-      gameState.recentlyAnimatedCells.push(sourceCellKey, targetCellKey);
-
-      // Apply wiggle and glow animation ONLY to these specific cells
-      sourceCell.classList.add("wiggle", "glow");
-      targetCell.classList.add("wiggle", "glow");
-
-      // Remove animation after duration
-      setTimeout(() => {
-        sourceCell.classList.remove("wiggle", "glow");
-        targetCell.classList.remove("wiggle", "glow");
-
-        // Remove from recently animated list
-        gameState.recentlyAnimatedCells =
-          gameState.recentlyAnimatedCells.filter(
-            (c) => c !== sourceCellKey && c !== targetCellKey
-          );
-      }, GAME_CONFIG.animationConfig.wiggleDuration);
-    }
-  },
+  // Removed animateNewMergeablePair method entirely
 
   showDemoEndedPopup() {
     const backdrop = document.createElement("div");
@@ -312,63 +258,5 @@ const eventManager = {
     }
   },
 
-  startWiggleAnimation() {
-    setInterval(() => {
-      // Don't wiggle during drag operations or if user is interacting
-      if (gameState.draggedCell || gameState.selectedCell) return;
-
-      // Only proceed if auto-merge or shuffle is owned (advanced feature)
-      if (!gameState.autoMerge.owned && !gameState.shuffle.owned) return;
-
-      this.clearWiggleGlow();
-
-      // Only wiggle animals that are part of mergeable pairs
-      if (gameState.mergeablePairs.length === 0) return;
-
-      // Select a random mergeable pair to wiggle
-      const randomPairIndex = Math.floor(
-        Math.random() * gameState.mergeablePairs.length
-      );
-      const selectedPair = gameState.mergeablePairs[randomPairIndex];
-
-      const sourceCellKey = `${selectedPair.source.i}-${selectedPair.source.j}`;
-      const targetCellKey = `${selectedPair.target.i}-${selectedPair.target.j}`;
-
-      // Don't wiggle if these cells were recently animated
-      if (
-        gameState.recentlyAnimatedCells.includes(sourceCellKey) ||
-        gameState.recentlyAnimatedCells.includes(targetCellKey)
-      ) {
-        return;
-      }
-
-      const sourceCell = document.getElementById(
-        `cell-${selectedPair.source.i}-${selectedPair.source.j}`
-      );
-      const targetCell = document.getElementById(
-        `cell-${selectedPair.target.i}-${selectedPair.target.j}`
-      );
-
-      if (sourceCell && targetCell) {
-        // Add both cells to recently animated list
-        gameState.recentlyAnimatedCells.push(sourceCellKey, targetCellKey);
-
-        // Apply wiggle and glow animation ONLY to mergeable pairs
-        sourceCell.classList.add("wiggle", "glow");
-        targetCell.classList.add("wiggle", "glow");
-
-        // Remove animation after duration
-        setTimeout(() => {
-          sourceCell.classList.remove("wiggle", "glow");
-          targetCell.classList.remove("wiggle", "glow");
-
-          // Remove from recently animated list
-          gameState.recentlyAnimatedCells =
-            gameState.recentlyAnimatedCells.filter(
-              (c) => c !== sourceCellKey && c !== targetCellKey
-            );
-        }, GAME_CONFIG.animationConfig.wiggleDuration);
-      }
-    }, GAME_CONFIG.animationConfig.wiggleInterval);
-  },
+  // Removed startWiggleAnimation method entirely - no more wiggle/glow animations
 };
