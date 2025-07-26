@@ -12,72 +12,40 @@ const slaughterHouseManager = {
     if (!shouldShowSlaughterHouse) {
       // Return placeholder that maintains layout but is invisible/empty
       return `
-        <div class="flex items-center space-x-3 overflow-x-auto" style="height: 150px;">
-          <div class="slaughter-house-placeholder" style="opacity: 0; pointer-events: none;">
-            <!-- Placeholder to maintain layout -->
-          </div>
-        </div>
       `;
     }
 
-    let html = '<div class="flex items-center space-x-3 overflow-x-auto">';
+    const house = gameState.slaughterHouses[0];
 
-    html += `
-      <div class="butcher-image-container">
-        <img src="images/butcher.png" alt="Butcher" class="butcher-image" />
-      </div>
-    `;
-
-    gameState.slaughterHouses.forEach((house, index) => {
-      html += `
-        <div class="slaughter-house-container">
-          <div class="p-3">
-            <div class="flex justify-between items-center mb-2">
-              <div class="flex items-center space-x-2">
-                <div class="compact-queue-display">
-                  Processing Que: &nbsp;<span id="queueCount${index}">${house.queue.length}</span>
-                </div>
-                <button id="slaughterInfo${index}" class="info-button">
-                  <i class="fas fa-info-circle"></i>
-                </button>
-              </div>
-            </div>
-            
-            <div id="slaughterHouse${index}" class="slaughter-house" data-house-index="${index}">
-              <div class="drop-zone-text">Drop animals here</div>
-              <div id="processingProgress${index}" class="processing-progress" style="width: 0%"></div>
-            </div>
-          </div>
+    return `
+      <div class="slaughter-house-section">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-bold text-red-800">🗡️ Slaughter House</h3>
+          <button id="slaughterInfo0" class="info-button">
+            <i class="fas fa-info-circle"></i>
+          </button>
         </div>
-      `;
-    });
-
-    html += `
-      <div class="slaughter-house-container opacity-60">
-        <div class="p-3 h-full flex flex-col justify-center">
-          <div class="text-center">
-            <h3 class="text-sm font-bold text-gray-600 mb-2">🔒 New House</h3>
-            <p class="text-xs text-gray-600 mb-3">Expand operation!</p>
-            <button id="buySlaughterHouse" class="enhanced-button buy-button w-full px-2 py-2 rounded-lg font-bold text-white text-xs">
-              <i class="fas fa-plus mr-1"></i>Buy ($${this.getNextSlaughterHouseCost()})
-            </button>
-          </div>
+        
+        <div class="compact-queue-display mb-3">
+          Processing Queue: <span id="queueCount0">${house.queue.length}</span>/10
+        </div>
+        
+        <div id="slaughterHouse0" class="slaughter-house" data-house-index="0">
+          <div class="drop-zone-text">Drop animals here to sell</div>
+          <div id="processingProgress0" class="processing-progress" style="width: 0%"></div>
         </div>
       </div>
     `;
-
-    html += "</div>";
-    return html;
   },
 
   updateVisibility() {
-    const container = document.getElementById("slaughterHousesContainer");
+    const container = document.getElementById("slaughterHouseContainer");
     if (!container) return;
 
     // Check if visibility state has changed
     const shouldShowSlaughterHouse = gameState.createdAnimals.has("Mantis");
     const currentlyVisible = !container.querySelector(
-      ".slaughter-house-placeholder"
+      "#slaughterHousePlaceholder"
     );
 
     if (shouldShowSlaughterHouse !== currentlyVisible) {
@@ -100,39 +68,8 @@ const slaughterHouseManager = {
     }
   },
 
-  getNextSlaughterHouseCost() {
-    return 50 * Math.pow(2, gameState.slaughterHouses.length - 1);
-  },
-
-  buySlaughterHouse() {
-    if (gameState.slaughterHouses.length >= 3) {
-      updateStatus("Maximum of 3 slaughter houses allowed! 🏭");
-      return;
-    }
-
-    const cost = this.getNextSlaughterHouseCost();
-    if (gameState.money >= cost) {
-      gameState.money -= cost;
-      gameState.slaughterHouses.push({
-        level: 1,
-        processTime: 5.0,
-        timer: 0,
-        queue: [],
-        currentAnimal: null,
-      });
-      updateMoney();
-      this.updateSlaughterHouseDisplay();
-      eventManager.showAchievement(`🗡️ New Slaughter House Built!`);
-      updateStatus(`Bought new slaughter house for ${cost}! 🗡️`);
-    } else {
-      updateStatus(`Need ${cost} for new slaughter house! 😕`);
-      document.body.classList.add("screen-shake");
-      setTimeout(() => document.body.classList.remove("screen-shake"), 500);
-    }
-  },
-
   addAnimalToQueue(houseIndex, animalType, gridI, gridJ) {
-    const house = gameState.slaughterHouses[houseIndex];
+    const house = gameState.slaughterHouses[0]; // Always use first house since there's only one
     if (house.queue.length >= 10) {
       updateStatus("Slaughter house queue is full! 😕");
       return false;
@@ -149,42 +86,40 @@ const slaughterHouseManager = {
     gridManager.updateCell(gridI, gridJ);
     updateMergeablePairs();
 
-    this.updateSlaughterHouseQueue(houseIndex);
-    this.processQueue(houseIndex);
+    this.updateSlaughterHouseQueue(0);
+    this.processQueue(0);
 
     updateStatus(`Added ${animalType} to slaughter queue!`);
     return true;
   },
 
   processQueue(houseIndex) {
-    const house = gameState.slaughterHouses[houseIndex];
+    const house = gameState.slaughterHouses[0];
 
     if (!house.currentAnimal && house.queue.length > 0) {
       house.currentAnimal = house.queue.shift();
       house.timer = house.processTime;
-      this.updateSlaughterHouseQueue(houseIndex);
-      this.startProcessingAnimation(houseIndex);
+      this.updateSlaughterHouseQueue(0);
+      this.startProcessingAnimation(0);
     }
   },
 
   startProcessingAnimation(houseIndex) {
-    const house = gameState.slaughterHouses[houseIndex];
-    const slaughterHouse = document.getElementById(
-      `slaughterHouse${houseIndex}`
-    );
+    const house = gameState.slaughterHouses[0];
+    const slaughterHouse = document.getElementById(`slaughterHouse0`);
     if (!slaughterHouse || !house.currentAnimal) return;
 
-    this.clearProcessingAnimation(houseIndex);
+    this.clearProcessingAnimation(0);
 
     const processingAnimal = document.createElement("div");
     processingAnimal.className = "processing-animal";
-    processingAnimal.id = `processingAnimal${houseIndex}`;
+    processingAnimal.id = `processingAnimal0`;
     processingAnimal.innerHTML = `<img src="${
       GAME_CONFIG.animalImages[house.currentAnimal.type]
     }" alt="${house.currentAnimal.type}" class="processing-animal-image" />`;
     slaughterHouse.appendChild(processingAnimal);
 
-    this.startProcessingParticles(houseIndex);
+    this.startProcessingParticles(0);
 
     const dropZoneText = slaughterHouse.querySelector(".drop-zone-text");
     if (dropZoneText) {
@@ -193,9 +128,7 @@ const slaughterHouseManager = {
   },
 
   startProcessingParticles(houseIndex) {
-    const slaughterHouse = document.getElementById(
-      `slaughterHouse${houseIndex}`
-    );
+    const slaughterHouse = document.getElementById(`slaughterHouse0`);
     if (!slaughterHouse) return;
 
     const existingParticles = slaughterHouse.querySelectorAll(
@@ -204,7 +137,7 @@ const slaughterHouseManager = {
     existingParticles.forEach((particle) => particle.remove());
 
     const particleInterval = setInterval(() => {
-      const house = gameState.slaughterHouses[houseIndex];
+      const house = gameState.slaughterHouses[0];
       if (!house.currentAnimal) {
         clearInterval(particleInterval);
         return;
@@ -226,26 +159,22 @@ const slaughterHouseManager = {
       }
     }, 200);
 
-    this.particleIntervals.set(houseIndex, particleInterval);
+    this.particleIntervals.set(0, particleInterval);
   },
 
   clearProcessingAnimation(houseIndex) {
-    const slaughterHouse = document.getElementById(
-      `slaughterHouse${houseIndex}`
-    );
+    const slaughterHouse = document.getElementById(`slaughterHouse0`);
     if (!slaughterHouse) return;
 
-    const processingAnimal = document.getElementById(
-      `processingAnimal${houseIndex}`
-    );
+    const processingAnimal = document.getElementById(`processingAnimal0`);
     if (processingAnimal) {
       processingAnimal.remove();
     }
 
-    const particleInterval = this.particleIntervals.get(houseIndex);
+    const particleInterval = this.particleIntervals.get(0);
     if (particleInterval) {
       clearInterval(particleInterval);
-      this.particleIntervals.delete(houseIndex);
+      this.particleIntervals.delete(0);
     }
 
     const particles = slaughterHouse.querySelectorAll(".processing-particle");
@@ -258,9 +187,7 @@ const slaughterHouseManager = {
   },
 
   createProcessingBurst(houseIndex) {
-    const slaughterHouse = document.getElementById(
-      `slaughterHouse${houseIndex}`
-    );
+    const slaughterHouse = document.getElementById(`slaughterHouse0`);
     if (!slaughterHouse) return;
 
     const burst = document.createElement("div");
@@ -276,9 +203,7 @@ const slaughterHouseManager = {
   },
 
   createFlyingCoins(houseIndex, value) {
-    const slaughterHouse = document.getElementById(
-      `slaughterHouse${houseIndex}`
-    );
+    const slaughterHouse = document.getElementById(`slaughterHouse0`);
     const moneyDisplay = document.getElementById("money");
 
     if (!slaughterHouse || !moneyDisplay) return;
@@ -350,51 +275,44 @@ const slaughterHouseManager = {
   },
 
   updateSlaughterHouseTimers() {
-    gameState.slaughterHouses.forEach((house, index) => {
-      if (house.currentAnimal) {
-        house.timer -= 1;
+    const house = gameState.slaughterHouses[0];
+    if (house && house.currentAnimal) {
+      house.timer -= 1;
 
-        const progressBar = document.getElementById(
-          `processingProgress${index}`
-        );
-        if (progressBar) {
-          const progress =
-            ((house.processTime - house.timer) / house.processTime) * 100;
-          progressBar.style.width = `${progress}%`;
-        }
-
-        if (house.timer <= 0) {
-          const animal = house.currentAnimal;
-          gameState.money += animal.value;
-          gameState.totalSlaughtered += 1;
-          updateMoney();
-          updateAutoMergeLevel();
-
-          this.createProcessingBurst(index);
-          this.createFlyingCoins(index, animal.value);
-          this.clearProcessingAnimation(index);
-
-          const progressBar = document.getElementById(
-            `processingProgress${index}`
-          );
-          if (progressBar) {
-            progressBar.style.width = "0%";
-          }
-
-          house.currentAnimal = null;
-          this.processQueue(index);
-
-          updateStatus(`Processed ${animal.type} for 💰${animal.value}!`);
-        }
+      const progressBar = document.getElementById(`processingProgress0`);
+      if (progressBar) {
+        const progress =
+          ((house.processTime - house.timer) / house.processTime) * 100;
+        progressBar.style.width = `${progress}%`;
       }
-    });
+
+      if (house.timer <= 0) {
+        const animal = house.currentAnimal;
+        gameState.money += animal.value;
+        gameState.totalSlaughtered += 1;
+        updateMoney();
+        updateAutoMergeLevel();
+
+        this.createProcessingBurst(0);
+        this.createFlyingCoins(0, animal.value);
+        this.clearProcessingAnimation(0);
+
+        const progressBar = document.getElementById(`processingProgress0`);
+        if (progressBar) {
+          progressBar.style.width = "0%";
+        }
+
+        house.currentAnimal = null;
+        this.processQueue(0);
+
+        updateStatus(`Processed ${animal.type} for 💰${animal.value}!`);
+      }
+    }
   },
 
-  updateSlaughterHouseData(index) {},
-
   updateSlaughterHouseQueue(index) {
-    const house = gameState.slaughterHouses[index];
-    const queueCount = document.getElementById(`queueCount${index}`);
+    const house = gameState.slaughterHouses[0];
+    const queueCount = document.getElementById(`queueCount0`);
 
     if (queueCount) {
       queueCount.textContent = house.queue.length;
@@ -402,7 +320,7 @@ const slaughterHouseManager = {
   },
 
   updateSlaughterHouseDisplay() {
-    const container = document.getElementById("slaughterHousesContainer");
+    const container = document.getElementById("slaughterHouseContainer");
     if (!container) return;
 
     this.domCache.clear();
@@ -445,64 +363,50 @@ const slaughterHouseManager = {
     const shouldShowSlaughterHouse = gameState.createdAnimals.has("Mantis");
     if (!shouldShowSlaughterHouse) return;
 
-    gameState.slaughterHouses.forEach((house, index) => {
-      const slaughterHouse = document.getElementById(`slaughterHouse${index}`);
-      if (slaughterHouse) {
-        this.domCache.set(`slaughterHouse${index}`, slaughterHouse);
+    const slaughterHouse = document.getElementById(`slaughterHouse0`);
+    if (slaughterHouse) {
+      this.domCache.set(`slaughterHouse0`, slaughterHouse);
 
-        const dragOverHandler = (e) => {
-          e.preventDefault();
-          slaughterHouse.classList.add("drag-over");
-        };
-        const dragLeaveHandler = () => {
-          slaughterHouse.classList.remove("drag-over");
-        };
-        const dropHandler = (e) => this.handleSlaughterDrop(e, index);
-        const touchEndHandler = (e) => this.handleSlaughterTouchEnd(e, index);
+      const dragOverHandler = (e) => {
+        e.preventDefault();
+        slaughterHouse.classList.add("drag-over");
+      };
+      const dragLeaveHandler = () => {
+        slaughterHouse.classList.remove("drag-over");
+      };
+      const dropHandler = (e) => this.handleSlaughterDrop(e, 0);
+      const touchEndHandler = (e) => this.handleSlaughterTouchEnd(e, 0);
 
-        slaughterHouse.addEventListener("dragover", dragOverHandler);
-        slaughterHouse.addEventListener("dragleave", dragLeaveHandler);
-        slaughterHouse.addEventListener("drop", dropHandler);
-        slaughterHouse.addEventListener("touchend", touchEndHandler);
+      slaughterHouse.addEventListener("dragover", dragOverHandler);
+      slaughterHouse.addEventListener("dragleave", dragLeaveHandler);
+      slaughterHouse.addEventListener("drop", dropHandler);
+      slaughterHouse.addEventListener("touchend", touchEndHandler);
 
-        this.eventListeners.set(slaughterHouse, [
-          { event: "dragover", handler: dragOverHandler },
-          { event: "dragleave", handler: dragLeaveHandler },
-          { event: "drop", handler: dropHandler },
-          { event: "touchend", handler: touchEndHandler },
-        ]);
-      }
+      this.eventListeners.set(slaughterHouse, [
+        { event: "dragover", handler: dragOverHandler },
+        { event: "dragleave", handler: dragLeaveHandler },
+        { event: "drop", handler: dropHandler },
+        { event: "touchend", handler: touchEndHandler },
+      ]);
+    }
 
-      const infoButton = document.getElementById(`slaughterInfo${index}`);
-      if (infoButton) {
-        const infoHandler = (e) => {
-          e.stopPropagation();
-          this.toggleMergedTooltip(index);
-        };
-        infoButton.addEventListener("click", infoHandler);
+    const infoButton = document.getElementById(`slaughterInfo0`);
+    if (infoButton) {
+      const infoHandler = (e) => {
+        e.stopPropagation();
+        this.toggleMergedTooltip(0);
+      };
+      infoButton.addEventListener("click", infoHandler);
 
-        this.eventListeners.set(infoButton, [
-          { event: "click", handler: infoHandler },
-        ]);
-      }
-    });
-
-    const buyButton = document.getElementById("buySlaughterHouse");
-    if (buyButton) {
-      const buyHandler = () => this.buySlaughterHouse();
-      buyButton.addEventListener("click", buyHandler);
-
-      this.eventListeners.set(buyButton, [
-        { event: "click", handler: buyHandler },
+      this.eventListeners.set(infoButton, [
+        { event: "click", handler: infoHandler },
       ]);
     }
   },
 
   handleSlaughterDrop(e, houseIndex) {
     e.preventDefault();
-    const slaughterHouse =
-      this.domCache.get(`slaughterHouse${houseIndex}`) ||
-      document.getElementById(`slaughterHouse${houseIndex}`);
+    const slaughterHouse = document.getElementById(`slaughterHouse0`);
     slaughterHouse.classList.remove("drag-over");
 
     if (!gameState.draggedCell) return;
@@ -511,7 +415,7 @@ const slaughterHouseManager = {
     const type = gameState.grid[i][j];
 
     if (GAME_CONFIG.animalTypes[type].sellPrice > 0) {
-      this.addAnimalToQueue(houseIndex, type, i, j);
+      this.addAnimalToQueue(0, type, i, j);
     } else {
       updateStatus(`${type} cannot be sold! 😕`);
     }
@@ -524,9 +428,7 @@ const slaughterHouseManager = {
 
   handleSlaughterTouchEnd(e, houseIndex) {
     e.preventDefault();
-    const slaughterHouse =
-      this.domCache.get(`slaughterHouse${houseIndex}`) ||
-      document.getElementById(`slaughterHouse${houseIndex}`);
+    const slaughterHouse = document.getElementById(`slaughterHouse0`);
     slaughterHouse.classList.remove("drag-over");
 
     if (!gameState.draggedCell) return;
@@ -535,7 +437,7 @@ const slaughterHouseManager = {
     const type = gameState.grid[i][j];
 
     if (GAME_CONFIG.animalTypes[type].sellPrice > 0) {
-      this.addAnimalToQueue(houseIndex, type, i, j);
+      this.addAnimalToQueue(0, type, i, j);
     } else {
       updateStatus(`${type} cannot be sold! 😕`);
     }
@@ -551,13 +453,13 @@ const slaughterHouseManager = {
     if (existingTooltip) {
       this.hideMergedTooltip();
     } else {
-      this.showMergedTooltip(houseIndex);
+      this.showMergedTooltip(0);
     }
   },
 
   showMergedTooltip(houseIndex) {
-    const house = gameState.slaughterHouses[houseIndex];
-    const infoButton = document.getElementById(`slaughterInfo${houseIndex}`);
+    const house = gameState.slaughterHouses[0];
+    const infoButton = document.getElementById(`slaughterInfo0`);
 
     if (!infoButton) return;
 
@@ -570,7 +472,7 @@ const slaughterHouseManager = {
     let tooltipContent = `
       <div class="tooltip-header">
         <div class="tooltip-title">
-          <strong>Slaughter House ${houseIndex + 1}</strong>
+          <strong>Slaughter House</strong>
           <span class="tooltip-level">Level ${house.level}</span>
         </div>
       </div>

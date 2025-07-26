@@ -34,10 +34,11 @@ const eventManager = {
   },
 
   startInitialEggButtonAnimation() {
+    // Only start if the egg button hasn't been clicked yet
     if (gameState.eggButtonClicked) return;
 
     const eggButton = document.getElementById("buyEgg");
-    if (eggButton) {
+    if (eggButton && !eggButton.classList.contains("initial-egg-glow")) {
       eggButton.classList.add("initial-egg-glow");
     }
   },
@@ -47,6 +48,12 @@ const eventManager = {
     const eggButton = document.getElementById("buyEgg");
     if (eggButton) {
       eggButton.classList.remove("initial-egg-glow");
+    }
+
+    // Clear any interval if it exists (though we're not using one currently)
+    if (this.initialEggAnimationInterval) {
+      clearInterval(this.initialEggAnimationInterval);
+      this.initialEggAnimationInterval = null;
     }
   },
 
@@ -67,7 +74,7 @@ const eventManager = {
       });
     });
 
-    // Animate new pairs
+    // Animate new pairs ONLY - not all animals
     if (newPairs.length > 0) {
       newPairs.forEach((pair) => {
         this.animateNewMergeablePair(pair);
@@ -90,7 +97,7 @@ const eventManager = {
 
       gameState.recentlyAnimatedCells.push(sourceCellKey, targetCellKey);
 
-      // Apply wiggle and glow animation
+      // Apply wiggle and glow animation ONLY to these specific cells
       sourceCell.classList.add("wiggle", "glow");
       targetCell.classList.add("wiggle", "glow");
 
@@ -346,7 +353,7 @@ const eventManager = {
         // Add both cells to recently animated list
         gameState.recentlyAnimatedCells.push(sourceCellKey, targetCellKey);
 
-        // Apply wiggle and glow animation
+        // Apply wiggle and glow animation ONLY to mergeable pairs
         sourceCell.classList.add("wiggle", "glow");
         targetCell.classList.add("wiggle", "glow");
 

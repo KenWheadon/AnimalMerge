@@ -42,25 +42,10 @@ const coopManager = {
   },
 
   generateCoopHTML() {
-    // Check if farm building panel should be visible (Cat has been created)
-    const shouldShowFarmBuilding = gameState.createdAnimals.has("Cat");
-
-    if (!shouldShowFarmBuilding) {
-      // Return placeholder that maintains layout but shows message
-      return `
-        <div id="emptyFarmMessage" class="text-center py-4 text-gray-600 text-sm">
-          Merge animals to unlock buildings
-        </div>
-      `;
-    }
-
     let html = "";
 
-    // Add empty state message that will be hidden when buildings are visible
+    // Add empty state message that will be shown/hidden as needed
     html += `
-      <div id="emptyFarmMessage" class="text-center py-4 text-gray-600 text-sm hidden">
-        Merge animals to unlock buildings
-      </div>
     `;
 
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
@@ -73,6 +58,7 @@ const coopManager = {
         stored: 0,
       };
 
+      // Start hidden - will be shown when unlocked
       html += `
         <div id="${animalType}Coop" class="compact-coop hidden">
           <div class="coop-header">
@@ -123,29 +109,9 @@ const coopManager = {
   },
 
   updatePanelVisibility() {
-    const shouldShowFarmBuilding = gameState.createdAnimals.has("Cat");
-
-    // Check if we need to regenerate the farm building panel
-    const emptyMessage = document.getElementById("emptyFarmMessage");
-    const hasVisibleCoops = document.querySelector(
-      ".compact-coop:not(.hidden)"
-    );
-
-    // If Cat has been created but we're still showing the placeholder message
-    if (
-      shouldShowFarmBuilding &&
-      emptyMessage &&
-      !emptyMessage.classList.contains("hidden") &&
-      !hasVisibleCoops
-    ) {
-      // Regenerate the farm building panel content
-      const farmBuildingContainer = emptyMessage.parentElement;
-      if (farmBuildingContainer) {
-        farmBuildingContainer.innerHTML = this.generateCoopHTML();
-        this.initializeFarmBuildingEventListeners();
-        this.updateCoopVisibility();
-      }
-    }
+    // Always call to update visibility based on created animals
+    this.updateCoopVisibility();
+    this.updateEmptyMessageVisibility();
   },
 
   initializeFarmBuildingEventListeners() {
@@ -367,44 +333,40 @@ const coopManager = {
       if (gameState.createdAnimals.has(animalName)) {
         const coopElement = document.getElementById(`${animalType}Coop`);
 
-        if (coopElement) {
+        if (coopElement && coopElement.classList.contains("hidden")) {
           coopElement.classList.remove("hidden");
           coopElement.classList.add("bounce-in");
+
+          // Mark this coop as unlocked so we don't animate it again
+          this.unlockedCoops.add(animalType);
+
+          console.log(
+            `Showing ${animalName} coop because ${animalName} was created`
+          );
         }
       }
     }
-    this.updateEmptyMessageVisibility();
   },
 
   updateEmptyMessageVisibility() {
     const emptyMessage = document.getElementById("emptyFarmMessage");
     if (!emptyMessage) return;
 
-    // Only show empty message if Cat hasn't been created yet
-    const shouldShowFarmBuilding = gameState.createdAnimals.has("Cat");
-
-    if (shouldShowFarmBuilding) {
-      let hasVisibleBuildings = false;
-      for (const [animalType, config] of Object.entries(
-        GAME_CONFIG.coopConfig
-      )) {
-        const animalName =
-          animalType.charAt(0).toUpperCase() + animalType.slice(1);
-        if (gameState.createdAnimals.has(animalName)) {
-          hasVisibleBuildings = true;
-          break;
-        }
+    // Check if any coops are visible
+    let hasVisibleCoops = false;
+    for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
+      const animalName =
+        animalType.charAt(0).toUpperCase() + animalType.slice(1);
+      if (gameState.createdAnimals.has(animalName)) {
+        hasVisibleCoops = true;
+        break;
       }
+    }
 
-      if (hasVisibleBuildings) {
-        emptyMessage.classList.add("hidden");
-      } else {
-        emptyMessage.classList.remove("hidden");
-        emptyMessage.textContent = "Merge animals to unlock buildings";
-      }
+    if (hasVisibleCoops) {
+      emptyMessage.classList.add("hidden");
     } else {
       emptyMessage.classList.remove("hidden");
-      emptyMessage.textContent = "Merge animals to unlock buildings";
     }
   },
 
@@ -435,7 +397,9 @@ const coopManager = {
     const lowerAnimalType = newAnimalType.toLowerCase();
     if (GAME_CONFIG.coopConfig[lowerAnimalType]) {
       if (!this.unlockedCoops.has(lowerAnimalType)) {
-        this.unlockedCoops.add(lowerAnimalType);
+        console.log(
+          `New unlock detected: ${newAnimalType} -> ${lowerAnimalType} coop`
+        );
         this.updateCoopVisibility();
         eventManager.showAchievement(`🏡 ${newAnimalType} Coop Unlocked!`);
       }

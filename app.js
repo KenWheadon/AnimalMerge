@@ -124,12 +124,6 @@ function generateMainHTML() {
         </div>
 
         <div class="flex flex-col">
-            <div class="p-1 bg-gray-50 border-b">
-                <div id="slaughterHousesContainer">
-                    ${slaughterHouseManager.generateSlaughterHouseHTML()}
-                </div>
-            </div>
-
             <div class="flex-shrink-0 bg-white mx-4 m-2 p-1 rounded-xl shadow-lg">
                 <div class="grid grid-cols-2 gap-2">
                     <div class="automation-section">
@@ -193,9 +187,12 @@ function generateMainHTML() {
 
         <div class="w-60 bg-white shadow-lg flex flex-col">
             <div class="p-4 border-b">
-                <h2 class="text-xl font-bold text-green-800">🏡 Farm Buildings</h2>
+                <h2 class="text-xl font-bold text-green-800">🏭 Buildings</h2>
             </div>
             <div class="flex-1 overflow-y-auto p-4">
+                <div id="slaughterHouseContainer" class="mb-6">
+                    ${slaughterHouseManager.generateSlaughterHouseHTML()}
+                </div>
                 <div class="space-y-4">
                     ${coopManager.generateCoopHTML()}
                 </div>

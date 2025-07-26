@@ -15,7 +15,7 @@ const gridManager = {
   generateGridHTML() {
     let html = '<table class="game-grid">';
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       html += "<tr>";
       for (let j = 0; j < 4; j++) {
         const spotConfig = GAME_CONFIG.gridConfig.availableSpots.find(

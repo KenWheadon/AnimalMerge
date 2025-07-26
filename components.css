@@ -377,6 +377,22 @@
   animation: coopFloat 3s ease-in-out infinite;
 }
 
+/* Slaughter House Section Styles */
+.slaughter-house-section {
+  background: linear-gradient(145deg, #fef2f2, #fee2e2);
+  border: 2px solid var(--accent-red-dark);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.slaughter-house-section h3 {
+  margin: 0;
+  color: var(--accent-red-dark);
+}
+
 /* Slaughter House Styles */
 .slaughter-house {
   background: linear-gradient(145deg, #fee2e2, #fecaca);
@@ -390,10 +406,16 @@
   width: 100%;
   border-radius: 8px;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .drop-zone-text {
-  margin-top: 5px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent-red-dark);
+  opacity: 0.8;
 }
 
 .slaughter-house::before {
@@ -481,35 +503,6 @@
   pointer-events: none;
 }
 
-.slaughter-house-container {
-  position: relative;
-  transition: all 0.3s ease;
-  height: fit-content;
-  width: 220px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  overflow: visible;
-}
-
-.slaughter-house-container:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-.butcher-image-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.butcher-image {
-  width: 80px;
-  height: auto;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
 .compact-queue-display {
   display: flex;
   align-items: center;
@@ -517,24 +510,11 @@
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 0.75rem;
+  padding: 6px 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--accent-red-dark);
-  min-width: 40px;
-}
-
-#slaughterHousesContainer {
-  max-height: 150px;
-  overflow-x: auto;
-  overflow-y: visible;
-  position: relative;
-  z-index: 1;
-}
-
-#slaughterHousesContainer .flex {
-  align-items: center;
-  gap: 5px;
+  text-align: center;
 }
 
 /* Tooltip Components */
