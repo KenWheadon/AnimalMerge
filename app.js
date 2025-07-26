@@ -8,7 +8,9 @@ let gameState = {
   createdAnimals: new Set(),
   recentlyAnimatedCells: [],
   mergeablePairs: [],
+  previousMergeablePairs: [], // Track previous pairs to detect new ones
   totalSlaughtered: 0,
+  eggButtonClicked: false, // Track if egg button has been clicked
   autoMerge: {
     owned: false,
     level: 1,
@@ -97,6 +99,9 @@ function initializeGame() {
   startGameTimers();
   eventManager.startWiggleAnimation();
 
+  // Start initial egg button animation
+  eventManager.startInitialEggButtonAnimation();
+
   showTutorialPopup();
 }
 
@@ -119,7 +124,7 @@ function generateMainHTML() {
         </div>
 
         <div class="flex flex-col">
-            <div class="p-1 border-b">
+            <div class="p-1 bg-gray-50 border-b">
                 <div id="slaughterHousesContainer">
                     ${slaughterHouseManager.generateSlaughterHouseHTML()}
                 </div>
@@ -266,7 +271,10 @@ function updateAutoMergeLevel() {
 }
 
 function updateMergeablePairs() {
+  // Store previous pairs for comparison
+  gameState.previousMergeablePairs = [...gameState.mergeablePairs];
   gameState.mergeablePairs = [];
+
   const neighbors = [
     { di: 0, dj: 1 },
     { di: 1, dj: 0 },
@@ -312,6 +320,9 @@ function updateMergeablePairs() {
       }
     }
   });
+
+  // Check for new pairs and trigger animation
+  eventManager.checkForNewMergeablePairs();
 }
 
 function isGridFull() {
@@ -348,6 +359,9 @@ function placeAnimal(type) {
 
       coopManager.checkForNewUnlocks(type);
 
+      // Update panel visibility based on created animals
+      updatePanelVisibility();
+
       return true;
     }
   }
@@ -358,6 +372,14 @@ function placeAnimal(type) {
 function buyAnimal(type, cost) {
   if (gameState.money >= cost) {
     gameState.money -= cost;
+
+    // Mark egg button as clicked if this is an egg purchase
+    if (type === "Egg" && !gameState.eggButtonClicked) {
+      gameState.eggButtonClicked = true;
+      eventManager.stopInitialEggButtonAnimation();
+      coopManager.updateBuyAnimalButtons(); // Update button states
+    }
+
     if (placeAnimal(type)) {
       updateMoney();
       updateStatus(`Bought and placed ${type}`);
@@ -412,6 +434,9 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   eventManager.createParticles(targetCell);
   coopManager.checkForNewUnlocks(newType);
 
+  // Update panel visibility based on created animals
+  updatePanelVisibility();
+
   if (newType === "EndDemoAnimal") {
     eventManager.showDemoEndedPopup();
   }
@@ -422,6 +447,14 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
       ? `Merged into ${newType}! You can sell it for 💰${sellPrice}`
       : `Merged into ${newType}!`
   );
+}
+
+function updatePanelVisibility() {
+  // Update slaughter house visibility
+  slaughterHouseManager.updateVisibility();
+
+  // Update farm building visibility
+  coopManager.updatePanelVisibility();
 }
 
 function updateMoney() {

@@ -2,6 +2,7 @@ const eventManager = {
   notificationQueue: [],
   isShowingNotification: false,
   notificationOffset: 0,
+  initialEggAnimationInterval: null,
 
   initializeButtonEventListeners() {
     const buyAutoMergeBtn = document.getElementById("buyAutoMerge");
@@ -29,6 +30,81 @@ const eventManager = {
       shuffleToggleBtn.addEventListener("click", () =>
         coopManager.toggleShuffle()
       );
+    }
+  },
+
+  startInitialEggButtonAnimation() {
+    if (gameState.eggButtonClicked) return;
+
+    const eggButton = document.getElementById("buyEgg");
+    if (eggButton) {
+      eggButton.classList.add("initial-egg-glow");
+    }
+  },
+
+  stopInitialEggButtonAnimation() {
+    // Remove the animation class from the DOM element immediately
+    const eggButton = document.getElementById("buyEgg");
+    if (eggButton) {
+      eggButton.classList.remove("initial-egg-glow");
+    }
+  },
+
+  checkForNewMergeablePairs() {
+    // Compare current pairs with previous pairs to find new ones
+    const newPairs = gameState.mergeablePairs.filter((currentPair) => {
+      return !gameState.previousMergeablePairs.some((previousPair) => {
+        return (
+          (currentPair.source.i === previousPair.source.i &&
+            currentPair.source.j === previousPair.source.j &&
+            currentPair.target.i === previousPair.target.i &&
+            currentPair.target.j === previousPair.target.j) ||
+          (currentPair.source.i === previousPair.target.i &&
+            currentPair.source.j === previousPair.target.j &&
+            currentPair.target.i === previousPair.source.i &&
+            currentPair.target.j === previousPair.source.j)
+        );
+      });
+    });
+
+    // Animate new pairs
+    if (newPairs.length > 0) {
+      newPairs.forEach((pair) => {
+        this.animateNewMergeablePair(pair);
+      });
+    }
+  },
+
+  animateNewMergeablePair(pair) {
+    const sourceCell = document.getElementById(
+      `cell-${pair.source.i}-${pair.source.j}`
+    );
+    const targetCell = document.getElementById(
+      `cell-${pair.target.i}-${pair.target.j}`
+    );
+
+    if (sourceCell && targetCell) {
+      // Add to recently animated to prevent regular wiggle from interfering
+      const sourceCellKey = `${pair.source.i}-${pair.source.j}`;
+      const targetCellKey = `${pair.target.i}-${pair.target.j}`;
+
+      gameState.recentlyAnimatedCells.push(sourceCellKey, targetCellKey);
+
+      // Apply wiggle and glow animation
+      sourceCell.classList.add("wiggle", "glow");
+      targetCell.classList.add("wiggle", "glow");
+
+      // Remove animation after duration
+      setTimeout(() => {
+        sourceCell.classList.remove("wiggle", "glow");
+        targetCell.classList.remove("wiggle", "glow");
+
+        // Remove from recently animated list
+        gameState.recentlyAnimatedCells =
+          gameState.recentlyAnimatedCells.filter(
+            (c) => c !== sourceCellKey && c !== targetCellKey
+          );
+      }, GAME_CONFIG.animationConfig.wiggleDuration);
     }
   },
 
@@ -231,49 +307,61 @@ const eventManager = {
 
   startWiggleAnimation() {
     setInterval(() => {
-      if (
-        gameState.draggedCell ||
-        gameState.selectedCell ||
-        (!gameState.autoMerge.owned && !gameState.shuffle.owned)
-      )
-        return;
+      // Don't wiggle during drag operations or if user is interacting
+      if (gameState.draggedCell || gameState.selectedCell) return;
+
+      // Only proceed if auto-merge or shuffle is owned (advanced feature)
+      if (!gameState.autoMerge.owned && !gameState.shuffle.owned) return;
+
       this.clearWiggleGlow();
-      const nonEmptyCells = [];
-      GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
-        if (
-          gameState.purchasedCells.has(`${i}-${j}`) &&
-          gameState.grid[i][j] &&
-          !gameState.recentlyAnimatedCells.includes(`${i}-${j}`)
-        ) {
-          nonEmptyCells.push({ i, j });
-        }
-      });
-      if (nonEmptyCells.length === 0) return;
-      const count = Math.min(
-        Math.floor(Math.random() * 3) + 1,
-        nonEmptyCells.length
+
+      // Only wiggle animals that are part of mergeable pairs
+      if (gameState.mergeablePairs.length === 0) return;
+
+      // Select a random mergeable pair to wiggle
+      const randomPairIndex = Math.floor(
+        Math.random() * gameState.mergeablePairs.length
       );
-      const selectedCells = [];
-      for (let i = 0; i < count; i++) {
-        const index = Math.floor(Math.random() * nonEmptyCells.length);
-        selectedCells.push(nonEmptyCells.splice(index, 1)[0]);
+      const selectedPair = gameState.mergeablePairs[randomPairIndex];
+
+      const sourceCellKey = `${selectedPair.source.i}-${selectedPair.source.j}`;
+      const targetCellKey = `${selectedPair.target.i}-${selectedPair.target.j}`;
+
+      // Don't wiggle if these cells were recently animated
+      if (
+        gameState.recentlyAnimatedCells.includes(sourceCellKey) ||
+        gameState.recentlyAnimatedCells.includes(targetCellKey)
+      ) {
+        return;
       }
-      selectedCells.forEach(({ i, j }) => {
-        const cell = document.getElementById(`cell-${i}-${j}`);
-        if (cell) {
-          cell.classList.add("wiggle", "glow");
-          gameState.recentlyAnimatedCells.push(`${i}-${j}`);
-          setTimeout(() => {
-            if (cell) {
-              cell.classList.remove("wiggle", "glow");
-              gameState.recentlyAnimatedCells =
-                gameState.recentlyAnimatedCells.filter(
-                  (c) => c !== `${i}-${j}`
-                );
-            }
-          }, GAME_CONFIG.animationConfig.wiggleDuration);
-        }
-      });
+
+      const sourceCell = document.getElementById(
+        `cell-${selectedPair.source.i}-${selectedPair.source.j}`
+      );
+      const targetCell = document.getElementById(
+        `cell-${selectedPair.target.i}-${selectedPair.target.j}`
+      );
+
+      if (sourceCell && targetCell) {
+        // Add both cells to recently animated list
+        gameState.recentlyAnimatedCells.push(sourceCellKey, targetCellKey);
+
+        // Apply wiggle and glow animation
+        sourceCell.classList.add("wiggle", "glow");
+        targetCell.classList.add("wiggle", "glow");
+
+        // Remove animation after duration
+        setTimeout(() => {
+          sourceCell.classList.remove("wiggle", "glow");
+          targetCell.classList.remove("wiggle", "glow");
+
+          // Remove from recently animated list
+          gameState.recentlyAnimatedCells =
+            gameState.recentlyAnimatedCells.filter(
+              (c) => c !== sourceCellKey && c !== targetCellKey
+            );
+        }, GAME_CONFIG.animationConfig.wiggleDuration);
+      }
     }, GAME_CONFIG.animationConfig.wiggleInterval);
   },
 };

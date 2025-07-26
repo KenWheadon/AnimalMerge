@@ -6,6 +6,20 @@ const slaughterHouseManager = {
   particleIntervals: new Map(),
 
   generateSlaughterHouseHTML() {
+    // Check if slaughter house should be visible (Mantis has been created)
+    const shouldShowSlaughterHouse = gameState.createdAnimals.has("Mantis");
+
+    if (!shouldShowSlaughterHouse) {
+      // Return placeholder that maintains layout but is invisible/empty
+      return `
+        <div class="flex items-center space-x-3 overflow-x-auto" style="height: 150px;">
+          <div class="slaughter-house-placeholder" style="opacity: 0; pointer-events: none;">
+            <!-- Placeholder to maintain layout -->
+          </div>
+        </div>
+      `;
+    }
+
     let html = '<div class="flex items-center space-x-3 overflow-x-auto">';
 
     html += `
@@ -19,9 +33,9 @@ const slaughterHouseManager = {
         <div class="slaughter-house-container">
           <div class="p-3">
             <div class="flex justify-between items-center mb-2">
-              <div class="flex items-center">
+              <div class="flex items-center space-x-2">
                 <div class="compact-queue-display">
-                  Processing Que:&nbsp;<span id="queueCount${index}"> ${house.queue.length}</span>
+                  Processing Que: &nbsp;<span id="queueCount${index}">${house.queue.length}</span>
                 </div>
                 <button id="slaughterInfo${index}" class="info-button">
                   <i class="fas fa-info-circle"></i>
@@ -54,6 +68,22 @@ const slaughterHouseManager = {
 
     html += "</div>";
     return html;
+  },
+
+  updateVisibility() {
+    const container = document.getElementById("slaughterHousesContainer");
+    if (!container) return;
+
+    // Check if visibility state has changed
+    const shouldShowSlaughterHouse = gameState.createdAnimals.has("Mantis");
+    const currentlyVisible = !container.querySelector(
+      ".slaughter-house-placeholder"
+    );
+
+    if (shouldShowSlaughterHouse !== currentlyVisible) {
+      // Regenerate the HTML with new visibility state
+      this.updateSlaughterHouseDisplay();
+    }
   },
 
   initializeSlaughterHouses() {
@@ -411,6 +441,10 @@ const slaughterHouseManager = {
   },
 
   initializeSlaughterHouseEventListeners() {
+    // Only initialize if slaughter house is visible
+    const shouldShowSlaughterHouse = gameState.createdAnimals.has("Mantis");
+    if (!shouldShowSlaughterHouse) return;
+
     gameState.slaughterHouses.forEach((house, index) => {
       const slaughterHouse = document.getElementById(`slaughterHouse${index}`);
       if (slaughterHouse) {
