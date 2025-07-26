@@ -126,11 +126,18 @@ h1 {
   );
   box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .buy-button:hover {
   box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.buy-button span {
+  width: 25%;
 }
 
 .sell-button {
@@ -224,31 +231,6 @@ h1 {
   border-radius: inherit;
   z-index: -1;
   animation: borderGlow 3s ease-in-out infinite;
-}
-
-@keyframes grassSway {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  50% {
-    transform: translate(-50%, -50%) rotate(5deg);
-  }
-}
-
-@keyframes autoMergeGlow {
-  0% {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06),
-      0 8px 20px rgba(0, 0, 0, 0.15), 0 0 20px rgba(139, 92, 246, 0.6),
-      0 0 40px rgba(139, 92, 246, 0.4);
-  }
-  100% {
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06),
-      0 12px 30px rgba(0, 0, 0, 0.25), 0 0 30px rgba(139, 92, 246, 0.8),
-      0 0 60px rgba(139, 92, 246, 0.6);
-  }
 }
 
 .compact-coop {
@@ -370,24 +352,6 @@ h1 {
 .coop-progress-fill.urgent {
   background: linear-gradient(90deg, var(--accent-red), #dc2626);
   animation: urgentGlow 0.5s ease-in-out infinite alternate;
-}
-
-@keyframes progressShine {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-@keyframes urgentGlow {
-  0% {
-    opacity: 0.8;
-  }
-  100% {
-    opacity: 1;
-  }
 }
 
 .coop-stored-display {
@@ -521,17 +485,6 @@ h1 {
   z-index: 5;
 }
 
-@keyframes processingSpinRed {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-    filter: hue-rotate(0deg) brightness(1);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(360deg);
-    filter: hue-rotate(360deg) brightness(1.2);
-  }
-}
-
 .processing-particle {
   position: absolute;
   width: 4px;
@@ -542,21 +495,6 @@ h1 {
   z-index: 3;
 }
 
-@keyframes processingParticle {
-  0% {
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 1;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0;
-  }
-}
-
 .processing-burst {
   position: absolute;
   top: 50%;
@@ -565,21 +503,6 @@ h1 {
   font-size: 3rem;
   animation: processingBurst 0.8s ease-out forwards;
   z-index: 20;
-}
-
-@keyframes processingBurst {
-  0% {
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 1;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.5);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(2);
-    opacity: 0;
-  }
 }
 
 .flying-coin {
@@ -629,17 +552,6 @@ h1 {
   animation: moneyValueFade 2s ease-out forwards;
   z-index: 1001;
   pointer-events: none;
-}
-
-@keyframes moneyValueFade {
-  0% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-60px) scale(1.5);
-    opacity: 0;
-  }
 }
 
 .slaughter-house-container {
@@ -801,46 +713,6 @@ h1 {
   min-width: 40px;
 }
 
-#slaughterHousesContainer {
-  max-height: 140px;
-  overflow-x: auto;
-  overflow-y: visible;
-  padding-bottom: 8px;
-  position: relative;
-  z-index: 1;
-}
-
-#slaughterHousesContainer .flex {
-  align-items: center;
-}
-
-.tutorial-popup-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(5px);
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: backdropFadeIn 0.3s ease-out;
-}
-
-.tutorial-popup {
-  background: linear-gradient(145deg, #ffffff, #f8fafc);
-  border-radius: 20px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  position: relative;
-  animation: popupSlideIn 0.4s ease-out;
-}
-
 .tutorial-close-btn {
   position: absolute;
   top: 15px;
@@ -858,23 +730,8 @@ h1 {
   color: #374151;
 }
 
-.tutorial-content {
-  display: flex;
-  padding: 2rem;
-  gap: 2rem;
-  align-items: flex-start;
-}
-
 .tutorial-character {
   flex-shrink: 0;
-}
-
-.tutorial-cow-image {
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
-  border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .tutorial-text {
@@ -888,17 +745,6 @@ h1 {
   margin-bottom: 1.5rem;
   text-align: center;
   font-family: "Fredoka One", cursive;
-}
-
-.tutorial-instructions {
-  margin-bottom: 2rem;
-}
-
-.tutorial-instructions p {
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #374151;
 }
 
 .tutorial-start-btn {
@@ -922,26 +768,6 @@ h1 {
 .tutorial-start-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
-}
-
-@keyframes backdropFadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes popupSlideIn {
-  0% {
-    transform: translateY(-50px) scale(0.9);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
 }
 
 .money-display {
@@ -1101,38 +927,6 @@ h1 {
   transform: scale(1.1);
 }
 
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-@keyframes titleBounce {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-@keyframes borderGlow {
-  0%,
-  100% {
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
 @keyframes animalPulse {
   0%,
   100% {
@@ -1150,375 +944,6 @@ h1 {
   }
   50% {
     transform: translateY(-5px);
-  }
-}
-
-@keyframes skullSpin {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-
-@keyframes statusGlow {
-  0%,
-  100% {
-    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  }
-  50% {
-    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  }
-}
-
-@keyframes coopFloat {
-  0%,
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-5px) rotate(5deg);
-  }
-}
-
-@keyframes slaughterEffect {
-  0% {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.5) rotate(180deg);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(2) rotate(360deg);
-  }
-}
-
-@keyframes coinBurst {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-30px) scale(1.5);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-60px) scale(0.5);
-  }
-}
-
-@keyframes coinSpin {
-  0% {
-    transform: rotateY(0deg);
-  }
-  100% {
-    transform: rotateY(360deg);
-  }
-}
-
-@keyframes wiggle {
-  0% {
-    transform: rotate(0deg) scale(1);
-  }
-  25% {
-    transform: rotate(5deg) scale(1.1);
-  }
-  50% {
-    transform: rotate(0deg) scale(1);
-  }
-  75% {
-    transform: rotate(-5deg) scale(1.1);
-  }
-  100% {
-    transform: rotate(0deg) scale(1);
-  }
-}
-
-@keyframes glow {
-  0% {
-    box-shadow: 0 0 5px rgba(234, 179, 8, 0.5), 0 0 10px rgba(234, 179, 8, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(234, 179, 8, 0.8), 0 0 30px rgba(234, 179, 8, 0.6);
-  }
-  100% {
-    box-shadow: 0 0 5px rgba(234, 179, 8, 0.5), 0 0 10px rgba(234, 179, 8, 0.3);
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes mergeExplosion {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.5);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-@keyframes newAnimalSpawn {
-  0% {
-    transform: scale(0) rotate(0deg);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.2) rotate(180deg);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1) rotate(360deg);
-    opacity: 1;
-  }
-}
-
-@keyframes screenShake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-5px);
-  }
-  75% {
-    transform: translateX(5px);
-  }
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes bounceIn {
-  0% {
-    transform: scale(0.3) translateY(-50px);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.1) translateY(0);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes tooltipFadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.slaughter-anim {
-  animation: slaughterEffect 0.8s ease-out;
-}
-.coin-burst {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(45deg, #fbbf24, #f59e0b);
-  border-radius: 50%;
-  animation: coinBurst 1s ease-out, coinSpin 1s linear;
-  box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
-}
-.wiggle {
-  animation: wiggle 1.5s ease-in-out 3;
-}
-.glow {
-  animation: glow 2s ease-in-out 3;
-}
-.pulse {
-  animation: pulse 1.5s ease-in-out infinite;
-}
-.merge-explosion {
-  animation: mergeExplosion 0.6s ease-out;
-}
-.new-animal-spawn {
-  animation: newAnimalSpawn 0.8s ease-out;
-}
-.screen-shake {
-  animation: screenShake 0.5s ease-in-out;
-}
-.fade-in {
-  animation: fadeIn 0.8s ease-out;
-}
-.bounce-in {
-  animation: bounceIn 0.6s ease-out;
-}
-
-.floating-number {
-  position: absolute;
-  font-weight: 800;
-  font-size: 1.5rem;
-  color: var(--secondary-yellow);
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  animation: floatUp 2s ease-out forwards;
-  pointer-events: none;
-  z-index: 1000;
-}
-
-@keyframes floatUp {
-  0% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-80px) scale(1.5);
-    opacity: 0;
-  }
-}
-
-.particle {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background: radial-gradient(circle, #fbbf24, #f59e0b);
-  border-radius: 50%;
-  animation: particleFloat 2s ease-out forwards;
-  pointer-events: none;
-  --end-x: 0px;
-  --end-y: 0px;
-}
-
-@keyframes particleFloat {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--end-x), var(--end-y)) scale(0);
-    opacity: 0;
-  }
-}
-
-.drag-preview {
-  opacity: 0.7;
-  transform: scale(1.1);
-  z-index: 1000;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.drag-valid-target {
-  background: linear-gradient(145deg, #d1fae5, #a7f3d0) !important;
-  border-color: var(--success-green) !important;
-  animation: validTargetPulse 1s ease-in-out infinite;
-}
-
-@keyframes validTargetPulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-.drag-invalid-target {
-  background: linear-gradient(145deg, #fee2e2, #fecaca) !important;
-  border-color: var(--accent-red) !important;
-  animation: invalidTargetShake 0.5s ease-in-out infinite;
-}
-
-@keyframes invalidTargetShake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-2px);
-  }
-  75% {
-    transform: translateX(2px);
-  }
-}
-
-.achievement-popup {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: linear-gradient(145deg, #fef3c7, #fbbf24);
-  border: 2px solid var(--secondary-yellow-dark);
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  z-index: 10000;
-  animation: achievementSlideIn 0.5s ease-out;
-}
-
-@keyframes achievementSlideIn {
-  0% {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.timer-display {
-  background: linear-gradient(145deg, #e0f2fe, #bae6fd);
-  border: 2px solid #0ea5e9;
-  border-radius: 4px;
-  padding: 0.125rem 0.375rem;
-  font-weight: 600;
-  color: #0c4a6e;
-  box-shadow: 0 1px 4px rgba(14, 165, 233, 0.08);
-  font-size: 0.75rem;
-  line-height: 1.2;
-}
-
-.timer-display.urgent {
-  background: linear-gradient(145deg, #fef2f2, #fee2e2);
-  border-color: var(--accent-red);
-  color: var(--accent-red-dark);
-  animation: urgentPulse 0.5s ease-in-out infinite;
-}
-
-@keyframes urgentPulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
   }
 }
 
@@ -1601,41 +1026,109 @@ h1 {
   background: var(--primary-green-dark);
 }
 
-@media (max-width: 768px) {
-  .slaughter-house-container {
-    min-width: 200px;
-    max-width: 200px;
-    width: 200px;
-  }
+.floating-number {
+  position: absolute;
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--secondary-yellow);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  animation: floatUp 2s ease-out forwards;
+  pointer-events: none;
+  z-index: 1000;
+}
 
-  .slaughter-house {
-    height: 70px;
-  }
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #fbbf24, #f59e0b);
+  border-radius: 50%;
+  animation: particleFloat 2s ease-out forwards;
+  pointer-events: none;
+  --end-x: 0px;
+  --end-y: 0px;
+}
 
-  #slaughterHousesContainer {
-    max-height: 100px;
-  }
+.drag-preview {
+  opacity: 0.7;
+  transform: scale(1.1);
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
 
-  .compact-coop {
-    min-height: 120px;
-  }
+.drag-valid-target {
+  background: linear-gradient(145deg, #d1fae5, #a7f3d0) !important;
+  border-color: var(--success-green) !important;
+  animation: validTargetPulse 1s ease-in-out infinite;
+}
 
-  .tutorial-content {
-    flex-direction: column;
-    text-align: center;
+@keyframes validTargetPulse {
+  0%,
+  100% {
+    transform: scale(1);
   }
+  50% {
+    transform: scale(1.05);
+  }
+}
 
-  .tutorial-cow-image {
-    width: 100px;
-    height: 100px;
-  }
+.drag-invalid-target {
+  background: linear-gradient(145deg, #fee2e2, #fecaca) !important;
+  border-color: var(--accent-red) !important;
+  animation: invalidTargetShake 0.5s ease-in-out infinite;
+}
 
-  .tutorial-title {
-    font-size: 1.5rem;
+@keyframes invalidTargetShake {
+  0%,
+  100% {
+    transform: translateX(0);
   }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
 
-  .butcher-image {
-    width: 60px;
-    height: 60px;
-  }
+.achievement-popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(145deg, #fef3c7, #fbbf24);
+  border: 2px solid var(--secondary-yellow-dark);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: 10000;
+  animation: achievementSlideIn 0.5s ease-out;
+}
+
+.timer-display {
+  background: linear-gradient(145deg, #e0f2fe, #bae6fd);
+  border: 2px solid #0ea5e9;
+  border-radius: 4px;
+  padding: 0.125rem 0.375rem;
+  font-weight: 600;
+  color: #0c4a6e;
+  box-shadow: 0 1px 4px rgba(14, 165, 233, 0.08);
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.timer-display.urgent {
+  background: linear-gradient(145deg, #fef2f2, #fee2e2);
+  border-color: var(--accent-red);
+  color: var(--accent-red-dark);
+  animation: urgentPulse 0.5s ease-in-out infinite;
+}
+
+.coin-burst {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(45deg, #fbbf24, #f59e0b);
+  border-radius: 50%;
+  animation: coinBurst 1s ease-out, coinSpin 1s linear;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
 }

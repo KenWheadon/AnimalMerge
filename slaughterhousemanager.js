@@ -6,7 +6,7 @@ const slaughterHouseManager = {
   particleIntervals: new Map(),
 
   generateSlaughterHouseHTML() {
-    let html = '<div class="flex items-center space-x-3 overflow-x-auto pb-2">';
+    let html = '<div class="flex items-center space-x-3 overflow-x-auto">';
 
     html += `
       <div class="butcher-image-container">

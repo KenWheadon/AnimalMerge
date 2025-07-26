@@ -27,8 +27,8 @@ const coopManager = {
       const hiddenClass = config.unlocked ? "" : "hidden";
 
       html += `
-        <button id="buy${animalType}" class="enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white ${hiddenClass}">
-            <i mr-2"></i>${animalType} <img src="${imageSrc}" alt="${animalType}" class="inline-animal-icon" /> (${costText})
+        <button id="buy${animalType}" class="egg-buy-button enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white ${hiddenClass}">
+            <span>${animalType} (${costText})</span> <img src="${imageSrc}" alt="${animalType}" class="inline-animal-icon" />
         </button>
       `;
     }

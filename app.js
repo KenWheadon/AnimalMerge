@@ -103,18 +103,15 @@ function initializeGame() {
 function generateMainHTML() {
   return `
     <div class="game-container flex h-screen">
-        <div class="w-64 bg-white shadow-lg flex flex-col">
+        <div class="w-40 bg-white shadow-lg flex flex-col">
             <div class="p-4 border-b">
                 <div id="money" class="money-display text-center">Money: 💰${
                   gameState.money
                 }</div>
-                <div class="mt-6">
-                    <div id="status" class="status-display text-sm h-16 flex items-center justify-center">Drag or click 'Buy Egg 🥚' to start!</div>
-                </div>
             </div>
             
             <div class="flex-1 overflow-y-auto p-4">
-                <h3 class="text-lg font-bold text-green-800 mb-4">🛒 Buy Animals</h3>
+                <h3 class="text-lg font-bold text-green-800 mb-4">🛒 Buy Eggs</h3>
                 <div class="space-y-3">
                     ${coopManager.generateBuyAnimalButtons()}
                 </div>
@@ -122,26 +119,28 @@ function generateMainHTML() {
         </div>
 
         <div class="flex flex-col">
-            <div class="p-3 bg-gray-50 border-b">
+            <div class="p-1 bg-gray-50 border-b">
                 <div id="slaughterHousesContainer">
                     ${slaughterHouseManager.generateSlaughterHouseHTML()}
                 </div>
             </div>
 
-            <div class="p-4 overflow-auto">
+            <div id="status" class="status-display text-sm h-16 flex items-center justify-center">Drag or click 'Buy Egg 🥚' to start!</div>
+
+            <div class="pb-2">
                 <div class="flex justify-center">
                     ${gridManager.generateGridHTML()}
                 </div>
             </div>
             
-            <div class="flex-shrink-0 bg-white mx-4 mb-4 p-3 rounded-xl shadow-lg">
-                <div class="grid grid-cols-2 gap-4">
+            <div class="flex-shrink-0 bg-white mx-4 mb-1 p-1 rounded-xl shadow-lg">
+                <div class="grid grid-cols-2 gap-2">
                     <div class="automation-section">
                         <div class="flex items-center justify-between mb-2">
                             <h4 class="text-sm font-bold text-purple-800">⚙️ Auto-Merge</h4>
                             <span id="autoMergeLevel" class="text-xs text-gray-600">Lv.1</span>
                         </div>
-                        <div class="space-y-1 text-xs mb-2">
+                        <div class="space-y-1 text-xs mb-1">
                             <div class="flex justify-between">
                                 <span>Interval:</span>
                                 <span id="autoMergeTimer" class="font-mono">10.0s</span>
@@ -168,7 +167,7 @@ function generateMainHTML() {
                             <h4 class="text-sm font-bold text-orange-800">🔀 Shuffle</h4>
                             <span class="text-xs text-gray-600">Auto</span>
                         </div>
-                        <div class="space-y-1 text-xs mb-2">
+                        <div class="space-y-1 text-xs mb-1">
                             <div class="text-gray-500">Triggers after Auto-Merge</div>
                             <div class="text-gray-500">Rearranges animals</div>
                         </div>
@@ -186,7 +185,7 @@ function generateMainHTML() {
             </div>
         </div>
 
-        <div class="w-80 bg-white shadow-lg flex flex-col">
+        <div class="w-60 bg-white shadow-lg flex flex-col">
             <div class="p-4 border-b">
                 <h2 class="text-xl font-bold text-green-800">🏡 Farm Buildings</h2>
             </div>
