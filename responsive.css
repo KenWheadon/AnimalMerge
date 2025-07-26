@@ -34,17 +34,6 @@
     border-left-color: transparent;
   }
 
-  /* Keep grid cells exactly the same size on mobile */
-  .grid-cell {
-    width: 80px !important;
-    height: 80px !important;
-    min-width: 80px !important;
-    min-height: 80px !important;
-    max-width: 80px !important;
-    max-height: 80px !important;
-    font-size: 2rem !important;
-  }
-
   .game-grid td {
     width: 80px !important;
     height: 80px !important;

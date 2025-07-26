@@ -22,7 +22,7 @@ const gridManager = {
 
     for (let i = 0; i < 5; i++) {
       html += "<tr>";
-      for (let j = 0; j < 8; j++) {
+      for (let j = 0; j < 5; j++) {
         const spotConfig = GAME_CONFIG.gridConfig.availableSpots.find(
           (spot) => spot.row === i && spot.col === j
         );

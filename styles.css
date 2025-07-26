@@ -196,8 +196,6 @@ h1 {
 }
 
 .game-grid td {
-  width: 80px;
-  height: 80px;
   padding: 0;
   border: none;
   vertical-align: middle;
@@ -233,65 +231,6 @@ h1 {
   animation: borderGlow 3s ease-in-out infinite;
 }
 
-.grid-cell {
-  background: linear-gradient(145deg, #ffffff, #f8fafc);
-  border: 2px solid #e2e8f0;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  width: 80px;
-  height: 80px;
-  min-width: 80px;
-  min-height: 80px;
-  max-width: 80px;
-  max-height: 80px;
-  flex-shrink: 0;
-  flex-grow: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.grid-cell.grass {
-  background: linear-gradient(145deg, #65a30d, #4d7c0f);
-  border: 2px solid #365314;
-  cursor: pointer;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.grid-cell.grass::before {
-  content: "🌱";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 2rem;
-  opacity: 0.6;
-  animation: grassSway 3s ease-in-out infinite;
-}
-
-.grid-cell.grass:hover {
-  background: linear-gradient(145deg, #84cc16, #65a30d);
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 20px rgba(0, 0, 0, 0.25);
-}
-
-.grid-cell.grass::after {
-  content: attr(data-cost);
-  position: absolute;
-  bottom: 4px;
-  right: 6px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: bold;
-}
-
 @keyframes grassSway {
   0%,
   100% {
@@ -300,53 +239,6 @@ h1 {
   50% {
     transform: translate(-50%, -50%) rotate(5deg);
   }
-}
-
-.grid-cell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  transform: translateX(-100%);
-  transition: transform 0.6s ease;
-}
-
-.grid-cell:hover::before {
-  transform: translateX(100%);
-}
-
-.grid-cell:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06),
-    0 8px 20px rgba(0, 0, 0, 0.15);
-  border-color: var(--primary-green);
-}
-
-.grid-cell.occupied {
-  background: linear-gradient(145deg, #fef7e3, #fef3c7);
-  border-color: var(--secondary-yellow);
-  animation: animalPulse 2s ease-in-out infinite;
-}
-
-.grid-cell.occupied:hover {
-  animation: animalBounce 0.6s ease-in-out infinite;
-}
-
-/* Auto-merge glow effect for mergeable cells - using hover-like effect */
-.grid-cell.auto-merge-glow {
-  transform: translateY(-2px) scale(1.02) !important;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06),
-    0 8px 20px rgba(0, 0, 0, 0.15), 0 0 20px rgba(139, 92, 246, 0.6),
-    0 0 40px rgba(139, 92, 246, 0.4) !important;
-  border-color: #8b5cf6 !important;
-  border-width: 3px !important;
-  background: linear-gradient(145deg, #f3e8ff, #e9d5ff) !important;
-  animation: autoMergeGlow 0.5s ease-in-out infinite alternate !important;
 }
 
 @keyframes autoMergeGlow {
@@ -1520,21 +1412,5 @@ h1 {
     border: 8px solid transparent;
     border-bottom-color: rgba(0, 0, 0, 0.9);
     border-left-color: transparent;
-  }
-
-  /* Keep grid cells exactly the same size on mobile */
-  .grid-cell {
-    width: 80px !important;
-    height: 80px !important;
-    min-width: 80px !important;
-    min-height: 80px !important;
-    max-width: 80px !important;
-    max-height: 80px !important;
-    font-size: 2rem !important;
-  }
-
-  .game-grid td {
-    width: 80px !important;
-    height: 80px !important;
   }
 }

@@ -17,8 +17,8 @@
 }
 
 .game-grid td {
-  width: 80px;
-  height: 80px;
+  width: 100px !important;
+  height: 100px !important;
   padding: 0;
   border: none;
   vertical-align: middle;
@@ -61,12 +61,6 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  width: 80px;
-  height: 80px;
-  min-width: 80px;
-  min-height: 80px;
-  max-width: 80px;
-  max-height: 80px;
   flex-shrink: 0;
   flex-grow: 0;
   display: flex;
