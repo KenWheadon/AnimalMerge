@@ -119,7 +119,7 @@ function generateMainHTML() {
         </div>
 
         <div class="flex flex-col">
-            <div class="p-1 bg-gray-50 border-b">
+            <div class="p-1 border-b">
                 <div id="slaughterHousesContainer">
                     ${slaughterHouseManager.generateSlaughterHouseHTML()}
                 </div>

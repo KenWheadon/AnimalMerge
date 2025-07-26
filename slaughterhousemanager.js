@@ -19,12 +19,9 @@ const slaughterHouseManager = {
         <div class="slaughter-house-container">
           <div class="p-3">
             <div class="flex justify-between items-center mb-2">
-              <h3 class="text-sm font-bold text-red-800">Slaughter House ${
-                index + 1
-              }</h3>
-              <div class="flex items-center space-x-2">
+              <div class="flex items-center">
                 <div class="compact-queue-display">
-                  <span id="queueCount${index}">${house.queue.length}</span>
+                  Processing Que:&nbsp;<span id="queueCount${index}"> ${house.queue.length}</span>
                 </div>
                 <button id="slaughterInfo${index}" class="info-button">
                   <i class="fas fa-info-circle"></i>
