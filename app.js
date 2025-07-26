@@ -83,6 +83,7 @@ function initializeGame() {
 
   updateAnimalValues();
   updateMergeablePairs();
+  coopManager.updateEmptyMessageVisibility(); // Initialize empty state message
   updateStatus(
     `Start with initial grid spots! Click 🌱 grass squares to expand!`
   );
@@ -133,44 +134,50 @@ function generateMainHTML() {
                 </div>
             </div>
             
-            <div class="flex-shrink-0 bg-white m-4 p-4 rounded-xl shadow-lg">
-                <div class="flex space-x-6">
-                    <div class="flex-1 min-w-[220px]">
-                        <h3 class="text-lg font-bold text-purple-800 mb-2">⚙️ Auto-Merge</h3>
-                        <div class="space-y-2 text-sm">
-                            <p id="autoMergeLevel" class="font-semibold">Level: 1</p>
-                            <p id="autoMergeTimer" class="timer-display">Check Interval: 10s</p>
-                            <p id="autoMergeProgress" class="text-xs text-gray-600">Progress: 0/6 animals slaughtered</p>
-                            <div id="autoMergeProgressContainer" class="hidden">
-                                <div class="coop-progress-container">
-                                    <div class="coop-progress-label">Next Auto-Merge</div>
-                                    <div class="coop-progress-bar">
-                                        <div id="autoMergeProgressBar" class="coop-progress-fill" style="width: 0%"></div>
-                                    </div>
-                                </div>
+            <div class="flex-shrink-0 bg-white mx-4 mb-4 p-3 rounded-xl shadow-lg">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="automation-section">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-bold text-purple-800">⚙️ Auto-Merge</h4>
+                            <span id="autoMergeLevel" class="text-xs text-gray-600">Lv.1</span>
+                        </div>
+                        <div class="space-y-1 text-xs mb-2">
+                            <div class="flex justify-between">
+                                <span>Interval:</span>
+                                <span id="autoMergeTimer" class="font-mono">10.0s</span>
+                            </div>
+                            <div id="autoMergeProgress" class="text-gray-500">0/6 animals slaughtered</div>
+                        </div>
+                        <div id="autoMergeProgressContainer" class="mb-2 hidden">
+                            <div class="coop-progress-bar h-1">
+                                <div id="autoMergeProgressBar" class="coop-progress-fill" style="width: 0%"></div>
                             </div>
                         </div>
-                        <div class="mt-4 space-y-2">
-                            <button id="buyAutoMerge" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
-                                <i class="fas fa-cogs mr-1"></i>Auto-Merge ($1)
+                        <div class="space-y-1">
+                            <button id="buyAutoMerge" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
+                                Buy ($1)
                             </button>
-                            <button id="autoMergeToggle" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full hidden bg-green-500">
+                            <button id="autoMergeToggle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white hidden bg-green-500">
                                 🔵 ON
                             </button>
                         </div>
                     </div>
 
-                    <div class="flex-1 min-w-[220px]">
-                        <h3 class="text-lg font-bold text-orange-800 mb-2">🔀 Shuffle</h3>
-                        <div class="space-y-2 text-sm">
-                            <p class="font-semibold">Shuffles after Auto-Merge</p>
-                            <p class="text-xs text-gray-600">Automatically rearranges animals on grid</p>
+                    <div class="automation-section">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-bold text-orange-800">🔀 Shuffle</h4>
+                            <span class="text-xs text-gray-600">Auto</span>
                         </div>
-                        <div class="mt-4 space-y-2">
-                            <button id="buyShuffle" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full" style="background: linear-gradient(145deg, #f59e0b, #d97706);">
-                                <i class="fas fa-random mr-1"></i>Shuffle ($10)
+                        <div class="space-y-1 text-xs mb-2">
+                            <div class="text-gray-500">Triggers after Auto-Merge</div>
+                            <div class="text-gray-500">Rearranges animals</div>
+                        </div>
+                        <div class="mb-2" style="height: 4px;"></div>
+                        <div class="space-y-1">
+                            <button id="buyShuffle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white" style="background: linear-gradient(145deg, #f59e0b, #d97706);">
+                                Buy ($10)
                             </button>
-                            <button id="shuffleToggle" class="enhanced-button px-3 py-2 rounded-lg font-bold text-white text-sm w-full hidden bg-green-500">
+                            <button id="shuffleToggle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white hidden bg-green-500">
                                 🔵 ON
                             </button>
                         </div>
@@ -241,14 +248,10 @@ function updateAutoMergeLevel() {
       );
     gameState.autoMerge.timer = gameState.autoMerge.currentInterval;
 
-    document.getElementById(
-      "autoMergeLevel"
-    ).textContent = `Level: ${newLevel}`;
+    document.getElementById("autoMergeLevel").textContent = `Lv.${newLevel}`;
     document.getElementById(
       "autoMergeTimer"
-    ).textContent = `Check Interval: ${gameState.autoMerge.currentInterval.toFixed(
-      1
-    )}s`;
+    ).textContent = `${gameState.autoMerge.currentInterval.toFixed(1)}s`;
 
     eventManager.showAchievement(`🆙 Auto-Merge Level ${newLevel}!`);
     updateStatus(`Auto-Merge upgraded to level ${newLevel}! 🆙`);
@@ -259,7 +262,7 @@ function updateAutoMergeLevel() {
   );
   document.getElementById(
     "autoMergeProgress"
-  ).textContent = `Progress: ${gameState.totalSlaughtered}/${nextRequirement} animals slaughtered`;
+  ).textContent = `${gameState.totalSlaughtered}/${nextRequirement} animals slaughtered`;
 }
 
 function updateMergeablePairs() {

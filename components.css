@@ -102,6 +102,21 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
+/* Automation Section Styles */
+.automation-section {
+  background: linear-gradient(145deg, #f8fafc, #f1f5f9);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 120px;
+}
+
+.automation-section h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
 /* Info Button Styles */
 .info-button {
   background: rgba(59, 130, 246, 0.1);
@@ -556,24 +571,6 @@
   align-items: center;
 }
 
-.coop-tooltip-fixed .tooltip-upgrade-btn {
-  margin-top: 8px;
-  padding: 6px 12px;
-  background: linear-gradient(145deg, var(--warning-orange), #d97706);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.coop-tooltip-fixed .tooltip-upgrade-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-}
-
 .merged-slaughter-tooltip {
   position: fixed;
   background: rgba(0, 0, 0, 0.95);
@@ -608,24 +605,6 @@
   font-size: 0.7rem;
   color: var(--secondary-yellow);
   font-weight: 600;
-}
-
-.merged-slaughter-tooltip .tooltip-upgrade-btn {
-  padding: 6px 12px;
-  background: linear-gradient(145deg, var(--warning-orange), #d97706);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-}
-
-.merged-slaughter-tooltip .tooltip-upgrade-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.5);
 }
 
 .merged-slaughter-tooltip .tooltip-divider {

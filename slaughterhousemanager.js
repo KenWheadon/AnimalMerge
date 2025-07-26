@@ -68,7 +68,6 @@ const slaughterHouseManager = {
           timer: 0,
           queue: [],
           currentAnimal: null,
-          upgradeCost: 20,
         },
       ];
     }
@@ -93,7 +92,6 @@ const slaughterHouseManager = {
         timer: 0,
         queue: [],
         currentAnimal: null,
-        upgradeCost: 20,
       });
       updateMoney();
       this.updateSlaughterHouseDisplay();
@@ -101,34 +99,6 @@ const slaughterHouseManager = {
       updateStatus(`Bought new slaughter house for ${cost}! 🗡️`);
     } else {
       updateStatus(`Need ${cost} for new slaughter house! 😕`);
-      document.body.classList.add("screen-shake");
-      setTimeout(() => document.body.classList.remove("screen-shake"), 500);
-    }
-  },
-
-  upgradeSlaughterHouse(index) {
-    const house = gameState.slaughterHouses[index];
-    if (gameState.money >= house.upgradeCost) {
-      gameState.money -= house.upgradeCost;
-      house.level += 1;
-      house.processTime = 5.0 * Math.pow(0.85, house.level - 1);
-      house.upgradeCost = Math.floor(house.upgradeCost * 1.5);
-      updateMoney();
-      this.updateSlaughterHouseData(index);
-      eventManager.showAchievement(
-        `🆙 Slaughter House ${index + 1} Level ${house.level}!`
-      );
-      updateStatus(
-        `Upgraded slaughter house ${index + 1} to level ${house.level}! 🆙`
-      );
-
-      const existingTooltip = document.getElementById("mergedSlaughterTooltip");
-      if (existingTooltip) {
-        this.hideMergedTooltip();
-        setTimeout(() => this.showMergedTooltip(index), 100);
-      }
-    } else {
-      updateStatus(`Need ${house.upgradeCost} to upgrade slaughter house! 😕`);
       document.body.classList.add("screen-shake");
       setTimeout(() => document.body.classList.remove("screen-shake"), 500);
     }
@@ -572,12 +542,19 @@ const slaughterHouseManager = {
           <strong>Slaughter House ${houseIndex + 1}</strong>
           <span class="tooltip-level">Level ${house.level}</span>
         </div>
-        <button class="tooltip-upgrade-btn" onclick="slaughterHouseManager.upgradeSlaughterHouse(${houseIndex})">
-          <i class="fas fa-arrow-up mr-1"></i>Upgrade (${house.upgradeCost})
-        </button>
       </div>
       <div class="tooltip-divider"></div>
       <div class="tooltip-content">
+        <div class="tooltip-section-title">Processing Info:</div>
+        <div class="tooltip-animal-row">
+          <span class="animal-info">Process Time: ${house.processTime.toFixed(
+            1
+          )}s</span>
+        </div>
+        <div class="tooltip-animal-row">
+          <span class="animal-info">Queue Capacity: 10 animals</span>
+        </div>
+        <div class="tooltip-divider"></div>
         <div class="tooltip-section-title">Animal Values:</div>
     `;
 

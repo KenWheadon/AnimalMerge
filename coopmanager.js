@@ -39,6 +39,13 @@ const coopManager = {
   generateCoopHTML() {
     let html = "";
 
+    // Add empty state message
+    html += `
+      <div id="emptyFarmMessage" class="text-center py-4 text-gray-600 text-sm">
+        Merge animals to unlock buildings
+      </div>
+    `;
+
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const animalName =
         animalType.charAt(0).toUpperCase() + animalType.slice(1);
@@ -48,17 +55,19 @@ const coopManager = {
         stored: 0,
       };
 
-      const currentUpgradeCost = config.upgradeCostMultiplier * coopState.level;
-
       html += `
         <div id="${animalType}Coop" class="compact-coop hidden">
           <div class="coop-header">
             <div class="flex justify-between items-center">
-              <h3 class="coop-title"><img src="${animalImage}" alt="${animalName}" class="inline-animal-icon" /> ${animalName} Coop</h3>
+              <h3 class="coop-title">${animalName} Coop</h3>
               <button id="coopInfo${animalType}" class="info-button">
                 <i class="fas fa-info-circle"></i>
               </button>
             </div>
+          </div>
+          
+          <div class="text-center mb-3">
+            <img src="${animalImage}" alt="${animalName}" style="width: 60px; height: 60px; object-fit: contain; margin: 0 auto;" />
           </div>
           
           <div id="${animalType}CoopUnpurchased" class="coop-unpurchased">
@@ -72,7 +81,7 @@ const coopManager = {
           <div id="${animalType}CoopPurchased" class="coop-purchased hidden">
             <div class="coop-stats">
               <div class="coop-progress-container">
-                <div class="coop-progress-label">Next ${animalName} <img src="${animalImage}" alt="${animalName}" class="inline-animal-icon" /></div>
+                <div class="coop-progress-label">Next ${animalName}</div>
                 <div class="coop-progress-bar">
                   <div id="${animalType}CoopProgress" class="coop-progress-fill" style="width: 0%"></div>
                 </div>
@@ -84,7 +93,7 @@ const coopManager = {
             
             <div class="coop-actions">
               <button id="place${animalName}" class="enhanced-button place-button hidden">
-                <i class="fas fa-plus mr-1"></i>Place ${animalName} <img src="${animalImage}" alt="${animalName}" class="inline-animal-icon" />
+                <i class="fas fa-plus mr-1"></i>Place ${animalName}
               </button>
             </div>
           </div>
@@ -182,40 +191,11 @@ const coopManager = {
       }
 
       updateMoney();
+      this.updateEmptyMessageVisibility();
       eventManager.showAchievement(`🏡 ${animalName} Coop Purchased!`);
       updateStatus(`Bought ${animalType} coop 🏡`);
     } else {
       updateStatus(`Not enough money for ${animalType} coop! 😕`);
-      document.body.classList.add("screen-shake");
-      setTimeout(() => document.body.classList.remove("screen-shake"), 500);
-    }
-  },
-
-  upgradeCoop(animalType) {
-    const coop = gameState[`${animalType}Coop`];
-    const config = GAME_CONFIG.coopConfig[animalType];
-    const cost = config.upgradeCostMultiplier * coop.level;
-    const animalName = animalType.charAt(0).toUpperCase() + animalType.slice(1);
-
-    if (gameState.money >= cost) {
-      gameState.money -= cost;
-      coop.level += 1;
-      coop.timer =
-        config.baseTime * Math.pow(config.timeReductionFactor, coop.level - 1);
-
-      updateMoney();
-      eventManager.showAchievement(
-        `🆙 ${animalName} Coop Level ${coop.level}!`
-      );
-      updateStatus(`Upgraded ${animalType} coop to level ${coop.level} 🆙`);
-
-      const existingTooltip = document.getElementById("coopTooltip");
-      if (existingTooltip) {
-        this.hideCoopTooltip();
-        setTimeout(() => this.showCoopTooltip(animalType), 100);
-      }
-    } else {
-      updateStatus(`Not enough money to upgrade ${animalType} coop! 😕`);
       document.body.classList.add("screen-shake");
       setTimeout(() => document.body.classList.remove("screen-shake"), 500);
     }
@@ -244,12 +224,8 @@ const coopManager = {
     tooltip.id = "coopTooltip";
     tooltip.className = "coop-tooltip-fixed";
 
-    const upgradeCost = config.upgradeCostMultiplier * coop.level;
     const currentTime = (
       config.baseTime * Math.pow(config.timeReductionFactor, coop.level - 1)
-    ).toFixed(1);
-    const nextTime = (
-      config.baseTime * Math.pow(config.timeReductionFactor, coop.level)
     ).toFixed(1);
 
     tooltip.innerHTML = `
@@ -258,11 +234,8 @@ const coopManager = {
       </div>
       <div class="tooltip-content">
         <div class="tooltip-row">Level: ${coop.level}</div>
-        <div class="tooltip-row">Current time: ${currentTime}s</div>
-        <div class="tooltip-row">Next level: ${nextTime}s</div>
-        <button class="tooltip-upgrade-btn" onclick="coopManager.upgradeCoop('${animalType}')">
-          <i class="fas fa-arrow-up mr-1"></i>Upgrade ($${upgradeCost})
-        </button>
+        <div class="tooltip-row">Generation time: ${currentTime}s</div>
+        <div class="tooltip-row">Stored: ${coop.stored}</div>
       </div>
     `;
 
@@ -343,6 +316,28 @@ const coopManager = {
           coopElement.classList.add("bounce-in");
         }
       }
+    }
+    this.updateEmptyMessageVisibility();
+  },
+
+  updateEmptyMessageVisibility() {
+    const emptyMessage = document.getElementById("emptyFarmMessage");
+    if (!emptyMessage) return;
+
+    let hasVisibleBuildings = false;
+    for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
+      const animalName =
+        animalType.charAt(0).toUpperCase() + animalType.slice(1);
+      if (gameState.createdAnimals.has(animalName)) {
+        hasVisibleBuildings = true;
+        break;
+      }
+    }
+
+    if (hasVisibleBuildings) {
+      emptyMessage.classList.add("hidden");
+    } else {
+      emptyMessage.classList.remove("hidden");
     }
   },
 
@@ -719,13 +714,15 @@ const coopManager = {
           ? `Auto-merged into ${mergedTypes.map((t) => t).join(", ")} ⚙️`
           : "Auto-merged animals ⚙️";
       updateStatus(message);
-
-      if (gameState.shuffle.owned && gameState.shuffle.enabled) {
-        setTimeout(() => {
-          this.performShuffle();
-        }, GAME_CONFIG.shuffleConfig.delayAfterAutoMerge);
-      }
     }
+
+    // FIXED: Always trigger shuffle if owned and enabled, regardless of whether merges were made
+    if (gameState.shuffle.owned && gameState.shuffle.enabled) {
+      setTimeout(() => {
+        this.performShuffle();
+      }, GAME_CONFIG.shuffleConfig.delayAfterAutoMerge);
+    }
+
     this.updatePlaceButtonStates();
   },
 
