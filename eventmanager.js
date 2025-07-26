@@ -33,29 +33,9 @@ const eventManager = {
     }
   },
 
-  startInitialEggButtonAnimation() {
-    // Only start if the egg button hasn't been clicked yet
-    if (gameState.eggButtonClicked) return;
+  // REMOVED: startInitialEggButtonAnimation - no more initial egg animation
 
-    const eggButton = document.getElementById("buyEgg");
-    if (eggButton && !eggButton.classList.contains("initial-egg-glow")) {
-      eggButton.classList.add("initial-egg-glow");
-    }
-  },
-
-  stopInitialEggButtonAnimation() {
-    // Remove the animation class from the DOM element immediately
-    const eggButton = document.getElementById("buyEgg");
-    if (eggButton) {
-      eggButton.classList.remove("initial-egg-glow");
-    }
-
-    // Clear any interval if it exists (though we're not using one currently)
-    if (this.initialEggAnimationInterval) {
-      clearInterval(this.initialEggAnimationInterval);
-      this.initialEggAnimationInterval = null;
-    }
-  },
+  // REMOVED: stopInitialEggButtonAnimation - no more initial egg animation
 
   // Removed checkForNewMergeablePairs method entirely
 
@@ -257,6 +237,4 @@ const eventManager = {
       setTimeout(() => particle.remove(), 2000);
     }
   },
-
-  // Removed startWiggleAnimation method entirely - no more wiggle/glow animations
 };

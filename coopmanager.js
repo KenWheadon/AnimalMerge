@@ -25,14 +25,10 @@ const coopManager = {
       const imageSrc = GAME_CONFIG.animalImages[animalType];
       const costText = config.cost === 0 ? "Free" : `${config.cost}`;
       const hiddenClass = config.unlocked ? "" : "hidden";
-      // Only add initial animation if it's an egg AND it hasn't been clicked yet
-      const initialAnimClass =
-        animalType === "Egg" && !gameState.eggButtonClicked
-          ? "initial-egg-glow"
-          : "";
+      // REMOVED: No more initial animation class
 
       html += `
-        <button id="buy${animalType}" class="egg-buy-button enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white ${hiddenClass} ${initialAnimClass}">
+        <button id="buy${animalType}" class="egg-buy-button enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white ${hiddenClass}">
             <span>${animalType} (${costText})</span> <img src="${imageSrc}" alt="${animalType}" class="inline-animal-icon" />
         </button>
       `;
@@ -169,10 +165,7 @@ const coopManager = {
           button.classList.add("hidden");
         }
 
-        // Remove the initial egg glow if egg has been clicked
-        if (animalType === "Egg" && gameState.eggButtonClicked) {
-          button.classList.remove("initial-egg-glow");
-        }
+        // REMOVED: No more initial egg glow removal since the class is never added
       }
     }
   },

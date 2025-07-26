@@ -22,14 +22,15 @@ const slaughterHouseManager = {
     return `
       <div class="slaughter-house-section">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-bold text-red-800">🗡️ Slaughter House</h3>
+          <h3 class="text-lg font-bold text-red-800">Butcher Shop</h3>
+        
+          <div class="compact-queue-display">
+          Queue:&nbsp;<span id="queueCount0">${house.queue.length}</span>/10
+        </div>
+        
           <button id="slaughterInfo0" class="info-button">
             <i class="fas fa-info-circle"></i>
           </button>
-        </div>
-        
-        <div class="compact-queue-display mb-3">
-          Processing Queue: <span id="queueCount0">${house.queue.length}</span>/10
         </div>
         
         <div id="slaughterHouse0" class="slaughter-house" data-house-index="0">
@@ -474,8 +475,7 @@ const slaughterHouseManager = {
     let tooltipContent = `
       <div class="tooltip-header">
         <div class="tooltip-title">
-          <strong>Slaughter House</strong>
-          <span class="tooltip-level">Level ${house.level}</span>
+          <strong>Butcher Shop</strong>
         </div>
       </div>
       <div class="tooltip-divider"></div>

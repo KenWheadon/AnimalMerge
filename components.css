@@ -505,6 +505,7 @@
 
 .compact-queue-display {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   background: rgba(239, 68, 68, 0.1);
@@ -661,7 +662,7 @@
   background: linear-gradient(145deg, #ffffff, #f8fafc);
   border-radius: 20px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  max-width: 800px;
+  max-width: 900px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
@@ -694,10 +695,12 @@
 
 .tutorial-character {
   flex-shrink: 0;
+  width: 45%;
+  margin-right: 2%;
 }
 
 .tutorial-cow-image {
-  width: 90%;
+  width: 100%;
   height: auto;
   object-fit: contain;
 }

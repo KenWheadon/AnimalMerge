@@ -32,7 +32,7 @@ function showTutorialPopup() {
   popup.className = "tutorial-popup-backdrop";
 
   popup.innerHTML = `
-    <div class="tutorial-popup">
+       <div class="tutorial-popup">
       <button id="closeTutorial" class="tutorial-close-btn">×</button>
       <div class="tutorial-content">
         <div class="tutorial-character">
@@ -42,10 +42,10 @@ function showTutorialPopup() {
           <h2 class="tutorial-title">Welcome to Animal Merge Farm!</h2>
           <div class="tutorial-instructions">
             <p><strong>🥚 Start with Eggs:</strong> Buy and place eggs on your grid to begin!</p>
-            <p><strong>🔄 Merge:</strong> Merge 2 of the same thing Drag identicalanimals together to create new species!</p>
-            <p><strong>💰 Make Money:</strong> Drag animals to slaughter houses to sell them!</p>
-            <p><strong>🏡 Build Coops:</strong> Unlock coops to automatically generate animals!</p>
-            <p><strong>⚙️ Automate:</strong> Buy auto-merge to automatically combine animals!</p>
+            <p><strong>🔄 Merge Everything:</strong> Merge 2 of the same thing to upgrade it!</p>
+            <p><strong>💰 Make Money:</strong> Sell animations by dragging them to the butcher shop!</p>
+            <p><strong>🏡 Build Coops:</strong> Unlock coops to automatically generate better eggs!</p>
+            <p><strong>⚙️ Automate:</strong> Buy auto-merge to automatically combine animals and eggs!</p>
           </div>
           <button id="startFarming" class="tutorial-start-btn">Get Farming!</button>
         </div>
@@ -98,8 +98,7 @@ function initializeGame() {
 
   startGameTimers();
 
-  // Start initial egg button animation
-  eventManager.startInitialEggButtonAnimation();
+  // REMOVED: Initial egg button animation start
 
   showTutorialPopup();
 }
@@ -367,7 +366,7 @@ function buyAnimal(type, cost) {
     // Mark egg button as clicked if this is an egg purchase
     if (type === "Egg" && !gameState.eggButtonClicked) {
       gameState.eggButtonClicked = true;
-      eventManager.stopInitialEggButtonAnimation();
+      // REMOVED: Stop initial egg button animation call
       coopManager.updateBuyAnimalButtons(); // Update button states
     }
 
