@@ -32,12 +32,12 @@ body::before {
   z-index: 1;
 }
 
-/* Main Game Area Container - Ensure tooltips aren't clipped */
+/* Main Game Area Container */
 .game-container {
   position: relative;
   z-index: 2;
   justify-content: center;
-  overflow: visible; /* Allow tooltips to extend beyond container */
+  overflow: visible;
 }
 
 /* Ensure slaughter house area doesn't clip tooltips */
@@ -61,7 +61,7 @@ h1 {
   animation: titleBounce 3s ease-in-out infinite;
 }
 
-/* Left and Right panel scrollbar styling */
+/* Scrollbar styling */
 .w-64::-webkit-scrollbar,
 .w-80::-webkit-scrollbar {
   width: 6px;
@@ -84,7 +84,6 @@ h1 {
   background: var(--primary-green-dark);
 }
 
-/* Horizontal scroll styling */
 .overflow-x-auto::-webkit-scrollbar {
   height: 4px;
 }
@@ -103,7 +102,7 @@ h1 {
   background: var(--primary-green-dark);
 }
 
-/* Animal Image Styles */
+/* Animal Image Base Styles */
 .animal-image {
   width: 115px;
   height: 115px;
@@ -137,7 +136,7 @@ h1 {
   }
 }
 
-/* Grid cell adjustments for images */
+/* Grid cell base styles */
 .grid-cell {
   display: flex;
   align-items: center;
