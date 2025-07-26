@@ -125,15 +125,7 @@ function generateMainHTML() {
                 </div>
             </div>
 
-            <div id="status" class="status-display text-sm h-16 flex items-center justify-center">Drag or click 'Buy Egg 🥚' to start!</div>
-
-            <div class="pb-2">
-                <div class="flex justify-center">
-                    ${gridManager.generateGridHTML()}
-                </div>
-            </div>
-            
-            <div class="flex-shrink-0 bg-white mx-4 mb-1 p-1 rounded-xl shadow-lg">
+            <div class="flex-shrink-0 bg-white mx-4 m-2 p-1 rounded-xl shadow-lg">
                 <div class="grid grid-cols-2 gap-2">
                     <div class="automation-section">
                         <div class="flex items-center justify-between mb-2">
@@ -183,6 +175,15 @@ function generateMainHTML() {
                     </div>
                 </div>
             </div>
+
+            <div class="pb-2">
+                <div class="flex justify-center">
+                    ${gridManager.generateGridHTML()}
+                </div>
+            </div>
+
+            <div id="status" class="status-display text-sm h-16 flex items-center justify-center">Drag or click 'Buy Egg 🥚' to start!</div>
+
         </div>
 
         <div class="w-60 bg-white shadow-lg flex flex-col">
