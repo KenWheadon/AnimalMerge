@@ -49,7 +49,8 @@ const coopManager = {
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const animalName =
         animalType.charAt(0).toUpperCase() + animalType.slice(1);
-      const animalImage = GAME_CONFIG.animalImages[animalName];
+      const producedType = config.producesType;
+      const producedImage = GAME_CONFIG.animalImages[producedType];
       const coopState = gameState[`${animalType}Coop`] || {
         level: 1,
         stored: 0,
@@ -67,7 +68,7 @@ const coopManager = {
           </div>
           
           <div class="text-center mb-3">
-            <img src="${animalImage}" alt="${animalName}" style="width: 60px; height: 60px; object-fit: contain; margin: 0 auto;" />
+            <img src="${producedImage}" alt="${producedType}" style="width: 60px; height: 60px; object-fit: contain; margin: 0 auto;" />
           </div>
           
           <div id="${animalType}CoopUnpurchased" class="coop-unpurchased">
@@ -81,7 +82,7 @@ const coopManager = {
           <div id="${animalType}CoopPurchased" class="coop-purchased hidden">
             <div class="coop-stats">
               <div class="coop-progress-container">
-                <div class="coop-progress-label">Next ${animalName}</div>
+                <div class="coop-progress-label">Next ${producedType}</div>
                 <div class="coop-progress-bar">
                   <div id="${animalType}CoopProgress" class="coop-progress-fill" style="width: 0%"></div>
                 </div>
@@ -92,8 +93,8 @@ const coopManager = {
             </div>
             
             <div class="coop-actions">
-              <button id="place${animalName}" class="enhanced-button place-button hidden">
-                <i class="fas fa-plus mr-1"></i>Place ${animalName}
+              <button id="place${producedType}" class="enhanced-button place-button hidden">
+                <i class="fas fa-plus mr-1"></i>Place ${producedType}
               </button>
             </div>
           </div>
@@ -123,16 +124,17 @@ const coopManager = {
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const animalName =
         animalType.charAt(0).toUpperCase() + animalType.slice(1);
+      const producedType = config.producesType;
 
       const buyButton = document.getElementById(`buy${animalName}Coop`);
       if (buyButton) {
         buyButton.addEventListener("click", () => this.buyCoop(animalType));
       }
 
-      const placeButton = document.getElementById(`place${animalName}`);
+      const placeButton = document.getElementById(`place${producedType}`);
       if (placeButton) {
         placeButton.addEventListener("click", () =>
-          this.placeStoredAnimal(animalName)
+          this.placeStoredAnimal(animalType, producedType)
         );
       }
 
@@ -165,6 +167,7 @@ const coopManager = {
     const config = GAME_CONFIG.coopConfig[animalType];
     const cost = config.buyCost;
     const animalName = animalType.charAt(0).toUpperCase() + animalType.slice(1);
+    const producedType = config.producesType;
 
     if (gameState.money >= cost) {
       gameState.money -= cost;
@@ -185,8 +188,9 @@ const coopManager = {
         purchasedElement.classList.remove("hidden");
       }
 
-      if (GAME_CONFIG.purchaseConfig[animalName]) {
-        GAME_CONFIG.purchaseConfig[animalName].unlocked = true;
+      // Unlock the corresponding egg for purchase
+      if (GAME_CONFIG.purchaseConfig[producedType]) {
+        GAME_CONFIG.purchaseConfig[producedType].unlocked = true;
         this.updateBuyAnimalButtons();
       }
 
@@ -214,6 +218,7 @@ const coopManager = {
     const coop = gameState[`${animalType}Coop`];
     const config = GAME_CONFIG.coopConfig[animalType];
     const animalName = animalType.charAt(0).toUpperCase() + animalType.slice(1);
+    const producedType = config.producesType;
     const infoButton = document.getElementById(`coopInfo${animalType}`);
 
     if (!coop.owned || !infoButton) return;
@@ -234,6 +239,7 @@ const coopManager = {
       </div>
       <div class="tooltip-content">
         <div class="tooltip-row">Level: ${coop.level}</div>
+        <div class="tooltip-row">Produces: ${producedType}</div>
         <div class="tooltip-row">Generation time: ${currentTime}s</div>
         <div class="tooltip-row">Stored: ${coop.stored}</div>
       </div>
@@ -283,19 +289,20 @@ const coopManager = {
     }
   },
 
-  placeStoredAnimal(animalName) {
-    const animalType = animalName.toLowerCase();
+  placeStoredAnimal(animalType, producedType) {
     const coop = gameState[`${animalType}Coop`];
 
-    if (coop.stored > 0 && placeAnimal(animalName)) {
+    if (coop.stored > 0 && placeAnimal(producedType)) {
       coop.stored -= 1;
       document.getElementById(
         `${animalType}CoopStored`
       ).textContent = `Stored: ${coop.stored}`;
 
       if (coop.stored === 0) {
-        document.getElementById(`place${animalName}`).classList.add("hidden");
-        document.getElementById(`place${animalName}`).classList.remove("pulse");
+        document.getElementById(`place${producedType}`).classList.add("hidden");
+        document
+          .getElementById(`place${producedType}`)
+          .classList.remove("pulse");
       }
       this.updatePlaceButtonStates();
     } else {
@@ -308,6 +315,7 @@ const coopManager = {
       const animalName =
         animalType.charAt(0).toUpperCase() + animalType.slice(1);
 
+      // Check if the actual animal (not egg) has been created to unlock the coop
       if (gameState.createdAnimals.has(animalName)) {
         const coopElement = document.getElementById(`${animalType}Coop`);
 
@@ -343,9 +351,8 @@ const coopManager = {
 
   updatePlaceButtonStates() {
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
-      const animalName =
-        animalType.charAt(0).toUpperCase() + animalType.slice(1);
-      const placeButton = document.getElementById(`place${animalName}`);
+      const producedType = config.producesType;
+      const placeButton = document.getElementById(`place${producedType}`);
       const coop = gameState[`${animalType}Coop`];
 
       if (placeButton && coop && coop.owned) {
@@ -365,11 +372,11 @@ const coopManager = {
   },
 
   checkForNewUnlocks(newAnimalType) {
-    if (GAME_CONFIG.coopConfig[newAnimalType.toLowerCase()]) {
-      const coopKey = newAnimalType.toLowerCase();
-
-      if (!this.unlockedCoops.has(coopKey)) {
-        this.unlockedCoops.add(coopKey);
+    // Check if this animal type corresponds to a coop (Cat, Panda, Vulture unlock coops)
+    const lowerAnimalType = newAnimalType.toLowerCase();
+    if (GAME_CONFIG.coopConfig[lowerAnimalType]) {
+      if (!this.unlockedCoops.has(lowerAnimalType)) {
+        this.unlockedCoops.add(lowerAnimalType);
         this.updateCoopVisibility();
         eventManager.showAchievement(`🏡 ${newAnimalType} Coop Unlocked!`);
       }
@@ -379,8 +386,7 @@ const coopManager = {
   updateCoopTimers() {
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const coop = gameState[`${animalType}Coop`];
-      const animalName =
-        animalType.charAt(0).toUpperCase() + animalType.slice(1);
+      const producedType = config.producesType;
 
       if (coop.owned) {
         coop.timer -= 1;
@@ -411,7 +417,7 @@ const coopManager = {
             storedElement.textContent = `Stored: ${coop.stored}`;
           }
 
-          const placeButton = document.getElementById(`place${animalName}`);
+          const placeButton = document.getElementById(`place${producedType}`);
           if (placeButton) {
             placeButton.classList.remove("hidden");
             placeButton.classList.add("pulse");
@@ -424,7 +430,7 @@ const coopManager = {
             config.baseTime *
             Math.pow(config.timeReductionFactor, coop.level - 1);
 
-          eventManager.showAchievement(`${animalName} Ready!`);
+          eventManager.showAchievement(`${producedType} Ready!`);
 
           const progressElement = document.getElementById(
             `${animalType}CoopProgress`
@@ -716,7 +722,7 @@ const coopManager = {
       updateStatus(message);
     }
 
-    // FIXED: Always trigger shuffle if owned and enabled, regardless of whether merges were made
+    // Always trigger shuffle if owned and enabled, regardless of whether merges were made
     if (gameState.shuffle.owned && gameState.shuffle.enabled) {
       setTimeout(() => {
         this.performShuffle();

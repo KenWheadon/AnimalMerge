@@ -40,7 +40,7 @@ function showTutorialPopup() {
           <h2 class="tutorial-title">Welcome to Animal Merge Farm!</h2>
           <div class="tutorial-instructions">
             <p><strong>🥚 Start with Eggs:</strong> Buy and place eggs on your grid to begin!</p>
-            <p><strong>🔄 Merge Animals:</strong> Drag identical animals together to create new species!</p>
+            <p><strong>🔄 Merge:</strong> Merge 2 of the same thing Drag identicalanimals together to create new species!</p>
             <p><strong>💰 Make Money:</strong> Drag animals to slaughter houses to sell them!</p>
             <p><strong>🏡 Build Coops:</strong> Unlock coops to automatically generate animals!</p>
             <p><strong>⚙️ Automate:</strong> Buy auto-merge to automatically combine animals!</p>
