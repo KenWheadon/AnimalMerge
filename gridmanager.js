@@ -32,9 +32,9 @@ const gridManager = {
           const cellClass = isPurchased ? "grid-cell" : "grid-cell grass";
           const cellContent =
             isPurchased && gameState.grid[i][j]
-              ? `<span class="animal-emoji">${
-                  GAME_CONFIG.animalEmojis[gameState.grid[i][j]]
-                }</span>`
+              ? `<img src="${
+                  GAME_CONFIG.animalImages[gameState.grid[i][j]]
+                }" alt="${gameState.grid[i][j]}" class="animal-image" />`
               : "";
 
           html += `<td><div id="cell-${i}-${j}" class="${cellClass}" 
@@ -71,9 +71,9 @@ const gridManager = {
 
       if (gameState.grid[i][j]) {
         cell.classList.add("occupied");
-        cell.innerHTML = `<span class="animal-emoji">${
-          GAME_CONFIG.animalEmojis[gameState.grid[i][j]]
-        }</span>`;
+        cell.innerHTML = `<img src="${
+          GAME_CONFIG.animalImages[gameState.grid[i][j]]
+        }" alt="${gameState.grid[i][j]}" class="animal-image" />`;
         cell.draggable = true;
       } else {
         cell.classList.remove("occupied");
@@ -521,9 +521,7 @@ const gridManager = {
     // Update mergeable pairs after moving
     updateMergeablePairs();
 
-    updateStatus(
-      `Moved ${GAME_CONFIG.animalEmojis[sourceType]} to empty space! 📦`
-    );
+    updateStatus(`Moved ${sourceType} to empty space! 📦`);
   },
 
   // Swap two animals
@@ -546,9 +544,7 @@ const gridManager = {
     // Update mergeable pairs after swapping
     updateMergeablePairs();
 
-    updateStatus(
-      `Swapped ${GAME_CONFIG.animalEmojis[sourceType]} and ${GAME_CONFIG.animalEmojis[targetType]}! 🔄`
-    );
+    updateStatus(`Swapped ${sourceType} and ${targetType}! 🔄`);
   },
 
   // Clear all drag target highlights

@@ -66,6 +66,109 @@ const eventManager = {
     }
   },
 
+  // Show demo ended popup
+  showDemoEndedPopup() {
+    // Create backdrop
+    const backdrop = document.createElement("div");
+    backdrop.className = "demo-ended-backdrop";
+    backdrop.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+
+    // Create popup
+    const popup = document.createElement("div");
+    popup.className = "demo-ended-popup";
+    popup.style.cssText = `
+      background: linear-gradient(145deg, #1f2937, #374151);
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      border: 2px solid #fbbf24;
+      animation: popupScale 0.5s ease-out;
+    `;
+
+    popup.innerHTML = `
+      <div style="margin-bottom: 1.5rem;">
+        <img src="${GAME_CONFIG.animalImages.EndDemoAnimal}" alt="End Demo Animal" style="width: 120px; height: 120px; object-fit: contain; margin: 0 auto; display: block; border-radius: 0.5rem;" />
+      </div>
+      <h2 style="color: #fbbf24; font-size: 2rem; font-weight: bold; margin-bottom: 1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🎉 Demo Ended! 🎉</h2>
+      <p style="color: #d1d5db; font-size: 1.1rem; margin-bottom: 1.5rem; line-height: 1.6;">
+        Congratulations! You've reached the final animal and completed this demo. 
+        The <strong style="color: #fbbf24;">End Demo Animal</strong> can be sold but cannot merge any further.
+      </p>
+      <button id="closeDemoPopup" style="
+        background: linear-gradient(145deg, #fbbf24, #f59e0b);
+        color: #1f2937;
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: bold;
+        font-size: 1.1rem;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+        transition: all 0.2s;
+      " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        Continue Playing
+      </button>
+    `;
+
+    // Add CSS animation keyframes if not already added
+    if (!document.querySelector("#popup-animations")) {
+      const style = document.createElement("style");
+      style.id = "popup-animations";
+      style.textContent = `
+        @keyframes popupScale {
+          0% {
+            transform: scale(0.8);
+            opacity: 0;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    backdrop.appendChild(popup);
+    document.body.appendChild(backdrop);
+
+    // Add close functionality
+    const closeButton = document.getElementById("closeDemoPopup");
+    closeButton.addEventListener("click", () => {
+      backdrop.remove();
+    });
+
+    // Close on backdrop click
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) {
+        backdrop.remove();
+      }
+    });
+
+    // Close on Escape key
+    const escapeHandler = (e) => {
+      if (e.key === "Escape") {
+        backdrop.remove();
+        document.removeEventListener("keydown", escapeHandler);
+      }
+    };
+    document.addEventListener("keydown", escapeHandler);
+  },
+
   // Enhanced notification queue system
   queueNotification(message) {
     this.notificationQueue.push(message);

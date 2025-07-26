@@ -298,8 +298,8 @@ function placeAnimal(type) {
       const animalType = GAME_CONFIG.animalTypes[type];
       updateStatus(
         gameState.createdAnimals.size === 1 && animalType.sellPrice > 0
-          ? `${GAME_CONFIG.animalEmojis[type]} created! You can sell it for 💰${animalType.sellPrice}`
-          : `Placed ${GAME_CONFIG.animalEmojis[type]}`
+          ? `${type} created! You can sell it for 💰${animalType.sellPrice}`
+          : `Placed ${type}`
       );
 
       // Check for new unlocks
@@ -317,10 +317,10 @@ function buyAnimal(type, cost) {
     gameState.money -= cost;
     if (placeAnimal(type)) {
       updateMoney();
-      updateStatus(`Bought and placed ${GAME_CONFIG.animalEmojis[type]}`);
+      updateStatus(`Bought and placed ${type}`);
     }
   } else {
-    updateStatus(`Not enough money for ${GAME_CONFIG.animalEmojis[type]}! 😕`);
+    updateStatus(`Not enough money for ${type}! 😕`);
     document.body.classList.add("screen-shake");
     setTimeout(() => document.body.classList.remove("screen-shake"), 500);
   }
@@ -377,11 +377,16 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   // Check for unlocks
   coopManager.checkForNewUnlocks(newType);
 
+  // Check if this is the end demo animal
+  if (newType === "EndDemoAnimal") {
+    eventManager.showDemoEndedPopup();
+  }
+
   const sellPrice = GAME_CONFIG.animalTypes[newType].sellPrice;
   updateStatus(
     sellPrice > 0
-      ? `Merged into ${GAME_CONFIG.animalEmojis[newType]}! You can sell it for 💰${sellPrice}`
-      : `Merged into ${GAME_CONFIG.animalEmojis[newType]}!`
+      ? `Merged into ${newType}! You can sell it for 💰${sellPrice}`
+      : `Merged into ${newType}!`
   );
 }
 

@@ -170,9 +170,7 @@ const slaughterHouseManager = {
     this.updateSlaughterHouseQueue(houseIndex);
     this.processQueue(houseIndex);
 
-    updateStatus(
-      `Added ${GAME_CONFIG.animalEmojis[animalType]} to slaughter queue!`
-    );
+    updateStatus(`Added ${animalType} to slaughter queue!`);
     return true;
   },
 
@@ -204,8 +202,9 @@ const slaughterHouseManager = {
     const processingAnimal = document.createElement("div");
     processingAnimal.className = "processing-animal";
     processingAnimal.id = `processingAnimal${houseIndex}`;
-    processingAnimal.textContent =
-      GAME_CONFIG.animalEmojis[house.currentAnimal.type];
+    processingAnimal.innerHTML = `<img src="${
+      GAME_CONFIG.animalImages[house.currentAnimal.type]
+    }" alt="${house.currentAnimal.type}" class="processing-animal-image" />`;
     slaughterHouse.appendChild(processingAnimal);
 
     // Start particle effect
@@ -432,11 +431,7 @@ const slaughterHouseManager = {
           house.currentAnimal = null;
           this.processQueue(index); // Start next animal
 
-          updateStatus(
-            `Processed ${GAME_CONFIG.animalEmojis[animal.type]} for 💰${
-              animal.value
-            }!`
-          );
+          updateStatus(`Processed ${animal.type} for 💰${animal.value}!`);
         }
       }
     });
@@ -586,7 +581,7 @@ const slaughterHouseManager = {
     if (GAME_CONFIG.animalTypes[type].sellPrice > 0) {
       this.addAnimalToQueue(houseIndex, type, i, j);
     } else {
-      updateStatus(`${GAME_CONFIG.animalEmojis[type]} cannot be sold! 😕`);
+      updateStatus(`${type} cannot be sold! 😕`);
     }
 
     const sourceCell = document.getElementById(`cell-${i}-${j}`);
@@ -611,7 +606,7 @@ const slaughterHouseManager = {
     if (GAME_CONFIG.animalTypes[type].sellPrice > 0) {
       this.addAnimalToQueue(houseIndex, type, i, j);
     } else {
-      updateStatus(`${GAME_CONFIG.animalEmojis[type]} cannot be sold! 😕`);
+      updateStatus(`${type} cannot be sold! 😕`);
     }
 
     const sourceCell = document.getElementById(`cell-${i}-${j}`);
@@ -668,7 +663,7 @@ const slaughterHouseManager = {
       if (sellPrice > 0 && gameState.createdAnimals.has(type)) {
         tooltipContent += `
           <div class="tooltip-animal-row">
-            <span class="animal-info">${GAME_CONFIG.animalEmojis[type]} ${type}</span>
+            <span class="animal-info"><img src="${GAME_CONFIG.animalImages[type]}" alt="${type}" class="inline-animal-icon" /> ${type}</span>
             <span class="animal-value">💰${sellPrice}</span>
           </div>
         `;

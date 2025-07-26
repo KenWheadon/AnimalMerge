@@ -27,29 +27,20 @@ const coopManager = {
     for (const [animalType, config] of Object.entries(
       GAME_CONFIG.purchaseConfig
     )) {
-      const emoji = GAME_CONFIG.animalEmojis[animalType];
+      const imageSrc = GAME_CONFIG.animalImages[animalType];
       const costText = config.cost === 0 ? "Free" : `$${config.cost}`;
       const hiddenClass = config.unlocked ? "" : "hidden";
 
       // Get appropriate icon based on animal type
       let icon = "fas fa-egg";
-      if (animalType.toLowerCase().includes("chicken"))
-        icon = "fas fa-drumstick-bite";
-      else if (animalType.toLowerCase().includes("rooster"))
-        icon = "fas fa-feather";
-      else if (animalType.toLowerCase().includes("goat"))
-        icon = "fas fa-mountain";
-      else if (animalType.toLowerCase().includes("sheep"))
-        icon = "fas fa-sheep";
-      else if (animalType.toLowerCase().includes("pig")) icon = "fas fa-pig";
-      else if (animalType.toLowerCase().includes("llama"))
-        icon = "fas fa-horse";
-      else if (animalType.toLowerCase().includes("cow")) icon = "fas fa-cow";
-      else if (animalType.toLowerCase().includes("bull")) icon = "fas fa-bull";
+      if (animalType.toLowerCase().includes("cat")) icon = "fas fa-cat";
+      else if (animalType.toLowerCase().includes("panda")) icon = "fas fa-paw";
+      else if (animalType.toLowerCase().includes("vulture"))
+        icon = "fas fa-dove";
 
       html += `
         <button id="buy${animalType}" class="enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white ${hiddenClass}">
-            <i class="${icon} mr-2"></i>${animalType} ${emoji} (${costText})
+            <i class="${icon} mr-2"></i>${animalType} <img src="${imageSrc}" alt="${animalType}" class="inline-animal-icon" /> (${costText})
         </button>
       `;
     }
@@ -65,7 +56,7 @@ const coopManager = {
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const animalName =
         animalType.charAt(0).toUpperCase() + animalType.slice(1);
-      const animalEmoji = GAME_CONFIG.animalEmojis[animalName];
+      const animalImage = GAME_CONFIG.animalImages[animalName];
       const coopState = gameState[`${animalType}Coop`] || {
         level: 1,
         stored: 0,
@@ -80,7 +71,7 @@ const coopManager = {
         <div id="${animalType}Coop" class="compact-coop hidden">
           <div class="coop-header">
             <div class="flex justify-between items-center">
-              <h3 class="coop-title">${animalEmoji} ${animalName} Coop</h3>
+              <h3 class="coop-title"><img src="${animalImage}" alt="${animalName}" class="inline-animal-icon" /> ${animalName} Coop</h3>
               <button id="coopInfo${animalType}" class="info-button">
                 <i class="fas fa-info-circle"></i>
               </button>
@@ -100,7 +91,7 @@ const coopManager = {
           <div id="${animalType}CoopPurchased" class="coop-purchased hidden">
             <div class="coop-stats">
               <div class="coop-progress-container">
-                <div class="coop-progress-label">Next ${animalName} ${animalEmoji}</div>
+                <div class="coop-progress-label">Next ${animalName} <img src="${animalImage}" alt="${animalName}" class="inline-animal-icon" /></div>
                 <div class="coop-progress-bar">
                   <div id="${animalType}CoopProgress" class="coop-progress-fill" style="width: 0%"></div>
                 </div>
@@ -112,7 +103,7 @@ const coopManager = {
             
             <div class="coop-actions">
               <button id="place${animalName}" class="enhanced-button place-button hidden">
-                <i class="fas fa-plus mr-1"></i>Place ${animalName} ${animalEmoji}
+                <i class="fas fa-plus mr-1"></i>Place ${animalName} <img src="${animalImage}" alt="${animalName}" class="inline-animal-icon" />
               </button>
             </div>
           </div>
@@ -505,9 +496,7 @@ const coopManager = {
             Math.pow(config.timeReductionFactor, coop.level - 1);
 
           // Achievement effect
-          eventManager.showAchievement(
-            `${GAME_CONFIG.animalEmojis[animalName]} ${animalName} Ready!`
-          );
+          eventManager.showAchievement(`${animalName} Ready!`);
 
           // Reset progress bar
           const progressElement = document.getElementById(
@@ -1045,6 +1034,11 @@ const coopManager = {
 
         // Check for new unlocks
         this.checkForNewUnlocks(newType);
+
+        // Check if this is the end demo animal
+        if (newType === "EndDemoAnimal") {
+          eventManager.showDemoEndedPopup();
+        }
       }
     });
 
@@ -1058,9 +1052,7 @@ const coopManager = {
     if (mergesMade) {
       const message =
         mergedTypes.length > 0
-          ? `Auto-merged into ${mergedTypes
-              .map((t) => GAME_CONFIG.animalEmojis[t])
-              .join(", ")} ⚙️`
+          ? `Auto-merged into ${mergedTypes.map((t) => t).join(", ")} ⚙️`
           : "Auto-merged animals ⚙️";
       updateStatus(message);
     }
