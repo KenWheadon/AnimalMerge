@@ -136,6 +136,9 @@
   color: #3b82f6;
   font-size: 0.75rem;
   transition: all 0.2s ease;
+  position: fixed;
+  margin-left: 1px;
+  margin-top: 1px;
 }
 
 .info-button:hover {

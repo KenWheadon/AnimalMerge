@@ -322,6 +322,11 @@ const gridManager = {
   },
 
   canMerge(sourceI, sourceJ, targetI, targetJ) {
+    // Fix: Prevent self-merging - same cell cannot merge with itself
+    if (sourceI === targetI && sourceJ === targetJ) {
+      return false;
+    }
+
     if (!gameState.purchasedCells.has(`${targetI}-${targetJ}`)) {
       return false;
     }

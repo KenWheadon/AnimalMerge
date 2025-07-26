@@ -21,14 +21,16 @@ const slaughterHouseManager = {
 
     return `
       <div class="slaughter-house-section">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-bold text-red-800">Butcher Shop</h3>
-        
+        <div class="slaughter-house-header">
+          <div class="butcher-image-container">
+            <img src="images/butcher.png" alt="Butcher" class="butcher-image" />
+          </div>
+          
           <div class="compact-queue-display">
-          Queue:&nbsp;<span id="queueCount0">${house.queue.length}</span>/10
-        </div>
-        
-          <button id="slaughterInfo0" class="info-button">
+            Queue:&nbsp;<span id="queueCount0">${house.queue.length}</span>/10
+          </div>
+          
+          <button id="slaughterInfo0" class="info-button slaughter-info-button">
             <i class="fas fa-info-circle"></i>
           </button>
         </div>
@@ -393,6 +395,41 @@ const slaughterHouseManager = {
       ]);
     }
 
+    // Also add event listeners to the entire slaughter house section for full-area dropping
+    const slaughterSection = document.querySelector(".slaughter-house-section");
+    if (slaughterSection) {
+      const sectionDragOverHandler = (e) => {
+        e.preventDefault();
+        const slaughterHouse = document.getElementById(`slaughterHouse0`);
+        if (slaughterHouse) {
+          slaughterHouse.classList.add("drag-over");
+        }
+      };
+      const sectionDragLeaveHandler = (e) => {
+        // Only remove if we're leaving the entire section
+        if (!slaughterSection.contains(e.relatedTarget)) {
+          const slaughterHouse = document.getElementById(`slaughterHouse0`);
+          if (slaughterHouse) {
+            slaughterHouse.classList.remove("drag-over");
+          }
+        }
+      };
+      const sectionDropHandler = (e) => this.handleSlaughterDrop(e, 0);
+      const sectionTouchEndHandler = (e) => this.handleSlaughterTouchEnd(e, 0);
+
+      slaughterSection.addEventListener("dragover", sectionDragOverHandler);
+      slaughterSection.addEventListener("dragleave", sectionDragLeaveHandler);
+      slaughterSection.addEventListener("drop", sectionDropHandler);
+      slaughterSection.addEventListener("touchend", sectionTouchEndHandler);
+
+      this.eventListeners.set(slaughterSection, [
+        { event: "dragover", handler: sectionDragOverHandler },
+        { event: "dragleave", handler: sectionDragLeaveHandler },
+        { event: "drop", handler: sectionDropHandler },
+        { event: "touchend", handler: sectionTouchEndHandler },
+      ]);
+    }
+
     const infoButton = document.getElementById(`slaughterInfo0`);
     if (infoButton) {
       const infoHandler = (e) => {
@@ -410,7 +447,9 @@ const slaughterHouseManager = {
   handleSlaughterDrop(e, houseIndex) {
     e.preventDefault();
     const slaughterHouse = document.getElementById(`slaughterHouse0`);
-    slaughterHouse.classList.remove("drag-over");
+    if (slaughterHouse) {
+      slaughterHouse.classList.remove("drag-over");
+    }
 
     if (!gameState.draggedCell) return;
 
@@ -424,7 +463,9 @@ const slaughterHouseManager = {
     }
 
     const sourceCell = document.getElementById(`cell-${i}-${j}`);
-    sourceCell.classList.remove("drag-preview");
+    if (sourceCell) {
+      sourceCell.classList.remove("drag-preview");
+    }
     gridManager.clearValidTargets();
     gameState.draggedCell = null;
   },
@@ -432,7 +473,9 @@ const slaughterHouseManager = {
   handleSlaughterTouchEnd(e, houseIndex) {
     e.preventDefault();
     const slaughterHouse = document.getElementById(`slaughterHouse0`);
-    slaughterHouse.classList.remove("drag-over");
+    if (slaughterHouse) {
+      slaughterHouse.classList.remove("drag-over");
+    }
 
     if (!gameState.draggedCell) return;
 
@@ -446,7 +489,9 @@ const slaughterHouseManager = {
     }
 
     const sourceCell = document.getElementById(`cell-${i}-${j}`);
-    sourceCell.classList.remove("drag-preview");
+    if (sourceCell) {
+      sourceCell.classList.remove("drag-preview");
+    }
     gridManager.clearValidTargets();
     gameState.draggedCell = null;
   },
