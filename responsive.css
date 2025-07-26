@@ -33,9 +33,4 @@
     border-bottom-color: rgba(0, 0, 0, 0.9);
     border-left-color: transparent;
   }
-
-  .game-grid td {
-    width: 80px !important;
-    height: 80px !important;
-  }
 }
