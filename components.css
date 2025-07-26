@@ -384,11 +384,12 @@
 .slaughter-house-section {
   background: linear-gradient(145deg, #fef2f2, #fee2e2);
   border: 2px solid var(--accent-red-dark);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 8px;
+  padding: 6px;
   margin-bottom: 20px;
   box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
 }
 
 .slaughter-house-section h3 {
@@ -519,6 +520,7 @@
   font-weight: 600;
   color: var(--accent-red-dark);
   text-align: center;
+  width: 40%;
 }
 
 /* Tooltip Components */
@@ -801,4 +803,51 @@
   border-radius: 50%;
   animation: coinBurst 1s ease-out, coinSpin 1s linear;
   box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+
+/* Slaughter House Section Styles */
+
+.slaughter-house-section h3 {
+  margin: 0;
+  color: var(--accent-red-dark);
+}
+
+/* Butcher Shop Header */
+.slaughter-house-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  position: relative;
+  gap: 6px;
+}
+
+.butcher-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.butcher-image {
+  width: 250px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Repositioned Info Button */
+.slaughter-info-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 10;
+  background: rgba(59, 130, 246, 0.9);
+  border: 2px solid #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.slaughter-info-button:hover {
+  background: rgba(59, 130, 246, 1);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }

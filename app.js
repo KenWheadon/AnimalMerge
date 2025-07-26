@@ -187,7 +187,7 @@ function generateMainHTML() {
             <div class="p-4 border-b">
                 <h2 class="text-xl font-bold text-green-800">🏭 Buildings</h2>
             </div>
-            <div class="flex-1 overflow-y-auto p-4">
+            <div class="flex-1 overflow-y-auto p-3">
                 <div id="slaughterHouseContainer" class="mb-6">
                     ${slaughterHouseManager.generateSlaughterHouseHTML()}
                 </div>
