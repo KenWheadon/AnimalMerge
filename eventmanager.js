@@ -19,7 +19,7 @@ const eventManager = {
   ],
   currentTutorialIndex: 0,
   lastTutorialTime: 0,
-  tutorialScrollDelay: 6000, // 4 seconds between tutorial messages for initial cycle
+  tutorialScrollDelay: 6000, // 6 seconds between tutorial messages for initial cycle
   initialTutorialComplete: false,
   isPlayingTutorial: false,
 
@@ -261,42 +261,8 @@ const eventManager = {
     const message = this.tutorialMessages[this.currentTutorialIndex];
     this.currentTutorialIndex++;
 
-    // Show tutorial message with a different style
-    this.showTutorialNotification(message);
-  },
-
-  showTutorialNotification(message) {
-    const notification = document.createElement("div");
-    notification.className = "achievement-popup tutorial-notification";
-    notification.style.top = `${20 + this.notificationOffset}px`;
-    notification.style.background = "linear-gradient(145deg, #e0f2fe, #bae6fd)";
-    notification.style.border = "2px solid #0ea5e9";
-    notification.innerHTML = `
-        <div class="flex items-center space-x-2">
-            <div class="text-2xl">💡</div>
-            <div class="font-bold text-blue-800">${message}</div>
-        </div>
-    `;
-    document.body.appendChild(notification);
-
-    requestAnimationFrame(() => {
-      notification.style.transform = "translateX(0)";
-      notification.style.opacity = "1";
-    });
-
-    this.notificationOffset += 80;
-
-    const displayTime = this.initialTutorialComplete ? 5000 : 3500; // Shorter for initial cycle
-
-    setTimeout(() => {
-      notification.style.transform = "translateX(100%)";
-      notification.style.opacity = "0";
-
-      setTimeout(() => {
-        notification.remove();
-        this.notificationOffset -= 80;
-      }, 500);
-    }, displayTime);
+    // FIX: Use status system instead of achievement notifications for tutorial messages
+    updateStatus(message);
   },
 
   startInitialEggButtonAnimation() {

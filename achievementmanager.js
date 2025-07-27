@@ -230,14 +230,39 @@ const achievementManager = {
       );
     });
 
-    // Update the achievements display if drawer is open
-    if (
-      document.getElementById("achievementDrawer")?.classList.contains("open")
-    ) {
-      this.updateAchievementDisplay();
+    // FIX: Always update the achievements display when new achievements are earned
+    // This ensures the panel refreshes even if it's not currently open
+    if (newAchievements.length > 0) {
+      this.refreshAchievementDrawer();
     }
 
     return newAchievements.length > 0;
+  },
+
+  // FIX: New method to completely refresh the achievement drawer content
+  refreshAchievementDrawer() {
+    const drawer = document.getElementById("achievementDrawer");
+    if (drawer) {
+      // Regenerate the entire drawer HTML
+      const newDrawerHTML = this.generateAchievementDrawerHTML();
+
+      // Extract just the inner content (excluding the toggle button)
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = newDrawerHTML;
+      const newDrawerElement = tempDiv.querySelector("#achievementDrawer");
+      const toggleButton = tempDiv.querySelector("#achievementDrawerToggle");
+
+      // Replace the drawer content while preserving its open/closed state
+      const wasOpen = drawer.classList.contains("open");
+      drawer.innerHTML = newDrawerElement.innerHTML;
+
+      if (wasOpen) {
+        drawer.classList.add("open");
+      }
+
+      // Reinitialize event listeners for the refreshed content
+      this.initializeEventListeners();
+    }
   },
 
   // Get earned achievements count and total points
@@ -348,24 +373,9 @@ const achievementManager = {
     `;
   },
 
-  // Update the achievement display
+  // Update the achievement display (kept for backwards compatibility but now calls refreshAchievementDrawer)
   updateAchievementDisplay() {
-    const drawer = document.getElementById("achievementDrawer");
-    if (!drawer) return;
-
-    const stats = this.getAchievementStats();
-    const statsContainer = drawer.querySelector(".achievement-stats");
-
-    if (statsContainer) {
-      statsContainer.innerHTML = `
-        <div class="stats-row">
-          <span>${stats.earnedCount}/${stats.totalCount} Unlocked</span>
-        </div>
-        <div class="stats-row">
-          <span>${stats.earnedPoints.toLocaleString()}/${stats.totalPoints.toLocaleString()} points</span>
-        </div>
-      `;
-    }
+    this.refreshAchievementDrawer();
   },
 
   // Toggle drawer open/closed
@@ -378,7 +388,7 @@ const achievementManager = {
       toggle.classList.toggle("active");
 
       if (drawer.classList.contains("open")) {
-        this.updateAchievementDisplay();
+        this.refreshAchievementDrawer();
       }
     }
   },
@@ -389,7 +399,11 @@ const achievementManager = {
     const closeBtn = document.getElementById("achievementDrawerClose");
 
     if (toggleBtn) {
-      toggleBtn.addEventListener("click", () => {
+      // Remove existing listeners to prevent duplicates
+      const newToggleBtn = toggleBtn.cloneNode(true);
+      toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
+
+      newToggleBtn.addEventListener("click", () => {
         trackPlayerInteraction();
         this.toggleDrawer();
       });

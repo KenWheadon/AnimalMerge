@@ -80,9 +80,6 @@ const coopManager = {
           <div class="coop-header">
             <div class="flex justify-between items-center">
               <h3 class="coop-title">${animalName} Coop</h3>
-              <button id="coopInfo${animalType}" class="info-button">
-                <i class="fas fa-info-circle"></i>
-              </button>
             </div>
           </div>
           
