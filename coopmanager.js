@@ -139,10 +139,18 @@ const coopManager = {
       );
 
       if (buyButton) {
+        // Add hover sound for buttons
+        // buyButton.addEventListener("mouseenter", () => {
+        //   audioManager.playSound("button-hover");
+        // });
+
         if (config.cost === 0) {
           console.log(`${animalType} is free - adding placeAnimal listener`);
           buyButton.addEventListener("click", () => {
             console.log(`Free ${animalType} button clicked`);
+
+            // Play button click sound
+            audioManager.playSound("button-click");
 
             // Handle egg button clicked state for free eggs
             if (animalType === "Egg" && !gameState.eggButtonClicked) {
@@ -160,6 +168,10 @@ const coopManager = {
           );
           buyButton.addEventListener("click", () => {
             console.log(`Paid ${animalType} button clicked`);
+
+            // Play button click sound
+            audioManager.playSound("button-click");
+
             buyAnimal(animalType, config.cost);
           });
         }
@@ -173,20 +185,35 @@ const coopManager = {
 
       const buyButton = document.getElementById(`buy${animalName}Coop`);
       if (buyButton) {
-        buyButton.addEventListener("click", () => this.buyCoop(animalType));
+        // Add hover sound for coop buy buttons
+        buyButton.addEventListener("mouseenter", () => {
+          audioManager.playSound("button-hover");
+        });
+
+        buyButton.addEventListener("click", () => {
+          audioManager.playSound("button-click");
+          this.buyCoop(animalType);
+        });
       }
 
       const placeButton = document.getElementById(`place${producedType}`);
       if (placeButton) {
-        placeButton.addEventListener("click", () =>
-          this.placeStoredAnimal(animalType, producedType)
-        );
+        // Add hover sound for place buttons
+        // placeButton.addEventListener("mouseenter", () => {
+        //   audioManager.playSound("button-hover");
+        // });
+
+        placeButton.addEventListener("click", () => {
+          audioManager.playSound("button-click");
+          this.placeStoredAnimal(animalType, producedType);
+        });
       }
 
       const infoButton = document.getElementById(`coopInfo${animalType}`);
       if (infoButton) {
         infoButton.addEventListener("click", (e) => {
           e.stopPropagation();
+          audioManager.playSound("button-click");
           this.toggleCoopTooltip(animalType);
         });
       }
@@ -233,6 +260,9 @@ const coopManager = {
       gameState.money -= cost;
       gameState[`${animalType}Coop`].owned = true;
 
+      // Play coop bought sound
+      audioManager.playSound("coop-bought");
+
       const unpurchasedElement = document.getElementById(
         `${animalType}CoopUnpurchased`
       );
@@ -262,7 +292,12 @@ const coopManager = {
 
       // Check achievements after buying coop
       achievementManager.checkAchievements();
+
+      // Update background music in case this unlocks new music
+      audioManager.updateBackgroundMusic();
     } else {
+      // Play invalid action sound for insufficient funds
+      audioManager.playSound("invalid-action");
       updateStatus(`Not enough money for ${animalType} coop! 😕`);
       document.body.classList.add("screen-shake");
       setTimeout(() => document.body.classList.remove("screen-shake"), 500);
@@ -372,6 +407,7 @@ const coopManager = {
       this.updatePlaceButtonStates();
       saveManager.saveOnAction(); // Save after placing animal from storage
     } else {
+      audioManager.playSound("invalid-action");
       updateStatus("Grid is full! 😕");
     }
   },
@@ -500,6 +536,16 @@ const coopManager = {
 
         if (coop.timer <= 0) {
           coop.stored += 1;
+
+          // Play specific egg timer sound based on coop type
+          // if (animalType === "cat") {
+          //   audioManager.playSound("egg-timer-cat");
+          // } else if (animalType === "panda") {
+          //   audioManager.playSound("egg-timer-panda");
+          // } else if (animalType === "vulture") {
+          //   audioManager.playSound("egg-timer-vulture");
+          // }
+
           const storedElement = document.getElementById(
             `${animalType}CoopStored`
           );
@@ -520,7 +566,7 @@ const coopManager = {
             config.baseTime *
             Math.pow(config.timeReductionFactor, coop.level - 1);
 
-          eventManager.showAchievement(`${producedConfig.name} Ready!`);
+          // eventManager.showAchievement(`${producedConfig.name} Ready!`);
 
           const progressElement = document.getElementById(
             `${animalType}CoopProgress`
@@ -541,6 +587,10 @@ const coopManager = {
       gameState.money -= GAME_CONFIG.autoMergeConfig.buyCost;
       gameState.autoMerge.owned = true;
       gameState.autoMerge.timer = gameState.autoMerge.currentInterval;
+
+      // Play coop bought sound for auto-merge purchase
+      audioManager.playSound("coop-bought");
+
       document.getElementById("buyAutoMerge").classList.add("hidden");
       document.getElementById("autoMergeToggle").classList.remove("hidden");
       document
@@ -558,6 +608,8 @@ const coopManager = {
       // Check achievements after buying auto-merge
       achievementManager.checkAchievements();
     } else {
+      // Play invalid action sound for insufficient funds
+      audioManager.playSound("invalid-action");
       updateStatus("Not enough money for Auto-Merge! 😕");
       document.body.classList.add("screen-shake");
       setTimeout(() => document.body.classList.remove("screen-shake"), 500);
@@ -608,6 +660,7 @@ const coopManager = {
   buyShuffle() {
     // Check if auto-merge is owned first
     if (!gameState.autoMerge.owned) {
+      audioManager.playSound("invalid-action");
       updateStatus("You need Auto-Merge first! 😕");
       document.body.classList.add("screen-shake");
       setTimeout(() => document.body.classList.remove("screen-shake"), 500);
@@ -617,6 +670,10 @@ const coopManager = {
     if (gameState.money >= GAME_CONFIG.shuffleConfig.buyCost) {
       gameState.money -= GAME_CONFIG.shuffleConfig.buyCost;
       gameState.shuffle.owned = true;
+
+      // Play coop bought sound for shuffle purchase
+      audioManager.playSound("coop-bought");
+
       document.getElementById("buyShuffle").classList.add("hidden");
       document.getElementById("shuffleToggle").classList.remove("hidden");
       updateMoney();
@@ -624,6 +681,8 @@ const coopManager = {
       updateStatus("Bought Shuffle 🔀");
       saveManager.saveOnAction(); // Save after buying shuffle
     } else {
+      // Play invalid action sound for insufficient funds
+      audioManager.playSound("invalid-action");
       updateStatus("Not enough money for Shuffle! 😕");
       document.body.classList.add("screen-shake");
       setTimeout(() => document.body.classList.remove("screen-shake"), 500);
@@ -663,6 +722,9 @@ const coopManager = {
     });
 
     if (animals.length === 0) return;
+
+    // Play shuffle sound
+    audioManager.playSound("shuffle");
 
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
       if (gameState.purchasedCells.has(`${i}-${j}`)) {
@@ -787,6 +849,14 @@ const coopManager = {
 
     const pairsToProcess = [...gameState.mergeablePairs];
 
+    if (pairsToProcess.length === 0) {
+      // Play auto-merge fail sound when no merges available
+      audioManager.playSound("auto-merge-fail");
+    } else {
+      // Play auto-merge win sound when merges happen
+      audioManager.playSound("auto-merge-win");
+    }
+
     pairsToProcess.forEach(({ source, target }) => {
       if (
         gameState.grid[source.i][source.j] &&
@@ -856,6 +926,9 @@ const coopManager = {
           ? `Auto-merged into ${mergedTypes.map((t) => t).join(", ")} ⚙️`
           : "Auto-merged animals ⚙️";
       updateStatus(message);
+
+      // Update background music based on new animals created
+      audioManager.updateBackgroundMusic();
     }
 
     // Always trigger shuffle if owned and enabled, regardless of whether merges were made

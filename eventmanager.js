@@ -31,36 +31,66 @@ const eventManager = {
     const helpBtn = document.getElementById("helpButton");
 
     if (buyAutoMergeBtn) {
+      // Add hover sound
+      buyAutoMergeBtn.addEventListener("mouseenter", () => {
+        audioManager.playSound("button-hover");
+      });
+
       buyAutoMergeBtn.addEventListener("click", () => {
         gameState.lastInteractionTime = Date.now(); // Track interaction
+        audioManager.playSound("button-click");
         coopManager.buyAutoMerge();
       });
     }
 
     if (autoMergeToggleBtn) {
+      // Add hover sound
+      autoMergeToggleBtn.addEventListener("mouseenter", () => {
+        audioManager.playSound("button-hover");
+      });
+
       autoMergeToggleBtn.addEventListener("click", () => {
         gameState.lastInteractionTime = Date.now(); // Track interaction
+        audioManager.playSound("button-click");
         coopManager.toggleAutoMerge();
       });
     }
 
     if (buyShuffleBtn) {
+      // Add hover sound
+      buyShuffleBtn.addEventListener("mouseenter", () => {
+        audioManager.playSound("button-hover");
+      });
+
       buyShuffleBtn.addEventListener("click", () => {
         gameState.lastInteractionTime = Date.now(); // Track interaction
+        audioManager.playSound("button-click");
         coopManager.buyShuffle();
       });
     }
 
     if (shuffleToggleBtn) {
+      // Add hover sound
+      shuffleToggleBtn.addEventListener("mouseenter", () => {
+        audioManager.playSound("button-hover");
+      });
+
       shuffleToggleBtn.addEventListener("click", () => {
         gameState.lastInteractionTime = Date.now(); // Track interaction
+        audioManager.playSound("button-click");
         coopManager.toggleShuffle();
       });
     }
 
     if (helpBtn) {
+      // Add hover sound
+      helpBtn.addEventListener("mouseenter", () => {
+        audioManager.playSound("button-hover");
+      });
+
       helpBtn.addEventListener("click", () => {
         gameState.lastInteractionTime = Date.now(); // Track interaction
+        audioManager.playSound("button-click");
         this.playTutorialSequence();
       });
     }
@@ -165,6 +195,7 @@ const eventManager = {
 
       // Add hover effect
       helpButton.addEventListener("mouseenter", () => {
+        audioManager.playSound("button-hover");
         helpButton.style.transform = "scale(1.1)";
         helpButton.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.4)";
       });
@@ -181,6 +212,7 @@ const eventManager = {
       // Add event listener (will be picked up by initializeButtonEventListeners)
       helpButton.addEventListener("click", () => {
         gameState.lastInteractionTime = Date.now();
+        audioManager.playSound("button-click");
         this.playTutorialSequence();
       });
     }
@@ -375,18 +407,24 @@ const eventManager = {
     document.body.appendChild(backdrop);
 
     const closeButton = document.getElementById("closeDemoPopup");
+    closeButton.addEventListener("mouseenter", () => {
+      audioManager.playSound("button-hover");
+    });
     closeButton.addEventListener("click", () => {
+      audioManager.playSound("button-click");
       backdrop.remove();
     });
 
     backdrop.addEventListener("click", (e) => {
       if (e.target === backdrop) {
+        audioManager.playSound("button-click");
         backdrop.remove();
       }
     });
 
     const escapeHandler = (e) => {
       if (e.key === "Escape") {
+        audioManager.playSound("button-click");
         backdrop.remove();
         document.removeEventListener("keydown", escapeHandler);
       }
@@ -459,6 +497,8 @@ const eventManager = {
   },
 
   showAchievement(message) {
+    // Play achievement awarded sound
+    audioManager.playSound("achievement-awarded");
     this.queueNotification(message);
   },
 

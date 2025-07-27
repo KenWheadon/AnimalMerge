@@ -108,12 +108,21 @@ const gridManager = {
     const cell = document.getElementById(`cell-${i}-${j}`);
     if (!cell) return;
 
+    // Add hover sound for grass cells
+    // cell.addEventListener("mouseenter", () => {
+    //   audioManager.playSound("button-hover");
+    // });
+
     cell.addEventListener("click", () => {
       gameState.lastInteractionTime = Date.now(); // Track interaction
 
       if (gameState.money >= cost) {
         gameState.money -= cost;
         gameState.purchasedCells.add(`${i}-${j}`);
+
+        // Play grid expansion sound
+        audioManager.playSound("grid-expansion");
+
         updateMoney();
         this.updateCell(i, j);
         updateMergeablePairs();
@@ -123,6 +132,8 @@ const gridManager = {
         // Check achievements after purchasing grid cell
         achievementManager.checkAchievements();
       } else {
+        // Play invalid action sound for insufficient funds
+        audioManager.playSound("invalid-action");
         updateStatus(`Need ${cost} to purchase this spot! 😕`);
         document.body.classList.add("screen-shake");
         setTimeout(() => document.body.classList.remove("screen-shake"), 500);
@@ -172,6 +183,14 @@ const gridManager = {
       return;
     }
 
+    // Play random "ooh" sound when picking up an animal (not eggs)
+    const animalType = gameState.grid[i][j];
+    const animalConfig = GAME_CONFIG.animalTypes[animalType];
+    if (animalConfig.sellPrice > 0) {
+      // Only animals, not eggs, have sell price
+      audioManager.playRandomSound("ooh");
+    }
+
     e.dataTransfer.setData("text/plain", `${i}-${j}`);
     e.dataTransfer.effectAllowed = "move";
 
@@ -183,8 +202,6 @@ const gridManager = {
     this.showValidTargets(i, j);
 
     // Check if dragged animal can be sold and trigger butcher wiggle
-    const animalType = gameState.grid[i][j];
-    const animalConfig = GAME_CONFIG.animalTypes[animalType];
     if (animalConfig.sellPrice > 0) {
       const butcherImage = document.querySelector(".butcher-image");
       if (butcherImage) {
@@ -256,6 +273,8 @@ const gridManager = {
     } else if (this.canMoveToEmpty(sourceI, sourceJ, i, j)) {
       this.moveToEmpty(sourceI, sourceJ, i, j);
     } else {
+      // Play invalid action sound for unsuccessful drop
+      audioManager.playSound("invalid-action");
       updateStatus("Cannot perform this action! 😕");
     }
 
@@ -297,14 +316,20 @@ const gridManager = {
     if (!gameState.purchasedCells.has(`${i}-${j}`) || !gameState.grid[i][j])
       return;
 
+    // Play random "ooh" sound when picking up an animal (not eggs) on touch
+    const animalType = gameState.grid[i][j];
+    const animalConfig = GAME_CONFIG.animalTypes[animalType];
+    if (animalConfig.sellPrice > 0) {
+      // Only animals, not eggs, have sell price
+      audioManager.playRandomSound("ooh");
+    }
+
     gameState.draggedCell = { i, j };
     const cell = document.getElementById(`cell-${i}-${j}`);
     cell.classList.add("drag-preview");
     this.showValidTargets(i, j);
 
     // Check if dragged animal can be sold and trigger butcher wiggle
-    const animalType = gameState.grid[i][j];
-    const animalConfig = GAME_CONFIG.animalTypes[animalType];
     if (animalConfig.sellPrice > 0) {
       const butcherImage = document.querySelector(".butcher-image");
       if (butcherImage) {

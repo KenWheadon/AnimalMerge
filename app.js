@@ -60,6 +60,8 @@ function showTutorialPopup() {
   const startBtn = document.getElementById("startFarming");
 
   const closeTutorial = () => {
+    // Handle first user interaction for audio
+    audioManager.handleFirstUserInteraction();
     popup.remove();
     // Start the tutorial notification cycle after popup is closed
     eventManager.startInitialTutorialCycle();
@@ -108,6 +110,9 @@ function initializeGame() {
 
   // Initialize achievements system
   achievementManager.initializeAchievements();
+
+  // Initialize audio system
+  audioManager.initialize();
 
   document.getElementById("gameContainer").innerHTML = generateMainHTML();
 
@@ -428,6 +433,10 @@ function placeAnimal(type) {
     if (gameState.purchasedCells.has(`${i}-${j}`) && !gameState.grid[i][j]) {
       gameState.grid[i][j] = type;
       gameState.createdAnimals.add(type);
+
+      // Play egg placement sound
+      audioManager.playSound("egg-placement");
+
       updateAnimalValues();
       gridManager.updateCell(i, j);
       updateMergeablePairs();
@@ -449,9 +458,15 @@ function placeAnimal(type) {
       // Update panel visibility based on created animals
       updatePanelVisibility();
 
+      // Update background music based on new animals
+      audioManager.updateBackgroundMusic();
+
       return true;
     }
   }
+
+  // Play invalid action sound if grid is full
+  audioManager.playSound("invalid-action");
   updateStatus("No available space! Purchase more grid squares! 🌱");
   return false;
 }
@@ -485,6 +500,8 @@ function buyAnimal(type, cost) {
       achievementManager.checkAchievements();
     }
   } else {
+    // Play invalid action sound for insufficient funds
+    audioManager.playSound("invalid-action");
     const animalConfig = GAME_CONFIG.animalTypes[type];
     updateStatus(`Not enough money for ${animalConfig.name}! 😕`);
     document.body.classList.add("screen-shake");
@@ -504,6 +521,9 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
 
   const newType =
     GAME_CONFIG.animalTypes[gameState.grid[targetI][targetJ]].mergeTo;
+
+  // Play manual merge sound
+  audioManager.playSound("manual-merge");
 
   const sourceCell = document.getElementById(`cell-${sourceI}-${sourceJ}`);
   const explosion = document.createElement("div");
@@ -536,6 +556,9 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
 
   // Update panel visibility based on created animals
   updatePanelVisibility();
+
+  // Update background music based on new animals
+  audioManager.updateBackgroundMusic();
 
   if (newType === "EndDemoAnimal") {
     eventManager.showDemoEndedPopup();

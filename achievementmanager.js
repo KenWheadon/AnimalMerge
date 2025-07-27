@@ -399,19 +399,30 @@ const achievementManager = {
     const closeBtn = document.getElementById("achievementDrawerClose");
 
     if (toggleBtn) {
+      // Add hover sound
+      toggleBtn.addEventListener("mouseenter", () => {
+        audioManager.playSound("button-hover");
+      });
+
       // Remove existing listeners to prevent duplicates
       const newToggleBtn = toggleBtn.cloneNode(true);
       toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
 
       newToggleBtn.addEventListener("click", () => {
         trackPlayerInteraction();
+        audioManager.playSound("button-click");
         this.toggleDrawer();
       });
     }
 
     if (closeBtn) {
+      closeBtn.addEventListener("mouseenter", () => {
+        audioManager.playSound("button-hover");
+      });
+
       closeBtn.addEventListener("click", () => {
         trackPlayerInteraction();
+        audioManager.playSound("button-click");
         this.toggleDrawer();
       });
     }

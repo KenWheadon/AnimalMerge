@@ -60,7 +60,7 @@ const slaughterHouseManager = {
       gameState.slaughterHouses = [
         {
           level: 1,
-          processTime: 3.5,
+          processTime: 5.0,
           timer: 0,
           queue: [],
           currentAnimal: null,
@@ -72,6 +72,7 @@ const slaughterHouseManager = {
   addAnimalToQueue(houseIndex, animalType, gridI, gridJ) {
     const house = gameState.slaughterHouses[0]; // Always use first house since there's only one
     if (house.queue.length >= 10) {
+      audioManager.playSound("invalid-action");
       updateStatus("Slaughter house queue is full! 😕");
       return false;
     }
@@ -83,6 +84,9 @@ const slaughterHouseManager = {
       gridJ,
       value: animalConfig.sellPrice,
     });
+
+    // Play butcher shop sound when starting the butchering process
+    audioManager.playSound("butcher-shop");
 
     gameState.grid[gridI][gridJ] = null;
     gridManager.updateCell(gridI, gridJ);
@@ -292,6 +296,13 @@ const slaughterHouseManager = {
         const animal = house.currentAnimal;
         gameState.money += animal.value;
         gameState.totalSlaughtered += 1;
+
+        // Play random butcher done sound when processing is completed
+        audioManager.playRandomSound("butcher-done");
+
+        // Play earn money sound
+        audioManager.playSound("earn-money");
+
         updateMoney();
         updateAutoMergeLevel();
         saveManager.saveOnAction(); // Save after selling animal
@@ -374,9 +385,11 @@ const slaughterHouseManager = {
     if (slaughterHouse) {
       this.domCache.set(`slaughterHouse0`, slaughterHouse);
 
+      // Add hover sound for slaughter house
       const dragOverHandler = (e) => {
         e.preventDefault();
         slaughterHouse.classList.add("drag-over");
+        // audioManager.playSound("button-hover");
       };
       const dragLeaveHandler = () => {
         slaughterHouse.classList.remove("drag-over");
@@ -405,6 +418,7 @@ const slaughterHouseManager = {
         const slaughterHouse = document.getElementById(`slaughterHouse0`);
         if (slaughterHouse) {
           slaughterHouse.classList.add("drag-over");
+          // audioManager.playSound("button-hover");
         }
       };
       const sectionDragLeaveHandler = (e) => {
@@ -436,6 +450,7 @@ const slaughterHouseManager = {
     if (infoButton) {
       const infoHandler = (e) => {
         e.stopPropagation();
+        audioManager.playSound("button-click");
         this.toggleMergedTooltip(0);
       };
       infoButton.addEventListener("click", infoHandler);
@@ -462,6 +477,7 @@ const slaughterHouseManager = {
     if (animalConfig.sellPrice > 0) {
       this.addAnimalToQueue(0, type, i, j);
     } else {
+      audioManager.playSound("invalid-action");
       updateStatus(`${animalConfig.name} cannot be sold! 😕`);
     }
 
@@ -489,6 +505,7 @@ const slaughterHouseManager = {
     if (animalConfig.sellPrice > 0) {
       this.addAnimalToQueue(0, type, i, j);
     } else {
+      audioManager.playSound("invalid-action");
       updateStatus(`${animalConfig.name} cannot be sold! 😕`);
     }
 
