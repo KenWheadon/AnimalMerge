@@ -49,15 +49,6 @@ body::before {
 
 h1 {
   font-family: "Fredoka One", cursive;
-  background: linear-gradient(
-    45deg,
-    var(--primary-green),
-    var(--secondary-yellow)
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
   animation: titleBounce 3s ease-in-out infinite;
 }
 

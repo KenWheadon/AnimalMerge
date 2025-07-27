@@ -6,7 +6,7 @@ const CREDITS = {
     previewImage: "images/ken-head.png",
     fullImage: "images/ken-head.png",
     description:
-      "With a lifelong passion for gaming, Ken Wheadon has been creating games since middle school, starting with projects for Newgrounds. After earning two degrees in game design and flash programming from community college, they honed their skills through internships and professional roles in lottery game development and elearning software. Leveraging generative AI technology since 2022, Ken overcame personal challenges with burnout to focus on crafting engaging game experiences, including level design, mechanics, and user onboarding. Pancake Tower reflects their dedication to realizing childhood dreams of making fun, innovative games.",
+      "With a lifelong passion for gaming, Ken Wheadon has been creating games since middle school, starting with projects for Newgrounds. After earning two degrees in game design and flash programming from community college, they honed their skills through internships and professional roles in lottery game development and elearning software. Leveraging generative AI technology since 2022, Ken overcame personal challenges with burnout to focus on crafting engaging game experiences, including level design, mechanics, and user onboarding. Furry Merge Farm reflects their dedication to realizing childhood dreams of making fun, innovative games.",
   },
 
   Jessy: {

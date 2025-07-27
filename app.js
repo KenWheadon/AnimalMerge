@@ -113,9 +113,14 @@ function showCreditsGallery() {
   modal.innerHTML = `
     <div class="credits-gallery-container">
       <div class="credits-gallery-header">
+       <img src="images/company-logo.png" alt="Weird Demon Games Logo" class="credits-logo" />
         <div class="credits-company">
-          <h1 class="credits-gallery-title">Game Credits</h1>
-          <img src="images/company-logo.png" alt="Company Logo" class="credits-logo" />
+          <div class="credits-text-info">
+            <h1 class="credits-gallery-title">Furry Merge Farm</h1>
+            <p class="credits-game-title">Game Credits</p>
+            <p class="credits-company-name">Weird Demon Games</p>
+          </div>
+         
         </div>
         <button class="credits-gallery-close" id="closeCredits">×</button>
       </div>
