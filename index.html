@@ -13,7 +13,6 @@
       href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="loading.css" />
     <link rel="stylesheet" href="variables.css" />
     <link rel="stylesheet" href="base.css" />
     <link rel="stylesheet" href="components.css" />
@@ -21,6 +20,7 @@
     <link rel="stylesheet" href="animations.css" />
     <link rel="stylesheet" href="responsive.css" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="loading.css" />
     <link rel="stylesheet" href="credits-gallery.css" />
     <style></style>
   </head>
@@ -32,16 +32,34 @@
           <img
             src="images/company-logo.png"
             alt="Company Logo"
-            style="max-width: 150px; height: auto"
+            class="logo-image"
           />
         </div>
         <div id="loadingText" class="loading-text">
           Loading Furry Merge Farm...
         </div>
         <div class="loading-bar-container">
-          <div id="loadingBar" class="loading-bar" style="width: 0%"></div>
+          <div class="loading-bar-background">
+            <div id="loadingBar" class="loading-bar" style="width: 0%">
+              <div class="loading-bar-shine"></div>
+              <div class="loading-bar-glow"></div>
+            </div>
+            <div class="loading-bar-particles">
+              <div class="particle particle-1"></div>
+              <div class="particle particle-2"></div>
+              <div class="particle particle-3"></div>
+              <div class="particle particle-4"></div>
+              <div class="particle particle-5"></div>
+            </div>
+          </div>
         </div>
         <div id="loadingPercentage" class="loading-percentage">0%</div>
+        <div class="loading-animals">
+          <div class="loading-animal loading-egg">🥚</div>
+          <div class="loading-animal loading-cat">🐱</div>
+          <div class="loading-animal loading-panda">🐼</div>
+          <div class="loading-animal loading-bird">🦅</div>
+        </div>
       </div>
     </div>
 

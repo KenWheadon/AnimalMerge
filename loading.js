@@ -4,7 +4,7 @@ class LoadingManager {
     this.totalAssets = 0;
     this.loadedAssets = 0;
     this.imagePromises = [];
-    this.MINIMUM_LOADING_TIME = 2000; // 2 seconds minimum
+    this.MINIMUM_LOADING_TIME = 1500; // 2 seconds minimum
   }
 
   getAllGameImages() {
@@ -64,6 +64,13 @@ class LoadingManager {
     if (loadingBar && loadingPercentage) {
       loadingBar.style.width = progress + "%";
       loadingPercentage.textContent = progress + "%";
+
+      // Add a subtle shake animation when progress updates
+      loadingPercentage.style.animation = "none";
+      setTimeout(() => {
+        loadingPercentage.style.animation =
+          "percentageBounce 1s ease-in-out infinite";
+      }, 10);
     }
 
     // Update loading message based on progress
@@ -80,9 +87,89 @@ class LoadingManager {
         messages[Math.min(messageIndex, messages.length - 1)];
     }
 
+    // Animate animals based on progress
+    this.animateLoadingAnimals(progress);
+
     // Check if loading is complete
     if (this.loadedAssets >= this.totalAssets) {
       this.completeLoading();
+    }
+  }
+
+  animateLoadingAnimals(progress) {
+    const animals = document.querySelectorAll(".loading-animal");
+
+    // Activate animals progressively based on loading progress
+    animals.forEach((animal, index) => {
+      const threshold = (index + 1) * (100 / animals.length);
+      if (progress >= threshold) {
+        animal.classList.add("active");
+      } else {
+        animal.classList.remove("active");
+      }
+    });
+
+    // Special effects at certain milestones
+    if (
+      progress === 25 ||
+      progress === 50 ||
+      progress === 75 ||
+      progress === 100
+    ) {
+      // Add a burst effect
+      this.createLoadingBurst();
+    }
+  }
+
+  createLoadingBurst() {
+    const loadingContent = document.querySelector(".loading-content");
+    if (!loadingContent) return;
+
+    // Create burst particles
+    for (let i = 0; i < 12; i++) {
+      const particle = document.createElement("div");
+      particle.style.cssText = `
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: radial-gradient(circle, #ffd700, #ffed4e);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 1000;
+        left: 50%;
+        top: 60%;
+        transform: translate(-50%, -50%);
+      `;
+
+      loadingContent.appendChild(particle);
+
+      // Animate particle
+      const angle = (i / 12) * Math.PI * 2;
+      const distance = 80 + Math.random() * 40;
+      const duration = 800 + Math.random() * 400;
+
+      particle
+        .animate(
+          [
+            {
+              transform: "translate(-50%, -50%) scale(0)",
+              opacity: 1,
+            },
+            {
+              transform: `translate(${-50 + Math.cos(angle) * distance}%, ${
+                -50 + Math.sin(angle) * distance
+              }%) scale(1)`,
+              opacity: 0,
+            },
+          ],
+          {
+            duration: duration,
+            easing: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+          }
+        )
+        .addEventListener("finish", () => {
+          particle.remove();
+        });
     }
   }
 
