@@ -36,7 +36,7 @@ const CREDITS = {
     previewImage: "images/px-head.png",
     fullImage: "images/px-head.png",
     description:
-      "Additional sound effects contributors from pixabay.com helped expand the audio library for enhanced gameplay immersion. Thank you to: Karim-Nessim, Universfield, and freesound_community.",
+      "Additional sound effects contributors from pixabay.com helped expand the audio library for enhanced gameplay immersion. Thank you to: Karim-Nessim, Universfield, castlegardener and freesound_community.",
   },
 
   Suno: {
