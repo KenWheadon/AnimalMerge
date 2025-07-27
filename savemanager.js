@@ -1,6 +1,6 @@
 const saveManager = {
-  SAVE_KEY: "animalMergeFarmSave",
-  COOKIE_KEY: "animalMergeFarmSave",
+  SAVE_KEY: "animalMergeFarmSave11",
+  COOKIE_KEY: "animalMergeFarmSave11",
   SAVE_VERSION: 1,
   autoSaveInterval: null,
 
@@ -39,6 +39,7 @@ const saveManager = {
       createdAnimals: Array.from(gameState.createdAnimals), // Convert Set to Array
       totalSlaughtered: gameState.totalSlaughtered,
       eggButtonClicked: gameState.eggButtonClicked,
+      achievements: gameState.achievements || [], // Save achievements
       autoMerge: {
         owned: gameState.autoMerge.owned,
         level: gameState.autoMerge.level,
@@ -97,6 +98,7 @@ const saveManager = {
     gameState.totalSlaughtered = saveData.totalSlaughtered || 0;
     gameState.eggButtonClicked = saveData.eggButtonClicked || false;
     gameState.lastInteractionTime = saveData.lastInteractionTime || Date.now();
+    gameState.achievements = saveData.achievements || []; // Load achievements
 
     // Auto-merge state
     if (saveData.autoMerge) {

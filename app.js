@@ -8,15 +8,15 @@ let gameState = {
   createdAnimals: new Set(),
   recentlyAnimatedCells: [],
   mergeablePairs: [],
-  previousMergeablePairs: [], // Track previous pairs to detect new ones
+  previousMergeablePairs: [],
   totalSlaughtered: 0,
-  eggButtonClicked: false, // Track if egg button has been clicked
+  eggButtonClicked: false,
   autoMerge: {
     owned: false,
     level: 1,
-    baseInterval: GAME_CONFIG.autoMergeConfig.baseInterval, // Fixed: use config value (25)
-    currentInterval: GAME_CONFIG.autoMergeConfig.baseInterval, // Fixed: use config value (25)
-    timer: GAME_CONFIG.autoMergeConfig.baseInterval, // Fixed: use config value (25)
+    baseInterval: GAME_CONFIG.autoMergeConfig.baseInterval,
+    currentInterval: GAME_CONFIG.autoMergeConfig.baseInterval,
+    timer: GAME_CONFIG.autoMergeConfig.baseInterval,
     enabled: true,
   },
   shuffle: {
@@ -106,12 +106,16 @@ function initializeGame() {
     coopManager.initializeCoopStates();
   }
 
+  // Initialize achievements system
+  achievementManager.initializeAchievements();
+
   document.getElementById("gameContainer").innerHTML = generateMainHTML();
 
   gridManager.initializeGridEventListeners();
   slaughterHouseManager.initializeSlaughterHouseEventListeners();
   coopManager.initializeFarmBuildingEventListeners();
   eventManager.initializeButtonEventListeners();
+  achievementManager.initializeEventListeners();
 
   // Update UI based on loaded/initial state
   updateAnimalValues();
@@ -124,6 +128,9 @@ function initializeGame() {
   updateMoney();
   updateAutoMergeLevel();
   updatePanelVisibility();
+
+  // Check achievements on load
+  achievementManager.checkAchievements();
 
   // If no save was loaded, show initial status
   if (!saveLoaded) {
@@ -272,6 +279,8 @@ function generateMainHTML() {
             </div>
         </div>
     </div>
+    
+    ${achievementManager.generateAchievementDrawerHTML()}
 `;
 }
 
@@ -471,6 +480,9 @@ function buyAnimal(type, cost) {
       const animalConfig = GAME_CONFIG.animalTypes[type];
       updateStatus(`Bought and placed ${animalConfig.name}`);
       saveManager.saveOnAction(); // Save after buying animal
+
+      // Check achievements after buying animal
+      achievementManager.checkAchievements();
     }
   } else {
     const animalConfig = GAME_CONFIG.animalTypes[type];
@@ -538,6 +550,9 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   );
 
   saveManager.saveOnAction(); // Save after merging
+
+  // Check achievements after merging
+  achievementManager.checkAchievements();
 }
 
 function updatePanelVisibility() {
@@ -553,6 +568,9 @@ function updateMoney() {
   moneyElement.textContent = `Money: 💰${gameState.money}`;
   moneyElement.classList.add("updated");
   setTimeout(() => moneyElement.classList.remove("updated"), 500);
+
+  // Check achievements when money changes
+  achievementManager.checkAchievements();
 }
 
 function updateStatus(message) {

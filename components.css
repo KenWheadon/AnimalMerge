@@ -780,6 +780,198 @@
   animation: achievementSlideIn 0.5s ease-out;
 }
 
+/* Achievement Drawer */
+.achievement-drawer {
+  position: fixed;
+  top: 0;
+  left: -400px;
+  width: 380px;
+  height: 100vh;
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border-left: 3px solid var(--secondary-yellow);
+  box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.achievement-drawer.open {
+  left: 0;
+}
+
+.achievement-toggle-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(
+    145deg,
+    var(--secondary-yellow),
+    var(--secondary-yellow-dark)
+  );
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+  transition: all 0.3s ease;
+  z-index: 10001;
+}
+
+.achievement-toggle-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4);
+}
+
+.achievement-toggle-btn.active {
+  left: 400px;
+  background: linear-gradient(
+    145deg,
+    var(--accent-red),
+    var(--accent-red-dark)
+  );
+}
+
+.achievement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  background: linear-gradient(145deg, #fef3c7, #fbbf24);
+}
+
+.achievement-header h3 {
+  margin: 0;
+  color: #92400e;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.drawer-close-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #92400e;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.drawer-close-btn:hover {
+  background: rgba(146, 64, 14, 0.1);
+  transform: scale(1.1);
+}
+
+.achievement-stats {
+  padding: 1rem 1.5rem;
+  background: linear-gradient(145deg, #f0f9ff, #e0f2fe);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #0c4a6e;
+}
+
+.stats-row:last-child {
+  margin-bottom: 0;
+}
+
+.achievement-list {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  overflow-y: auto;
+}
+
+.achievement-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.achievement-item.earned {
+  background: linear-gradient(145deg, #f0fdf4, #dcfce7);
+  border-color: var(--success-green);
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
+}
+
+.achievement-item.locked {
+  background: linear-gradient(145deg, #f9fafb, #f3f4f6);
+  border-color: #d1d5db;
+  opacity: 0.7;
+}
+
+.achievement-icon {
+  font-size: 2rem;
+  margin-right: 1rem;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  flex-shrink: 0;
+}
+
+.achievement-content {
+  flex: 1;
+}
+
+.achievement-name {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.achievement-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.achievement-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.achievement-rarity {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.achievement-points {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: var(--secondary-yellow-dark);
+  background: rgba(251, 191, 36, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
 /* Floating Effects */
 .floating-number {
   position: absolute;
@@ -812,13 +1004,6 @@
   border-radius: 50%;
   animation: coinBurst 1s ease-out, coinSpin 1s linear;
   box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
-}
-
-/* Slaughter House Section Styles */
-
-.slaughter-house-section h3 {
-  margin: 0;
-  color: var(--accent-red-dark);
 }
 
 /* Butcher Shop Header */

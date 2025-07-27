@@ -296,6 +296,9 @@ const slaughterHouseManager = {
         updateAutoMergeLevel();
         saveManager.saveOnAction(); // Save after selling animal
 
+        // Check achievements after selling animal
+        achievementManager.checkAchievements();
+
         this.createProcessingBurst(0);
         this.createFlyingCoins(0, animal.value);
         this.clearProcessingAnimation(0);

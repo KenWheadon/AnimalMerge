@@ -40,7 +40,7 @@ const gridManager = {
 
           html += `<td><div id="cell-${i}-${j}" class="${cellClass}" 
                       data-row="${i}" data-col="${j}" 
-                      ${!isPurchased ? `data-cost="$${spotConfig.cost}"` : ""}
+                      ${!isPurchased ? `data-cost="${spotConfig.cost}"` : ""}
                       draggable="${
                         isPurchased && gameState.grid[i][j] ? "true" : "false"
                       }"
@@ -98,7 +98,7 @@ const gridManager = {
       }
     } else {
       cell.className = "grid-cell grass";
-      cell.setAttribute("data-cost", `$${spotConfig.cost}`);
+      cell.setAttribute("data-cost", `${spotConfig.cost}`);
       cell.innerHTML = "";
       cell.draggable = false;
     }
@@ -117,10 +117,13 @@ const gridManager = {
         updateMoney();
         this.updateCell(i, j);
         updateMergeablePairs();
-        updateStatus(`Purchased grid spot for $${cost}! 🌱`);
+        updateStatus(`Purchased grid spot for ${cost}! 🌱`);
         saveManager.saveOnAction(); // Save after purchasing grid cell
+
+        // Check achievements after purchasing grid cell
+        achievementManager.checkAchievements();
       } else {
-        updateStatus(`Need $${cost} to purchase this spot! 😕`);
+        updateStatus(`Need ${cost} to purchase this spot! 😕`);
         document.body.classList.add("screen-shake");
         setTimeout(() => document.body.classList.remove("screen-shake"), 500);
       }

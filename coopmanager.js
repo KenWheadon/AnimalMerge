@@ -257,6 +257,9 @@ const coopManager = {
       eventManager.showAchievement(`🏡 ${animalName} Coop Purchased!`);
       updateStatus(`Bought ${animalType} coop 🏡`);
       saveManager.saveOnAction(); // Save after buying coop
+
+      // Check achievements after buying coop
+      achievementManager.checkAchievements();
     } else {
       updateStatus(`Not enough money for ${animalType} coop! 😕`);
       document.body.classList.add("screen-shake");
@@ -549,6 +552,9 @@ const coopManager = {
       eventManager.showAchievement("⚙️ Auto-Merge Activated!");
       updateStatus("Bought Auto-Merge ⚙️");
       saveManager.saveOnAction(); // Save after buying auto-merge
+
+      // Check achievements after buying auto-merge
+      achievementManager.checkAchievements();
     } else {
       updateStatus("Not enough money for Auto-Merge! 😕");
       document.body.classList.add("screen-shake");
