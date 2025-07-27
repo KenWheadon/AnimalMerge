@@ -84,7 +84,7 @@ const coopManager = {
         <div id="${animalType}Coop" class="compact-coop hidden">
           <div class="coop-header">
             <div class="flex justify-between items-center">
-              <h3 class="coop-title">${animalName} Coop</h3>
+              <h3 class="coop-title">${animalName} Coop (Lv.${coopState.level})</h3>
             </div>
           </div>
           
@@ -329,19 +329,26 @@ const coopManager = {
     tooltip.id = "coopTooltip";
     tooltip.className = "coop-tooltip-fixed";
 
-    const currentTime = (
-      config.baseTime * Math.pow(config.timeReductionFactor, coop.level - 1)
-    ).toFixed(1);
+    // FIX: Calculate current production time based on level
+    const currentTime = this.calculateCoopProductionTime(
+      animalType,
+      coop.level
+    );
 
     tooltip.innerHTML = `
       <div class="tooltip-header">
-        <strong>${animalName} Coop</strong>
+        <strong>${animalName} Coop (Level ${coop.level})</strong>
       </div>
       <div class="tooltip-content">
-        <div class="tooltip-row">Level: ${coop.level}</div>
         <div class="tooltip-row">Produces: ${producedConfig.name}</div>
-        <div class="tooltip-row">Generation time: ${currentTime}s</div>
+        <div class="tooltip-row">Generation time: ${currentTime.toFixed(
+          1
+        )}s</div>
         <div class="tooltip-row">Stored: ${coop.stored}</div>
+        <div class="tooltip-row">Speed bonus: ${(
+          (1 - Math.pow(0.9, coop.level - 1)) *
+          100
+        ).toFixed(0)}%</div>
       </div>
     `;
 
@@ -508,6 +515,67 @@ const coopManager = {
     }
   },
 
+  // FIX: New method to calculate production time based on level
+  calculateCoopProductionTime(animalType, level) {
+    const config = GAME_CONFIG.coopConfig[animalType];
+    // Each level reduces time by 10% multiplicatively (0.9^(level-1))
+    return config.baseTime * Math.pow(0.9, level - 1);
+  },
+
+  // FIX: New method to handle coop leveling when eggs are merged
+  checkCoopLevelUp(eggType) {
+    // Find which coop produces this egg type
+    for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
+      if (config.producesType === eggType) {
+        const coop = gameState[`${animalType}Coop`];
+        if (coop && coop.owned) {
+          const oldLevel = coop.level;
+          coop.level += 1;
+
+          // Update the timer with new production time
+          const newTime = this.calculateCoopProductionTime(
+            animalType,
+            coop.level
+          );
+          coop.timer = Math.min(coop.timer, newTime); // Don't extend current timer
+
+          // Update UI
+          const coopTitle = document.querySelector(
+            `#${animalType}Coop .coop-title`
+          );
+          if (coopTitle) {
+            const animalName =
+              animalType.charAt(0).toUpperCase() + animalType.slice(1);
+            coopTitle.textContent = `${animalName} Coop (Lv.${coop.level})`;
+          }
+
+          // Show achievement
+          eventManager.showAchievement(
+            `🆙 ${
+              animalType.charAt(0).toUpperCase() + animalType.slice(1)
+            } Coop Level ${coop.level}!`
+          );
+
+          // Play level up sound
+          audioManager.playSound("achievement-awarded");
+
+          updateStatus(
+            `${
+              animalType.charAt(0).toUpperCase() + animalType.slice(1)
+            } coop leveled up! Production 10% faster! 🆙`
+          );
+
+          console.log(
+            `${animalType} coop leveled up from ${oldLevel} to ${coop.level} due to ${eggType} merge`
+          );
+
+          saveManager.saveOnAction(); // Save after coop level up
+          break;
+        }
+      }
+    }
+  },
+
   updateCoopTimers() {
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const coop = gameState[`${animalType}Coop`];
@@ -521,9 +589,11 @@ const coopManager = {
           `${animalType}CoopProgress`
         );
         if (progressElement) {
-          const maxTime =
-            config.baseTime *
-            Math.pow(config.timeReductionFactor, coop.level - 1);
+          // FIX: Use the new calculation method for max time
+          const maxTime = this.calculateCoopProductionTime(
+            animalType,
+            coop.level
+          );
           const progress = ((maxTime - coop.timer) / maxTime) * 100;
           progressElement.style.width = `${Math.max(0, progress)}%`;
 
@@ -562,9 +632,8 @@ const coopManager = {
             }
           }
 
-          coop.timer =
-            config.baseTime *
-            Math.pow(config.timeReductionFactor, coop.level - 1);
+          // FIX: Reset timer with new production time based on current level
+          coop.timer = this.calculateCoopProductionTime(animalType, coop.level);
 
           // eventManager.showAchievement(`${producedConfig.name} Ready!`);
 
@@ -865,6 +934,7 @@ const coopManager = {
           gameState.grid[target.i][target.j] &&
         GAME_CONFIG.animalTypes[gameState.grid[target.i][target.j]].mergeTo
       ) {
+        const sourceType = gameState.grid[source.i][source.j];
         const newType =
           GAME_CONFIG.animalTypes[gameState.grid[target.i][target.j]].mergeTo;
 
@@ -887,6 +957,9 @@ const coopManager = {
         gameState.grid[source.i][source.j] = null;
         gameState.grid[target.i][target.j] = newType;
         gameState.createdAnimals.add(newType);
+
+        // FIX: Check for coop leveling when eggs are merged via auto-merge
+        this.checkCoopLevelUp(sourceType);
 
         document
           .getElementById(`cell-${source.i}-${source.j}`)

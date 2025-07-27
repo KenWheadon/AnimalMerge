@@ -1,6 +1,6 @@
 const saveManager = {
-  SAVE_KEY: "animalMergeFarmSave2",
-  COOKIE_KEY: "animalMergeFarmSave2",
+  SAVE_KEY: "animalMergeFarmSave3",
+  COOKIE_KEY: "animalMergeFarmSave3",
   SAVE_VERSION: 1,
   autoSaveInterval: null,
 
@@ -67,7 +67,7 @@ const saveManager = {
       };
     }
 
-    // Save coop states
+    // Save coop states including levels
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const coopKey = `${animalType}Coop`;
       if (gameState[coopKey]) {
@@ -136,7 +136,7 @@ const saveManager = {
       }
     }
 
-    // Coop states
+    // Coop states - FIX: Load coop levels from save data
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const coopKey = `${animalType}Coop`;
       if (saveData[coopKey]) {
@@ -150,7 +150,7 @@ const saveManager = {
           };
         }
         gameState[coopKey].owned = saveData[coopKey].owned || false;
-        gameState[coopKey].level = saveData[coopKey].level || 1;
+        gameState[coopKey].level = saveData[coopKey].level || 1; // Load saved level
         gameState[coopKey].baseTime =
           saveData[coopKey].baseTime || config.baseTime;
         gameState[coopKey].timer = saveData[coopKey].timer || config.baseTime;

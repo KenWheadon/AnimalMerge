@@ -199,6 +199,7 @@ const gridManager = {
     const cell = document.getElementById(`cell-${i}-${j}`);
     cell.classList.add("drag-preview");
 
+    // FIX: Only show valid targets for the specific cell being dragged
     this.showValidTargets(i, j);
 
     // Check if dragged animal can be sold and trigger butcher wiggle
@@ -489,7 +490,11 @@ const gridManager = {
     return true;
   },
 
+  // FIX: Only show valid targets for the specific cell being dragged, not all occupied cells
   showValidTargets(sourceI, sourceJ) {
+    const sourceType = gameState.grid[sourceI][sourceJ];
+    if (!sourceType) return;
+
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
       if (gameState.purchasedCells.has(`${i}-${j}`)) {
         if (i === sourceI && j === sourceJ) return;

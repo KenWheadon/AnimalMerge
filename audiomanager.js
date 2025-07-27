@@ -126,14 +126,26 @@ const audioManager = {
   getExpectedMusicLevel() {
     let expectedLevel = 0;
 
-    if (gameState.createdAnimals.has("Vulture")) {
+    // FIX: Check for owned coops instead of just created animals to determine music progression
+    if (
+      gameState.vultureCoop?.owned ||
+      gameState.createdAnimals.has("Vulture")
+    ) {
       expectedLevel = 3; // vulture-song
-    } else if (gameState.createdAnimals.has("Panda")) {
+    } else if (
+      gameState.pandaCoop?.owned ||
+      gameState.createdAnimals.has("Panda")
+    ) {
       expectedLevel = 2; // panda-song
-    } else if (gameState.createdAnimals.has("Cat")) {
+    } else if (
+      gameState.catCoop?.owned ||
+      gameState.createdAnimals.has("Cat")
+    ) {
       expectedLevel = 1; // cat-song
+    } else if (gameState.createdAnimals.has("Mantis")) {
+      expectedLevel = 0; // mantis-song (default when game starts)
     } else {
-      expectedLevel = 0; // mantis-song
+      expectedLevel = -1; // No music yet
     }
 
     return expectedLevel;
@@ -167,12 +179,30 @@ const audioManager = {
   updateBackgroundMusic() {
     const newMusicLevel = this.getExpectedMusicLevel();
 
+    // FIX: Don't try to play music if no music should be playing yet
+    if (newMusicLevel === -1) {
+      if (this.currentTrack) {
+        this.fadeOut(this.currentTrack, 1000, () => {
+          this.currentTrack.pause();
+          this.currentTrack.currentTime = 0;
+          this.currentTrack = null;
+          this.currentTrackName = "";
+        });
+      }
+      this.currentMusicLevel = -1;
+      return;
+    }
+
     // Always set the appropriate music level on load, not just when it progresses
     if (newMusicLevel !== this.currentMusicLevel) {
+      console.log(
+        `Music level changing from ${this.currentMusicLevel} to ${newMusicLevel}`
+      );
       this.currentMusicLevel = newMusicLevel;
       this.switchBackgroundMusic(this.musicProgression[newMusicLevel]);
     } else if (!this.currentTrack || this.currentTrack.paused) {
       // If no music is playing but we should be playing music, start it
+      console.log(`Restarting music at level ${newMusicLevel}`);
       this.switchBackgroundMusic(this.musicProgression[newMusicLevel]);
     }
   },
@@ -184,6 +214,12 @@ const audioManager = {
     const newTrack = this.loadedMusic[trackName];
     if (!newTrack) {
       console.warn(`Music track not found: ${trackName}`);
+      return;
+    }
+
+    // Don't switch if already playing the correct track
+    if (this.currentTrack === newTrack && !this.currentTrack.paused) {
+      console.log(`Already playing ${trackName}, no need to switch`);
       return;
     }
 

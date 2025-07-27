@@ -102,7 +102,7 @@ const GAME_CONFIG = {
     buyCost: 1,
     baseInterval: 25,
     intervalReductionFactor: 0.9,
-    animalRequirements: [0, 5, 10, 20, 40, 65, 90, 120, 150, 180, 240, 300],
+    animalRequirements: [0, 5, 12, 20, 40, 65, 90, 120, 150, 180, 240, 300],
   },
   shuffleConfig: {
     buyCost: 35,

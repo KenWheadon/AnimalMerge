@@ -146,8 +146,9 @@ function initializeGame() {
     updateStatus("Game loaded! Welcome back! 🎉");
   }
 
+  // FIX: Only setup grass cells for unpurchased spots AFTER save loading
   GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
-    if (cost > 0) {
+    if (cost > 0 && !gameState.purchasedCells.has(`${row}-${col}`)) {
       gridManager.setupGrassCell(row, col, cost);
     }
   });
@@ -406,7 +407,11 @@ function updateMergeablePairs() {
     }
   });
 
-  // Removed the check for new mergeable pairs animation
+  // FIX: Clear any persistent highlights that shouldn't be there
+  // Only clear highlights if we're not currently dragging
+  if (!gameState.draggedCell) {
+    gridManager.clearValidTargets();
+  }
 }
 
 function isGridFull() {
@@ -519,8 +524,8 @@ function sellAnimal(i, j, type) {
 function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   trackPlayerInteraction(); // Track interaction
 
-  const newType =
-    GAME_CONFIG.animalTypes[gameState.grid[targetI][targetJ]].mergeTo;
+  const sourceType = gameState.grid[sourceI][sourceJ];
+  const newType = GAME_CONFIG.animalTypes[sourceType].mergeTo;
 
   // Play manual merge sound
   audioManager.playSound("manual-merge");
@@ -542,6 +547,9 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   gameState.grid[sourceI][sourceJ] = null;
   gameState.grid[targetI][targetJ] = newType;
   gameState.createdAnimals.add(newType);
+
+  // FIX: Check for coop leveling when eggs are merged
+  coopManager.checkCoopLevelUp(sourceType);
 
   updateAnimalValues();
   gridManager.updateCell(sourceI, sourceJ);

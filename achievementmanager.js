@@ -130,15 +130,15 @@ const achievementManager = {
 
     // Discovery Related (100-1500 points)
     {
-      id: "discover_5",
+      id: "discover_6",
       name: "Animal Collector",
       icon: "📚",
-      description: "Discover 5 different animal types",
+      description: "Discover 6 different animal types",
       hint: "Discovery Related",
       rarity: "Common",
       points: 200,
       earned: false,
-      checkCondition: () => gameState.createdAnimals.size >= 5,
+      checkCondition: () => gameState.createdAnimals.size >= 6,
     },
     {
       id: "discover_all",
