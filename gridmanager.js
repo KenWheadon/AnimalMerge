@@ -1,15 +1,21 @@
 const gridManager = {
   initializeGridState() {
-    gameState.grid = Array(5)
-      .fill(null)
-      .map(() => Array(8).fill(null));
+    // Only initialize if grid doesn't exist
+    if (!gameState.grid || gameState.grid.length === 0) {
+      gameState.grid = Array(5)
+        .fill(null)
+        .map(() => Array(8).fill(null));
+    }
 
-    gameState.purchasedCells = new Set();
-    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
-      if (cost === 0) {
-        gameState.purchasedCells.add(`${row}-${col}`);
-      }
-    });
+    // Only initialize if purchasedCells doesn't exist
+    if (!gameState.purchasedCells || gameState.purchasedCells.size === 0) {
+      gameState.purchasedCells = new Set();
+      GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
+        if (cost === 0) {
+          gameState.purchasedCells.add(`${row}-${col}`);
+        }
+      });
+    }
   },
 
   generateGridHTML() {
@@ -112,6 +118,7 @@ const gridManager = {
         this.updateCell(i, j);
         updateMergeablePairs();
         updateStatus(`Purchased grid spot for $${cost}! 🌱`);
+        saveManager.saveOnAction(); // Save after purchasing grid cell
       } else {
         updateStatus(`Need $${cost} to purchase this spot! 😕`);
         document.body.classList.add("screen-shake");
@@ -486,6 +493,7 @@ const gridManager = {
 
     const animalConfig = GAME_CONFIG.animalTypes[sourceType];
     updateStatus(`Moved ${animalConfig.name} to empty space! 📦`);
+    saveManager.saveOnAction(); // Save after moving animal
   },
 
   swapAnimals(sourceI, sourceJ, targetI, targetJ) {
@@ -503,6 +511,7 @@ const gridManager = {
     const sourceConfig = GAME_CONFIG.animalTypes[sourceType];
     const targetConfig = GAME_CONFIG.animalTypes[targetType];
     updateStatus(`Swapped ${sourceConfig.name} and ${targetConfig.name}! 🔄`);
+    saveManager.saveOnAction(); // Save after swapping animals
   },
 
   clearValidTargets() {

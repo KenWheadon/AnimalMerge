@@ -4,6 +4,7 @@ const coopManager = {
   initializeCoopStates() {
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const coopKey = `${animalType}Coop`;
+      // Only initialize if the coop state doesn't exist
       if (!gameState[coopKey]) {
         gameState[coopKey] = {
           owned: false,
@@ -255,6 +256,7 @@ const coopManager = {
       this.updateEmptyMessageVisibility();
       eventManager.showAchievement(`🏡 ${animalName} Coop Purchased!`);
       updateStatus(`Bought ${animalType} coop 🏡`);
+      saveManager.saveOnAction(); // Save after buying coop
     } else {
       updateStatus(`Not enough money for ${animalType} coop! 😕`);
       document.body.classList.add("screen-shake");
@@ -363,6 +365,7 @@ const coopManager = {
           .classList.remove("pulse");
       }
       this.updatePlaceButtonStates();
+      saveManager.saveOnAction(); // Save after placing animal from storage
     } else {
       updateStatus("Grid is full! 😕");
     }
@@ -521,6 +524,8 @@ const coopManager = {
             progressElement.style.width = "0%";
             progressElement.classList.remove("urgent");
           }
+
+          saveManager.saveOnAction(); // Save when coop generates an animal
         }
       }
     }
@@ -543,6 +548,7 @@ const coopManager = {
       updateMoney();
       eventManager.showAchievement("⚙️ Auto-Merge Activated!");
       updateStatus("Bought Auto-Merge ⚙️");
+      saveManager.saveOnAction(); // Save after buying auto-merge
     } else {
       updateStatus("Not enough money for Auto-Merge! 😕");
       document.body.classList.add("screen-shake");
@@ -588,6 +594,7 @@ const coopManager = {
     updateStatus(
       `Auto-Merge ${gameState.autoMerge.enabled ? "enabled" : "disabled"}`
     );
+    saveManager.saveOnAction(); // Save after toggling auto-merge
   },
 
   buyShuffle() {
@@ -607,6 +614,7 @@ const coopManager = {
       updateMoney();
       eventManager.showAchievement("🔀 Shuffle Activated!");
       updateStatus("Bought Shuffle 🔀");
+      saveManager.saveOnAction(); // Save after buying shuffle
     } else {
       updateStatus("Not enough money for Shuffle! 😕");
       document.body.classList.add("screen-shake");
@@ -629,6 +637,7 @@ const coopManager = {
     updateStatus(
       `Shuffle ${gameState.shuffle.enabled ? "enabled" : "disabled"}`
     );
+    saveManager.saveOnAction(); // Save after toggling shuffle
   },
 
   performShuffle() {

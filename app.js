@@ -75,9 +75,36 @@ function showTutorialPopup() {
 }
 
 function initializeGame() {
-  gridManager.initializeGridState();
-  slaughterHouseManager.initializeSlaughterHouses();
-  coopManager.initializeCoopStates();
+  // Initialize save system and load saved data FIRST
+  const saveLoaded = saveManager.initialize();
+
+  // Only initialize default states if no save was loaded
+  if (!saveLoaded) {
+    gridManager.initializeGridState();
+    slaughterHouseManager.initializeSlaughterHouses();
+    coopManager.initializeCoopStates();
+  } else {
+    // If save was loaded, still need to ensure grid state array exists
+    if (!gameState.grid || gameState.grid.length === 0) {
+      gameState.grid = Array(5)
+        .fill(null)
+        .map(() => Array(8).fill(null));
+    }
+    // Ensure slaughter houses exist
+    if (!gameState.slaughterHouses || gameState.slaughterHouses.length === 0) {
+      gameState.slaughterHouses = [
+        {
+          level: 1,
+          processTime: 5.0,
+          timer: 0,
+          queue: [],
+          currentAnimal: null,
+        },
+      ];
+    }
+    // Ensure coop states exist
+    coopManager.initializeCoopStates();
+  }
 
   document.getElementById("gameContainer").innerHTML = generateMainHTML();
 
@@ -86,12 +113,26 @@ function initializeGame() {
   coopManager.initializeFarmBuildingEventListeners();
   eventManager.initializeButtonEventListeners();
 
+  // Update UI based on loaded/initial state
   updateAnimalValues();
   updateMergeablePairs();
-  coopManager.updateEmptyMessageVisibility(); // Initialize empty state message
-  updateStatus(
-    `Start with initial grid spots! Click 🌱 grass squares to expand!`
-  );
+  coopManager.updateEmptyMessageVisibility();
+  coopManager.updateBuyAnimalButtons(); // Update button states based on loaded data
+  coopManager.updateShuffleButtonState(); // Update shuffle state
+
+  // Update UI elements that depend on saved state
+  updateMoney();
+  updateAutoMergeLevel();
+  updatePanelVisibility();
+
+  // If no save was loaded, show initial status
+  if (!saveLoaded) {
+    updateStatus(
+      `Start with initial grid spots! Click 🌱 grass squares to expand!`
+    );
+  } else {
+    updateStatus("Game loaded! Welcome back! 🎉");
+  }
 
   GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
     if (cost > 0) {
@@ -114,6 +155,22 @@ function initializeGame() {
 }
 
 function generateMainHTML() {
+  // Determine button states based on current game state
+  const autoMergeBuyHidden = gameState.autoMerge.owned ? "hidden" : "";
+  const autoMergeToggleHidden = gameState.autoMerge.owned ? "" : "hidden";
+  const autoMergeProgressHidden = gameState.autoMerge.owned ? "" : "hidden";
+  const autoMergeToggleText = gameState.autoMerge.enabled ? "🔵 ON" : "🔴 OFF";
+  const autoMergeToggleClass = gameState.autoMerge.enabled
+    ? "bg-green-500"
+    : "bg-red-500";
+
+  const shuffleBuyHidden = gameState.shuffle.owned ? "hidden" : "";
+  const shuffleToggleHidden = gameState.shuffle.owned ? "" : "hidden";
+  const shuffleToggleText = gameState.shuffle.enabled ? "🔵 ON" : "🔴 OFF";
+  const shuffleToggleClass = gameState.shuffle.enabled
+    ? "bg-green-500"
+    : "bg-red-500";
+
   return `
     <div class="game-container flex h-screen">
         <div class="w-40 bg-white shadow-lg flex flex-col">
@@ -137,26 +194,34 @@ function generateMainHTML() {
                     <div class="automation-section">
                         <div class="flex items-center justify-between mb-2">
                             <h4 class="text-sm font-bold text-purple-800">⚙️ Auto-Merge</h4>
-                            <span id="autoMergeLevel" class="text-xs text-gray-600">Lv.1</span>
+                            <span id="autoMergeLevel" class="text-xs text-gray-600">Lv.${
+                              gameState.autoMerge.level
+                            }</span>
                         </div>
                         <div class="space-y-1 text-xs mb-1">
                             <div class="flex justify-between">
                                 <span>Interval:</span>
-                                <span id="autoMergeTimer" class="font-mono">25.0s</span>
+                                <span id="autoMergeTimer" class="font-mono">${gameState.autoMerge.currentInterval.toFixed(
+                                  1
+                                )}s</span>
                             </div>
-                            <div id="autoMergeProgress" class="text-gray-500">0/6 animals slaughtered</div>
+                            <div id="autoMergeProgress" class="text-gray-500">${
+                              gameState.totalSlaughtered
+                            }/${getNextAutoMergeRequirement(
+    gameState.autoMerge.level
+  )} animals slaughtered</div>
                         </div>
-                        <div id="autoMergeProgressContainer" class="mb-2 hidden">
+                        <div id="autoMergeProgressContainer" class="mb-2 ${autoMergeProgressHidden}">
                             <div class="coop-progress-bar h-1">
                                 <div id="autoMergeProgressBar" class="coop-progress-fill" style="width: 0%"></div>
                             </div>
                         </div>
                         <div class="space-y-1">
-                            <button id="buyAutoMerge" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
+                            <button id="buyAutoMerge" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white ${autoMergeBuyHidden}" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed);">
                                 Buy ($1)
                             </button>
-                            <button id="autoMergeToggle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white hidden bg-green-500">
-                                🔵 ON
+                            <button id="autoMergeToggle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white ${autoMergeToggleHidden} ${autoMergeToggleClass}">
+                                ${autoMergeToggleText}
                             </button>
                         </div>
                     </div>
@@ -172,11 +237,11 @@ function generateMainHTML() {
                         </div>
                         <div class="mb-2" style="height: 4px;"></div>
                         <div class="space-y-1">
-                            <button id="buyShuffle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white" style="background: linear-gradient(145deg, #f59e0b, #d97706);">
+                            <button id="buyShuffle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white ${shuffleBuyHidden}" style="background: linear-gradient(145deg, #f59e0b, #d97706);">
                                 <span id="shuffleButtonText">Buy ($10)</span>
                             </button>
-                            <button id="shuffleToggle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white hidden bg-green-500">
-                                🔵 ON
+                            <button id="shuffleToggle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white ${shuffleToggleHidden} ${shuffleToggleClass}">
+                                ${shuffleToggleText}
                             </button>
                         </div>
                     </div>
@@ -405,6 +470,7 @@ function buyAnimal(type, cost) {
       updateMoney();
       const animalConfig = GAME_CONFIG.animalTypes[type];
       updateStatus(`Bought and placed ${animalConfig.name}`);
+      saveManager.saveOnAction(); // Save after buying animal
     }
   } else {
     const animalConfig = GAME_CONFIG.animalTypes[type];
@@ -470,6 +536,8 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
       ? `Merged into ${newAnimalConfig.name}! You can sell it for 💰${sellPrice}`
       : `Merged into ${newAnimalConfig.name}!`
   );
+
+  saveManager.saveOnAction(); // Save after merging
 }
 
 function updatePanelVisibility() {

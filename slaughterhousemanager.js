@@ -294,6 +294,7 @@ const slaughterHouseManager = {
         gameState.totalSlaughtered += 1;
         updateMoney();
         updateAutoMergeLevel();
+        saveManager.saveOnAction(); // Save after selling animal
 
         this.createProcessingBurst(0);
         this.createFlyingCoins(0, animal.value);

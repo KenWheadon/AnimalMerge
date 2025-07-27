@@ -14,10 +14,6 @@
     max-height: 100px;
   }
 
-  .compact-coop {
-    min-height: 120px;
-  }
-
   .coop-tooltip {
     right: auto;
     left: 50%;
