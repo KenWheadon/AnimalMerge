@@ -103,6 +103,8 @@ const gridManager = {
     if (!cell) return;
 
     cell.addEventListener("click", () => {
+      gameState.lastInteractionTime = Date.now(); // Track interaction
+
       if (gameState.money >= cost) {
         gameState.money -= cost;
         gameState.purchasedCells.add(`${i}-${j}`);
@@ -140,6 +142,8 @@ const gridManager = {
   },
 
   handleMouseDown(e, i, j) {
+    gameState.lastInteractionTime = Date.now(); // Track interaction
+
     if (!gameState.purchasedCells.has(`${i}-${j}`) || !gameState.grid[i][j])
       return;
 
@@ -151,6 +155,8 @@ const gridManager = {
   },
 
   handleDragStart(e, i, j) {
+    gameState.lastInteractionTime = Date.now(); // Track interaction
+
     if (!gameState.purchasedCells.has(`${i}-${j}`) || !gameState.grid[i][j]) {
       e.preventDefault();
       return;
@@ -224,6 +230,7 @@ const gridManager = {
 
   handleDrop(e, i, j) {
     e.preventDefault();
+    gameState.lastInteractionTime = Date.now(); // Track interaction
 
     if (!gameState.draggedCell) {
       return;
@@ -275,6 +282,8 @@ const gridManager = {
   },
 
   handleTouchStart(e, i, j) {
+    gameState.lastInteractionTime = Date.now(); // Track interaction
+
     if (!gameState.purchasedCells.has(`${i}-${j}`) || !gameState.grid[i][j])
       return;
 
@@ -300,6 +309,7 @@ const gridManager = {
 
   handleTouchEnd(e, i, j) {
     e.preventDefault();
+    gameState.lastInteractionTime = Date.now(); // Track interaction
 
     if (!gameState.draggedCell) return;
 

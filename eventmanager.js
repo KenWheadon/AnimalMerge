@@ -3,6 +3,24 @@ const eventManager = {
   isShowingNotification: false,
   notificationOffset: 0,
 
+  // Idle detection system
+  idleCheckInterval: null,
+  tutorialScrollInterval: null,
+  tutorialMessages: [
+    "🥚 Click the free Egg button to place your first animal!",
+    "🔄 Drag identical animals together to merge and upgrade them!",
+    "💰 Drag animals to the butcher shop to sell them for money!",
+    "🌱 Click grass squares with your money to expand your farm!",
+    "🏡 Create better animals to unlock coops that generate eggs automatically!",
+    "⚙️ Buy Auto-Merge to automatically combine animals every 25 seconds!",
+    "🔀 Buy Shuffle to rearrange your animals after auto-merging!",
+    "💡 Tip: Merge two of the same animal type to create the next tier!",
+    "🎯 Goal: Keep merging to discover all the different animal types!",
+  ],
+  currentTutorialIndex: 0,
+  lastTutorialTime: 0,
+  tutorialScrollDelay: 8000, // 8 seconds between tutorial messages
+
   initializeButtonEventListeners() {
     const buyAutoMergeBtn = document.getElementById("buyAutoMerge");
     const autoMergeToggleBtn = document.getElementById("autoMergeToggle");
@@ -10,26 +28,164 @@ const eventManager = {
     const shuffleToggleBtn = document.getElementById("shuffleToggle");
 
     if (buyAutoMergeBtn) {
-      buyAutoMergeBtn.addEventListener("click", () =>
-        coopManager.buyAutoMerge()
-      );
+      buyAutoMergeBtn.addEventListener("click", () => {
+        gameState.lastInteractionTime = Date.now(); // Track interaction
+        coopManager.buyAutoMerge();
+      });
     }
 
     if (autoMergeToggleBtn) {
-      autoMergeToggleBtn.addEventListener("click", () =>
-        coopManager.toggleAutoMerge()
-      );
+      autoMergeToggleBtn.addEventListener("click", () => {
+        gameState.lastInteractionTime = Date.now(); // Track interaction
+        coopManager.toggleAutoMerge();
+      });
     }
 
     if (buyShuffleBtn) {
-      buyShuffleBtn.addEventListener("click", () => coopManager.buyShuffle());
+      buyShuffleBtn.addEventListener("click", () => {
+        gameState.lastInteractionTime = Date.now(); // Track interaction
+        coopManager.buyShuffle();
+      });
     }
 
     if (shuffleToggleBtn) {
-      shuffleToggleBtn.addEventListener("click", () =>
-        coopManager.toggleShuffle()
-      );
+      shuffleToggleBtn.addEventListener("click", () => {
+        gameState.lastInteractionTime = Date.now(); // Track interaction
+        coopManager.toggleShuffle();
+      });
     }
+  },
+
+  initializeIdleDetection() {
+    // Check for idle states every 2 seconds
+    this.idleCheckInterval = setInterval(() => {
+      this.checkIdleState();
+    }, 2000);
+
+    // Start tutorial scrolling when no notifications are active
+    this.startTutorialScrolling();
+  },
+
+  checkIdleState() {
+    const now = Date.now();
+    const timeSinceLastInteraction = now - gameState.lastInteractionTime;
+
+    // Check for 10 second idle + open space for egg glow
+    if (timeSinceLastInteraction >= 10000) {
+      this.handleEggGlowIdle();
+    }
+
+    // Check for 20 second idle + animals present for wiggle
+    if (timeSinceLastInteraction >= 20000) {
+      this.handleAnimalWiggleIdle();
+      // Reset the interaction time to prevent constant wiggling
+      gameState.lastInteractionTime = now - 15000; // Reset to 15 seconds ago
+    }
+  },
+
+  handleEggGlowIdle() {
+    // Check if there's an open space on the board
+    const hasOpenSpace = GAME_CONFIG.gridConfig.availableSpots.some(
+      ({ row, col }) =>
+        gameState.purchasedCells.has(`${row}-${col}`) &&
+        !gameState.grid[row][col]
+    );
+
+    if (hasOpenSpace && !gameState.eggButtonClicked) {
+      // Make the free egg button glow and scale once
+      const eggButton = document.getElementById("buyEgg");
+      if (eggButton && !eggButton.classList.contains("egg-button-pulse")) {
+        eggButton.classList.add("glow", "pulse");
+        setTimeout(() => {
+          eggButton.classList.remove("glow", "pulse");
+        }, 3000); // Remove after 3 seconds (glow animation runs 3 times)
+      }
+    }
+  },
+
+  handleAnimalWiggleIdle() {
+    // Find all animals/eggs on the board
+    const occupiedCells = [];
+    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col }) => {
+      if (
+        gameState.purchasedCells.has(`${row}-${col}`) &&
+        gameState.grid[row][col]
+      ) {
+        occupiedCells.push({ row, col, type: gameState.grid[row][col] });
+      }
+    });
+
+    if (occupiedCells.length > 0) {
+      // Pick a random animal to wiggle
+      const randomCell =
+        occupiedCells[Math.floor(Math.random() * occupiedCells.length)];
+      const cellElement = document.getElementById(
+        `cell-${randomCell.row}-${randomCell.col}`
+      );
+
+      if (cellElement) {
+        // Add wiggle animation
+        cellElement.classList.add("butcher-wiggle");
+        setTimeout(() => {
+          cellElement.classList.remove("butcher-wiggle");
+        }, 1000); // Remove after 1 second
+      }
+    }
+  },
+
+  startTutorialScrolling() {
+    // Start tutorial message cycling
+    this.tutorialScrollInterval = setInterval(() => {
+      // Only show tutorial messages when no other notifications are active
+      if (!this.isShowingNotification && this.notificationQueue.length === 0) {
+        const now = Date.now();
+        if (now - this.lastTutorialTime >= this.tutorialScrollDelay) {
+          this.showTutorialMessage();
+          this.lastTutorialTime = now;
+        }
+      }
+    }, 1000); // Check every second
+  },
+
+  showTutorialMessage() {
+    const message = this.tutorialMessages[this.currentTutorialIndex];
+    this.currentTutorialIndex =
+      (this.currentTutorialIndex + 1) % this.tutorialMessages.length;
+
+    // Show tutorial message with a different style
+    this.showTutorialNotification(message);
+  },
+
+  showTutorialNotification(message) {
+    const notification = document.createElement("div");
+    notification.className = "achievement-popup tutorial-notification";
+    notification.style.top = `${20 + this.notificationOffset}px`;
+    notification.style.background = "linear-gradient(145deg, #e0f2fe, #bae6fd)";
+    notification.style.border = "2px solid #0ea5e9";
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <div class="text-2xl">💡</div>
+            <div class="font-bold text-blue-800">${message}</div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+
+    requestAnimationFrame(() => {
+      notification.style.transform = "translateX(0)";
+      notification.style.opacity = "1";
+    });
+
+    this.notificationOffset += 80;
+
+    setTimeout(() => {
+      notification.style.transform = "translateX(100%)";
+      notification.style.opacity = "0";
+
+      setTimeout(() => {
+        notification.remove();
+        this.notificationOffset -= 80;
+      }, 500);
+    }, 6000); // Show tutorial messages longer than achievements
   },
 
   startInitialEggButtonAnimation() {

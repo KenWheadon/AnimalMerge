@@ -536,6 +536,10 @@ const coopManager = {
       document
         .getElementById("autoMergeProgressContainer")
         .classList.remove("hidden");
+
+      // Update shuffle button state now that auto-merge is owned
+      this.updateShuffleButtonState();
+
       updateMoney();
       eventManager.showAchievement("⚙️ Auto-Merge Activated!");
       updateStatus("Bought Auto-Merge ⚙️");
@@ -543,6 +547,29 @@ const coopManager = {
       updateStatus("Not enough money for Auto-Merge! 😕");
       document.body.classList.add("screen-shake");
       setTimeout(() => document.body.classList.remove("screen-shake"), 500);
+    }
+  },
+
+  updateShuffleButtonState() {
+    const shuffleButton = document.getElementById("buyShuffle");
+    const shuffleButtonText = document.getElementById("shuffleButtonText");
+
+    if (shuffleButton && shuffleButtonText) {
+      if (!gameState.autoMerge.owned) {
+        // Lock shuffle until auto-merge is purchased
+        shuffleButton.disabled = true;
+        shuffleButton.style.opacity = "0.5";
+        shuffleButton.style.cursor = "not-allowed";
+        shuffleButtonText.textContent = "Requires Auto-Merge";
+        shuffleButton.title = "Purchase Auto-Merge first to unlock Shuffle";
+      } else {
+        // Unlock shuffle
+        shuffleButton.disabled = false;
+        shuffleButton.style.opacity = "1";
+        shuffleButton.style.cursor = "pointer";
+        shuffleButtonText.textContent = "Buy ($10)";
+        shuffleButton.title = "";
+      }
     }
   },
 
@@ -564,6 +591,14 @@ const coopManager = {
   },
 
   buyShuffle() {
+    // Check if auto-merge is owned first
+    if (!gameState.autoMerge.owned) {
+      updateStatus("You need Auto-Merge first! 😕");
+      document.body.classList.add("screen-shake");
+      setTimeout(() => document.body.classList.remove("screen-shake"), 500);
+      return;
+    }
+
     if (gameState.money >= GAME_CONFIG.shuffleConfig.buyCost) {
       gameState.money -= GAME_CONFIG.shuffleConfig.buyCost;
       gameState.shuffle.owned = true;

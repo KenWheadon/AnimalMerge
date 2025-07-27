@@ -14,9 +14,9 @@ let gameState = {
   autoMerge: {
     owned: false,
     level: 1,
-    baseInterval: 10,
-    currentInterval: 10,
-    timer: 10,
+    baseInterval: GAME_CONFIG.autoMergeConfig.baseInterval, // Fixed: use config value (25)
+    currentInterval: GAME_CONFIG.autoMergeConfig.baseInterval, // Fixed: use config value (25)
+    timer: GAME_CONFIG.autoMergeConfig.baseInterval, // Fixed: use config value (25)
     enabled: true,
   },
   shuffle: {
@@ -24,6 +24,7 @@ let gameState = {
     enabled: true,
   },
   slaughterHouses: [],
+  lastInteractionTime: Date.now(), // Track last player interaction for idle detection
 };
 
 function showTutorialPopup() {
@@ -101,6 +102,12 @@ function initializeGame() {
   // Add initial egg button animation
   eventManager.startInitialEggButtonAnimation();
 
+  // Initialize idle detection system
+  eventManager.initializeIdleDetection();
+
+  // Initialize shuffle button state (locked until auto-merge is purchased)
+  coopManager.updateShuffleButtonState();
+
   showTutorialPopup();
 }
 
@@ -133,7 +140,7 @@ function generateMainHTML() {
                         <div class="space-y-1 text-xs mb-1">
                             <div class="flex justify-between">
                                 <span>Interval:</span>
-                                <span id="autoMergeTimer" class="font-mono">10.0s</span>
+                                <span id="autoMergeTimer" class="font-mono">25.0s</span>
                             </div>
                             <div id="autoMergeProgress" class="text-gray-500">0/6 animals slaughtered</div>
                         </div>
@@ -164,7 +171,7 @@ function generateMainHTML() {
                         <div class="mb-2" style="height: 4px;"></div>
                         <div class="space-y-1">
                             <button id="buyShuffle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white" style="background: linear-gradient(145deg, #f59e0b, #d97706);">
-                                Buy ($10)
+                                <span id="shuffleButtonText">Buy ($10)</span>
                             </button>
                             <button id="shuffleToggle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white hidden bg-green-500">
                                 🔵 ON
@@ -241,6 +248,7 @@ function updateAutoMergeLevel() {
 
   if (newLevel > oldLevel) {
     gameState.autoMerge.level = newLevel;
+    // Fixed: Properly calculate decreasing interval using config values
     gameState.autoMerge.currentInterval =
       GAME_CONFIG.autoMergeConfig.baseInterval *
       Math.pow(
@@ -327,11 +335,18 @@ function isGridFull() {
   );
 }
 
+// Function to track player interactions
+function trackPlayerInteraction() {
+  gameState.lastInteractionTime = Date.now();
+}
+
 function placeAnimal(type) {
   console.log(`placeAnimal called with type: ${type}`);
   console.log(
     `gameState.eggButtonClicked in placeAnimal: ${gameState.eggButtonClicked}`
   );
+
+  trackPlayerInteraction(); // Track interaction
 
   for (const { row: i, col: j } of GAME_CONFIG.gridConfig.availableSpots) {
     if (gameState.purchasedCells.has(`${i}-${j}`) && !gameState.grid[i][j]) {
@@ -371,6 +386,8 @@ function buyAnimal(type, cost) {
     `gameState.eggButtonClicked before: ${gameState.eggButtonClicked}`
   );
 
+  trackPlayerInteraction(); // Track interaction
+
   if (gameState.money >= cost) {
     gameState.money -= cost;
 
@@ -396,12 +413,15 @@ function buyAnimal(type, cost) {
 }
 
 function sellAnimal(i, j, type) {
+  trackPlayerInteraction(); // Track interaction
   if (gameState.slaughterHouses.length > 0) {
     slaughterHouseManager.addAnimalToQueue(0, type, i, j);
   }
 }
 
 function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
+  trackPlayerInteraction(); // Track interaction
+
   const newType =
     GAME_CONFIG.animalTypes[gameState.grid[targetI][targetJ]].mergeTo;
 
