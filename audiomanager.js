@@ -12,6 +12,13 @@ const audioManager = {
   musicProgression: ["mantis-song", "cat-song", "panda-song", "vulture-song"],
   currentMusicLevel: 0,
 
+  // FIX: Add background music retry system
+  musicRetryInterval: null,
+  lastMusicCheck: 0,
+
+  // Add cooldown tracking for overlapping sounds
+  soundCooldowns: new Map(),
+
   // Audio file paths
   musicFiles: {
     "mantis-song": "audio/mantis-song.mp3",
@@ -75,13 +82,61 @@ const audioManager = {
     // Load all audio files
     this.loadAllAudio();
 
-    // Start with first background music
-    this.updateBackgroundMusic();
+    // FIX: Start background music retry system
+    this.startMusicRetrySystem();
 
     // Add volume controls to UI (optional)
     this.addVolumeControls();
 
     console.log("Audio Manager initialized");
+  },
+
+  // FIX: Start system to check and retry background music every 15 seconds
+  startMusicRetrySystem() {
+    this.musicRetryInterval = setInterval(() => {
+      this.checkBackgroundMusic();
+    }, 15000); // Check every 15 seconds
+  },
+
+  // FIX: Check if background music should be playing but isn't
+  checkBackgroundMusic() {
+    // Only check if audio is not muted
+    if (this.isMuted) return;
+
+    // Determine what music level should be playing
+    const expectedMusicLevel = this.getExpectedMusicLevel();
+    const expectedTrackName = this.musicProgression[expectedMusicLevel];
+
+    // Check if music should be playing but isn't
+    const shouldBePlaying = expectedTrackName && !this.isMuted;
+    const isCurrentlyPlaying =
+      this.currentTrack &&
+      !this.currentTrack.paused &&
+      !this.currentTrack.ended;
+
+    if (shouldBePlaying && !isCurrentlyPlaying) {
+      console.log(
+        "Background music should be playing but isn't - attempting to restart"
+      );
+      this.updateBackgroundMusic();
+    }
+  },
+
+  // FIX: Helper method to determine expected music level
+  getExpectedMusicLevel() {
+    let expectedLevel = 0;
+
+    if (gameState.createdAnimals.has("Vulture")) {
+      expectedLevel = 3; // vulture-song
+    } else if (gameState.createdAnimals.has("Panda")) {
+      expectedLevel = 2; // panda-song
+    } else if (gameState.createdAnimals.has("Cat")) {
+      expectedLevel = 1; // cat-song
+    } else {
+      expectedLevel = 0; // mantis-song
+    }
+
+    return expectedLevel;
   },
 
   // Load all audio files
@@ -108,24 +163,16 @@ const audioManager = {
     });
   },
 
-  // Update background music based on game progression
+  // Update background music based on game progression - properly determine level on load
   updateBackgroundMusic() {
-    let newMusicLevel = 0;
+    const newMusicLevel = this.getExpectedMusicLevel();
 
-    // Determine music level based on unlocked coops
-    if (gameState.createdAnimals.has("Vulture")) {
-      newMusicLevel = 3; // vulture-song
-    } else if (gameState.createdAnimals.has("Panda")) {
-      newMusicLevel = 2; // panda-song
-    } else if (gameState.createdAnimals.has("Cat")) {
-      newMusicLevel = 1; // cat-song
-    } else {
-      newMusicLevel = 0; // mantis-song
-    }
-
-    // Only change music if level has progressed
-    if (newMusicLevel > this.currentMusicLevel) {
+    // Always set the appropriate music level on load, not just when it progresses
+    if (newMusicLevel !== this.currentMusicLevel) {
       this.currentMusicLevel = newMusicLevel;
+      this.switchBackgroundMusic(this.musicProgression[newMusicLevel]);
+    } else if (!this.currentTrack || this.currentTrack.paused) {
+      // If no music is playing but we should be playing music, start it
       this.switchBackgroundMusic(this.musicProgression[newMusicLevel]);
     }
   },
@@ -176,6 +223,25 @@ const audioManager = {
     soundClone.play().catch((e) => {
       console.warn(`Failed to play sound: ${soundName}`, e);
     });
+  },
+
+  // Play random sound from a group with cooldown to prevent overlapping
+  playRandomSoundWithCooldown(soundGroup, cooldownMs = 500) {
+    if (this.isMuted) return;
+
+    // Check if this sound group is on cooldown
+    const now = Date.now();
+    const lastPlayTime = this.soundCooldowns.get(soundGroup);
+
+    if (lastPlayTime && now - lastPlayTime < cooldownMs) {
+      return; // Skip playing if still on cooldown
+    }
+
+    // Set cooldown
+    this.soundCooldowns.set(soundGroup, now);
+
+    // Play the sound
+    this.playRandomSound(soundGroup);
   },
 
   // Play random sound from a group
@@ -391,6 +457,14 @@ const audioManager = {
     // Start music if not already playing
     if (!this.currentTrack || this.currentTrack.paused) {
       this.updateBackgroundMusic();
+    }
+  },
+
+  // FIX: Cleanup method to stop retry system
+  cleanup() {
+    if (this.musicRetryInterval) {
+      clearInterval(this.musicRetryInterval);
+      this.musicRetryInterval = null;
     }
   },
 };

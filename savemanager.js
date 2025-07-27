@@ -1,6 +1,6 @@
 const saveManager = {
-  SAVE_KEY: "animalMergeFarmSave11",
-  COOKIE_KEY: "animalMergeFarmSave11",
+  SAVE_KEY: "animalMergeFarmSave2",
+  COOKIE_KEY: "animalMergeFarmSave2",
   SAVE_VERSION: 1,
   autoSaveInterval: null,
 

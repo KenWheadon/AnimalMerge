@@ -40,11 +40,11 @@ function showTutorialPopup() {
           <img src="images/cow.png" alt="Farm Guide" class="tutorial-cow-image" />
         </div>
         <div class="tutorial-text">
-          <h2 class="tutorial-title">Welcome to Animal Merge Farm!</h2>
+          <h2 class="tutorial-title">Welcome to Furry Merge Farm!</h2>
           <div class="tutorial-instructions">
             <p><strong>🥚 Start with Eggs:</strong> Buy and place eggs on your grid to begin!</p>
             <p><strong>🔄 Merge Everything:</strong> Merge 2 of the same thing to upgrade it!</p>
-            <p><strong>💰 Make Money:</strong> Sell animations by dragging them to the butcher shop!</p>
+            <p><strong>💰 Make Money:</strong> Sell animals by dragging them to the butcher shop!</p>
             <p><strong>🏡 Build Coops:</strong> Unlock coops to automatically generate better eggs!</p>
             <p><strong>⚙️ Automate:</strong> Buy auto-merge to automatically combine animals and eggs!</p>
           </div>
@@ -275,10 +275,10 @@ function generateMainHTML() {
                 <h2 class="text-xl font-bold text-green-800">🏭 Buildings</h2>
             </div>
             <div class="flex-1 overflow-y-auto p-3">
-                <div id="slaughterHouseContainer" class="mb-6">
+                <div id="slaughterHouseContainer" class="mb-2">
                     ${slaughterHouseManager.generateSlaughterHouseHTML()}
                 </div>
-                <div class="space-y-4">
+                <div class="space-y-2">
                     ${coopManager.generateCoopHTML()}
                 </div>
             </div>

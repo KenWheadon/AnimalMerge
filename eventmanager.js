@@ -3,6 +3,10 @@ const eventManager = {
   isShowingNotification: false,
   notificationOffset: 0,
 
+  // FIX: Add centralized particle management
+  activeParticles: new Set(),
+  particleCleanupInterval: null,
+
   // Idle detection system
   idleCheckInterval: null,
   tutorialScrollInterval: null,
@@ -29,6 +33,9 @@ const eventManager = {
     const buyShuffleBtn = document.getElementById("buyShuffle");
     const shuffleToggleBtn = document.getElementById("shuffleToggle");
     const helpBtn = document.getElementById("helpButton");
+
+    // FIX: Initialize particle cleanup system
+    this.initializeParticleCleanup();
 
     if (buyAutoMergeBtn) {
       // Add hover sound
@@ -94,6 +101,33 @@ const eventManager = {
         this.playTutorialSequence();
       });
     }
+  },
+
+  // FIX: Initialize particle cleanup system for optimization
+  initializeParticleCleanup() {
+    // Clean up orphaned particles every 5 seconds
+    this.particleCleanupInterval = setInterval(() => {
+      this.cleanupOrphanedParticles();
+    }, 5000);
+  },
+
+  // FIX: Clean up particles that may have been left behind
+  cleanupOrphanedParticles() {
+    const particles = document.querySelectorAll(
+      ".particle, .processing-particle, .flying-coin, .flying-money-value"
+    );
+    const maxAge = 10000; // 10 seconds max age for any particle
+    const now = Date.now();
+
+    particles.forEach((particle) => {
+      const createdTime = particle.dataset.created;
+      if (createdTime && now - parseInt(createdTime) > maxAge) {
+        if (particle.parentNode) {
+          particle.parentNode.removeChild(particle);
+        }
+        this.activeParticles.delete(particle);
+      }
+    });
   },
 
   initializeIdleDetection() {
@@ -509,19 +543,38 @@ const eventManager = {
     number.style.left = "50%";
     number.style.top = "50%";
     number.style.transform = "translate(-50%, -50%)";
-    parent.appendChild(number);
 
-    setTimeout(
-      () => number.remove(),
-      GAME_CONFIG.animationConfig.floatingNumberDuration
-    );
+    // FIX: Add timestamp for cleanup tracking
+    number.dataset.created = Date.now().toString();
+
+    parent.appendChild(number);
+    this.activeParticles.add(number);
+
+    setTimeout(() => {
+      if (number.parentNode) {
+        number.parentNode.removeChild(number);
+      }
+      this.activeParticles.delete(number);
+    }, GAME_CONFIG.animationConfig.floatingNumberDuration);
   },
 
-  createParticles(element) {
+  // FIX: Enhanced particle creation with limits and optimization
+  createParticles(element, value = null) {
     const rect = element.getBoundingClientRect();
     const container = document.body;
 
-    for (let i = 0; i < GAME_CONFIG.animationConfig.particleCount; i++) {
+    // FIX: Dynamic particle count based on value with reasonable limits
+    let particleCount = GAME_CONFIG.animationConfig.particleCount; // Default 20
+
+    if (value !== null) {
+      // Scale particle count based on value, but cap it for performance
+      const minParticles = 5;
+      const maxParticles = 30; // Maximum for performance
+      const scaledCount = Math.floor(value / 100) + minParticles; // 1 particle per 100 value
+      particleCount = Math.min(scaledCount, maxParticles);
+    }
+
+    for (let i = 0; i < particleCount; i++) {
       const particle = document.createElement("div");
       particle.className = "particle";
       particle.style.left = `${rect.left + rect.width / 2}px`;
@@ -529,14 +582,49 @@ const eventManager = {
       particle.style.animationDelay = `${Math.random() * 0.5}s`;
       particle.style.animationDuration = `${1 + Math.random() * 1}s`;
 
-      const angle =
-        (Math.PI * 2 * i) / GAME_CONFIG.animationConfig.particleCount;
+      // FIX: Add timestamp for cleanup tracking
+      particle.dataset.created = Date.now().toString();
+
+      const angle = (Math.PI * 2 * i) / particleCount;
       const distance = 50 + Math.random() * 50;
       particle.style.setProperty("--end-x", `${Math.cos(angle) * distance}px`);
       particle.style.setProperty("--end-y", `${Math.sin(angle) * distance}px`);
 
       container.appendChild(particle);
-      setTimeout(() => particle.remove(), 2000);
+      this.activeParticles.add(particle);
+
+      setTimeout(() => {
+        if (particle.parentNode) {
+          particle.parentNode.removeChild(particle);
+        }
+        this.activeParticles.delete(particle);
+      }, 2000);
     }
+  },
+
+  // FIX: Cleanup method to be called when game is shut down
+  cleanup() {
+    if (this.particleCleanupInterval) {
+      clearInterval(this.particleCleanupInterval);
+      this.particleCleanupInterval = null;
+    }
+
+    if (this.idleCheckInterval) {
+      clearInterval(this.idleCheckInterval);
+      this.idleCheckInterval = null;
+    }
+
+    if (this.tutorialScrollInterval) {
+      clearInterval(this.tutorialScrollInterval);
+      this.tutorialScrollInterval = null;
+    }
+
+    // Remove all active particles
+    this.activeParticles.forEach((particle) => {
+      if (particle.parentNode) {
+        particle.parentNode.removeChild(particle);
+      }
+    });
+    this.activeParticles.clear();
   },
 };

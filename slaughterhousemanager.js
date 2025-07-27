@@ -4,6 +4,8 @@ const slaughterHouseManager = {
   tooltipCache: null,
   processingIntervals: new Map(),
   particleIntervals: new Map(),
+  // FIX: Track if splat sound has been played for current animal
+  splatSoundPlayed: new Map(),
 
   generateSlaughterHouseHTML() {
     // Check if slaughter house should be visible (Mantis has been created)
@@ -85,9 +87,6 @@ const slaughterHouseManager = {
       value: animalConfig.sellPrice,
     });
 
-    // Play butcher shop sound when starting the butchering process
-    audioManager.playSound("butcher-shop");
-
     gameState.grid[gridI][gridJ] = null;
     gridManager.updateCell(gridI, gridJ);
     updateMergeablePairs();
@@ -105,6 +104,8 @@ const slaughterHouseManager = {
     if (!house.currentAnimal && house.queue.length > 0) {
       house.currentAnimal = house.queue.shift();
       house.timer = house.processTime;
+      // FIX: Reset splat sound flag for new animal
+      this.splatSoundPlayed.set(0, false);
       this.updateSlaughterHouseQueue(0);
       this.startProcessingAnimation(0);
     }
@@ -114,6 +115,9 @@ const slaughterHouseManager = {
     const house = gameState.slaughterHouses[0];
     const slaughterHouse = document.getElementById(`slaughterHouse0`);
     if (!slaughterHouse || !house.currentAnimal) return;
+
+    // Play butcher shop sound when processing actually starts
+    audioManager.playSound("butcher-shop");
 
     this.clearProcessingAnimation(0);
 
@@ -217,7 +221,10 @@ const slaughterHouseManager = {
     const slaughterRect = slaughterHouse.getBoundingClientRect();
     const moneyRect = moneyDisplay.getBoundingClientRect();
 
-    const numCoins = Math.ceil(value / 10);
+    // FIX: Limit number of coins based on value with reasonable maximum
+    const maxCoins = 15; // Maximum number of coins to prevent performance issues
+    const baseCoins = Math.ceil(value / 10);
+    const numCoins = Math.min(baseCoins, maxCoins);
     const displayValue = `+${value}`;
 
     const moneyValue = document.createElement("div");
@@ -290,6 +297,12 @@ const slaughterHouseManager = {
         const progress =
           ((house.processTime - house.timer) / house.processTime) * 100;
         progressBar.style.width = `${progress}%`;
+
+        // FIX: Play splat sound at 90% completion (before reward sound)
+        if (progress >= 90 && !this.splatSoundPlayed.get(0)) {
+          audioManager.playRandomSound("butcher-done");
+          this.splatSoundPlayed.set(0, true);
+        }
       }
 
       if (house.timer <= 0) {
@@ -297,10 +310,7 @@ const slaughterHouseManager = {
         gameState.money += animal.value;
         gameState.totalSlaughtered += 1;
 
-        // Play random butcher done sound when processing is completed
-        audioManager.playRandomSound("butcher-done");
-
-        // Play earn money sound
+        // Play earn money sound (reward sound plays after splat)
         audioManager.playSound("earn-money");
 
         updateMoney();
