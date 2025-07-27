@@ -48,7 +48,10 @@ function showTutorialPopup() {
             <p><strong>🏡 Build Coops:</strong> Unlock coops to automatically generate better eggs!</p>
             <p><strong>⚙️ Automate:</strong> Buy auto-merge to automatically combine animals and eggs!</p>
           </div>
-          <button id="startFarming" class="tutorial-start-btn">Get Farming!</button>
+          <div class="tutorial-buttons">
+            <button id="startFarming" class="tutorial-start-btn">Get Farming!</button>
+            <button id="showCredits" class="tutorial-credits-btn">Credits</button>
+          </div>
         </div>
       </div>
     </div>
@@ -58,6 +61,7 @@ function showTutorialPopup() {
 
   const closeBtn = document.getElementById("closeTutorial");
   const startBtn = document.getElementById("startFarming");
+  const creditsBtn = document.getElementById("showCredits");
 
   const closeTutorial = () => {
     // Handle first user interaction for audio
@@ -69,11 +73,173 @@ function showTutorialPopup() {
 
   closeBtn.addEventListener("click", closeTutorial);
   startBtn.addEventListener("click", closeTutorial);
+
+  creditsBtn.addEventListener("click", () => {
+    audioManager.playSound("button-click");
+    showCreditsGallery();
+  });
+
   popup.addEventListener("click", (e) => {
     if (e.target === popup) {
       closeTutorial();
     }
   });
+}
+
+function showCreditsGallery() {
+  const modal = document.createElement("div");
+  modal.className = "credits-gallery-modal";
+  modal.id = "creditsModal";
+
+  // Ensure modal is positioned properly
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  `;
+
+  modal.innerHTML = `
+    <div class="credits-gallery-container">
+      <div class="credits-gallery-header">
+        <div class="credits-company">
+          <h1 class="credits-gallery-title">Game Credits</h1>
+          <img src="images/company-logo.png" alt="Company Logo" class="credits-logo" />
+        </div>
+        <button class="credits-gallery-close" id="closeCredits">×</button>
+      </div>
+      
+      <div class="credits-gallery-content">
+        <div class="credits-gallery-filters">
+          <button class="credits-filter-btn active" data-filter="all">All</button>
+          ${getAllDepartments()
+            .map(
+              (dept) =>
+                `<button class="credits-filter-btn" data-filter="${dept.toLowerCase()}">${dept}</button>`
+            )
+            .join("")}
+        </div>
+        
+        <div class="credits-grid" id="creditsGrid">
+          ${Object.entries(CREDITS)
+            .map(
+              ([key, person]) => `
+            <div class="credits-card" data-department="${person.department.toLowerCase()}" data-person="${key}">
+              <img src="${person.previewImage}" alt="${
+                person.name
+              }" class="credits-card-image" />
+              <h3 class="credits-card-name">${person.name}</h3>
+              <p class="credits-card-title">${person.jobTitle}</p>
+              <p class="credits-card-department">${person.department}</p>
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+        
+        <div class="credits-detail-view" id="creditsDetailView">
+          <button class="credits-detail-back" id="creditsDetailBack">←</button>
+          <div class="credits-detail-left">
+            <img id="creditsDetailImage" class="credits-detail-image" />
+          </div>
+          <div class="credits-detail-right">
+            <h2 id="creditsDetailName" class="credits-detail-name"></h2>
+            <p id="creditsDetailTitle" class="credits-detail-title"></p>
+            <p id="creditsDetailDepartment" class="credits-detail-department"></p>
+            <p id="creditsDetailDescription" class="credits-detail-description"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Show modal with proper animation
+  requestAnimationFrame(() => {
+    modal.style.opacity = "1";
+    modal.style.visibility = "visible";
+    modal.style.pointerEvents = "auto";
+  });
+
+  // Event listeners
+  document
+    .getElementById("closeCredits")
+    .addEventListener("click", hideCreditsGallery);
+
+  // Filter buttons
+  document.querySelectorAll(".credits-filter-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      document
+        .querySelectorAll(".credits-filter-btn")
+        .forEach((b) => b.classList.remove("active"));
+      e.target.classList.add("active");
+
+      const filter = e.target.dataset.filter;
+      const cards = document.querySelectorAll(".credits-card");
+
+      cards.forEach((card) => {
+        if (filter === "all" || card.dataset.department === filter) {
+          card.style.display = "block";
+        } else {
+          card.style.display = "none";
+        }
+      });
+    });
+  });
+
+  // Card clicks
+  document.querySelectorAll(".credits-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const personKey = card.dataset.person;
+      const person = CREDITS[personKey];
+
+      document.getElementById("creditsDetailImage").src = person.fullImage;
+      document.getElementById("creditsDetailImage").alt = person.name;
+      document.getElementById("creditsDetailName").textContent = person.name;
+      document.getElementById("creditsDetailTitle").textContent =
+        person.jobTitle;
+      document.getElementById("creditsDetailDepartment").textContent =
+        person.department;
+      document.getElementById("creditsDetailDescription").textContent =
+        person.description;
+
+      document.getElementById("creditsDetailView").classList.add("active");
+    });
+  });
+
+  // Detail back button
+  document.getElementById("creditsDetailBack").addEventListener("click", () => {
+    document.getElementById("creditsDetailView").classList.remove("active");
+  });
+
+  // Close on backdrop click
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      hideCreditsGallery();
+    }
+  });
+}
+
+function hideCreditsGallery() {
+  const modal = document.getElementById("creditsModal");
+  if (modal) {
+    modal.style.opacity = "0";
+    modal.style.visibility = "hidden";
+    modal.style.pointerEvents = "none";
+    setTimeout(() => modal.remove(), 300);
+  }
 }
 
 function initializeGame() {
@@ -625,4 +791,7 @@ function startGameTimers() {
   }, 100);
 }
 
-document.addEventListener("DOMContentLoaded", initializeGame);
+// Initialize the game when page loads, but start with loading screen
+document.addEventListener("DOMContentLoaded", () => {
+  loadingManager.showLoadingScreen();
+});

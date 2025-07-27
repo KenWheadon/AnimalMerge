@@ -404,20 +404,36 @@ const eventManager = {
         Congratulations! You've reached the final animal and completed this demo. 
         The <strong style="color: #fbbf24;">${endDemoConfig.name}</strong> can be sold but cannot merge any further.
       </p>
-      <button id="closeDemoPopup" style="
-        background: linear-gradient(145deg, #fbbf24, #f59e0b);
-        color: #1f2937;
-        padding: 0.75rem 2rem;
-        border: none;
-        border-radius: 0.5rem;
-        font-weight: bold;
-        font-size: 1.1rem;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
-        transition: all 0.2s;
-      " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        Continue Playing
-      </button>
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <button id="closeDemoPopup" style="
+          background: linear-gradient(145deg, #fbbf24, #f59e0b);
+          color: #1f2937;
+          padding: 0.75rem 2rem;
+          border: none;
+          border-radius: 0.5rem;
+          font-weight: bold;
+          font-size: 1.1rem;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+          transition: all 0.2s;
+        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          Continue Playing
+        </button>
+        <button id="showDemoCredits" style="
+          background: linear-gradient(145deg, #374151, #1f2937);
+          color: #fbbf24;
+          padding: 0.75rem 2rem;
+          border: 2px solid #fbbf24;
+          border-radius: 0.5rem;
+          font-weight: bold;
+          font-size: 1.1rem;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+          transition: all 0.2s;
+        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          Credits
+        </button>
+      </div>
     `;
 
     if (!document.querySelector("#popup-animations")) {
@@ -442,12 +458,22 @@ const eventManager = {
     document.body.appendChild(backdrop);
 
     const closeButton = document.getElementById("closeDemoPopup");
+    const creditsButton = document.getElementById("showDemoCredits");
+
     closeButton.addEventListener("mouseenter", () => {
       audioManager.playSound("button-hover");
     });
     closeButton.addEventListener("click", () => {
       audioManager.playSound("button-click");
       backdrop.remove();
+    });
+
+    creditsButton.addEventListener("mouseenter", () => {
+      audioManager.playSound("button-hover");
+    });
+    creditsButton.addEventListener("click", () => {
+      audioManager.playSound("button-click");
+      showCreditsGallery();
     });
 
     backdrop.addEventListener("click", (e) => {

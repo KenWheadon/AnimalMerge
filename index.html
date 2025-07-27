@@ -13,6 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="loading.css" />
     <link rel="stylesheet" href="variables.css" />
     <link rel="stylesheet" href="base.css" />
     <link rel="stylesheet" href="components.css" />
@@ -20,12 +21,35 @@
     <link rel="stylesheet" href="animations.css" />
     <link rel="stylesheet" href="responsive.css" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="credits-gallery.css" />
     <style></style>
   </head>
   <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+      <div class="loading-content">
+        <div class="loading-logo">
+          <img
+            src="images/company-logo.png"
+            alt="Company Logo"
+            style="max-width: 150px; height: auto"
+          />
+        </div>
+        <div id="loadingText" class="loading-text">
+          Loading Furry Merge Farm...
+        </div>
+        <div class="loading-bar-container">
+          <div id="loadingBar" class="loading-bar" style="width: 0%"></div>
+        </div>
+        <div id="loadingPercentage" class="loading-percentage">0%</div>
+      </div>
+    </div>
+
     <div id="gameContainer"></div>
 
     <script src="config.js"></script>
+    <script src="credits-data.js"></script>
+    <script src="loading.js"></script>
     <script src="audiomanager.js"></script>
     <script src="achievementmanager.js"></script>
     <script src="savemanager.js"></script>

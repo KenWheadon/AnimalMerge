@@ -241,3 +241,68 @@
     transform: translateX(2px);
   }
 }
+
+/* Tutorial Button Styles - Add this to your styles.css */
+
+.tutorial-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.tutorial-start-btn {
+  background: linear-gradient(145deg, #4ade80, #22c55e);
+  color: white;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.tutorial-start-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+}
+
+.tutorial-credits-btn {
+  background: linear-gradient(145deg, #374151, #1f2937);
+  color: #fbbf24;
+  padding: 0.75rem 2rem;
+  border: 2px solid #fbbf24;
+  border-radius: 0.75rem;
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.tutorial-credits-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: linear-gradient(145deg, #fbbf24, #f59e0b);
+  color: #1f2937;
+  border-color: #f59e0b;
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+}
+
+/* Mobile responsiveness for tutorial buttons */
+@media (max-width: 480px) {
+  .tutorial-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tutorial-start-btn,
+  .tutorial-credits-btn {
+    width: 100%;
+    max-width: 250px;
+  }
+}
