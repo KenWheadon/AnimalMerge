@@ -115,7 +115,7 @@ const GAME_CONFIG = {
     spawnAnimationDuration: 600,
     slaughterAnimationDuration: 1000,
     mergeExplosionDuration: 800,
-    achievementDuration: 3000,
+    achievementDuration: 2500,
     floatingNumberDuration: 1000,
     particleCount: 20,
     autoMergeGlowDuration: 500,

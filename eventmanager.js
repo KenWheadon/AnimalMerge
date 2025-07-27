@@ -19,13 +19,16 @@ const eventManager = {
   ],
   currentTutorialIndex: 0,
   lastTutorialTime: 0,
-  tutorialScrollDelay: 8000, // 8 seconds between tutorial messages
+  tutorialScrollDelay: 6000, // 4 seconds between tutorial messages for initial cycle
+  initialTutorialComplete: false,
+  isPlayingTutorial: false,
 
   initializeButtonEventListeners() {
     const buyAutoMergeBtn = document.getElementById("buyAutoMerge");
     const autoMergeToggleBtn = document.getElementById("autoMergeToggle");
     const buyShuffleBtn = document.getElementById("buyShuffle");
     const shuffleToggleBtn = document.getElementById("shuffleToggle");
+    const helpBtn = document.getElementById("helpButton");
 
     if (buyAutoMergeBtn) {
       buyAutoMergeBtn.addEventListener("click", () => {
@@ -54,6 +57,13 @@ const eventManager = {
         coopManager.toggleShuffle();
       });
     }
+
+    if (helpBtn) {
+      helpBtn.addEventListener("click", () => {
+        gameState.lastInteractionTime = Date.now(); // Track interaction
+        this.playTutorialSequence();
+      });
+    }
   },
 
   initializeIdleDetection() {
@@ -62,8 +72,118 @@ const eventManager = {
       this.checkIdleState();
     }, 2000);
 
-    // Start tutorial scrolling when no notifications are active
-    this.startTutorialScrolling();
+    // Don't start tutorial cycle here - wait for popup to be closed
+  },
+
+  startInitialTutorialCycle() {
+    // Start the initial tutorial cycle immediately
+    this.isPlayingTutorial = true;
+    this.currentTutorialIndex = 0;
+    this.lastTutorialTime = Date.now();
+
+    // Show first message immediately
+    this.showTutorialMessage();
+
+    // Set up interval for the rest of the messages
+    this.tutorialScrollInterval = setInterval(() => {
+      if (this.isPlayingTutorial && !this.initialTutorialComplete) {
+        const now = Date.now();
+        if (now - this.lastTutorialTime >= this.tutorialScrollDelay) {
+          if (this.currentTutorialIndex < this.tutorialMessages.length) {
+            this.showTutorialMessage();
+            this.lastTutorialTime = now;
+          } else {
+            // Initial cycle complete
+            this.initialTutorialComplete = true;
+            this.isPlayingTutorial = false;
+            clearInterval(this.tutorialScrollInterval);
+            this.showHelpButton();
+          }
+        }
+      }
+    }, 1000);
+  },
+
+  playTutorialSequence() {
+    if (this.isPlayingTutorial) return; // Don't start if already playing
+
+    this.isPlayingTutorial = true;
+    this.currentTutorialIndex = 0;
+    this.lastTutorialTime = Date.now();
+
+    // Show first message immediately
+    this.showTutorialMessage();
+
+    // Set up interval for manual tutorial playback
+    this.tutorialScrollInterval = setInterval(() => {
+      if (this.isPlayingTutorial) {
+        const now = Date.now();
+        if (now - this.lastTutorialTime >= this.tutorialScrollDelay) {
+          if (this.currentTutorialIndex < this.tutorialMessages.length) {
+            this.showTutorialMessage();
+            this.lastTutorialTime = now;
+          } else {
+            // Manual cycle complete
+            this.isPlayingTutorial = false;
+            clearInterval(this.tutorialScrollInterval);
+          }
+        }
+      }
+    }, 1000);
+  },
+
+  showHelpButton() {
+    // Add help button to the status area or a suitable location
+    const statusElement = document.getElementById("status");
+    if (statusElement && !document.getElementById("helpButton")) {
+      const helpButton = document.createElement("button");
+      helpButton.id = "helpButton";
+      helpButton.className = "help-button";
+      helpButton.innerHTML = "❓";
+      helpButton.title = "Show tutorial tips";
+
+      // Position the help button in the corner of the status area
+      helpButton.style.cssText = `
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #3b82f6, #2563eb);
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        transition: all 0.2s ease;
+        z-index: 10;
+      `;
+
+      // Add hover effect
+      helpButton.addEventListener("mouseenter", () => {
+        helpButton.style.transform = "scale(1.1)";
+        helpButton.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.4)";
+      });
+
+      helpButton.addEventListener("mouseleave", () => {
+        helpButton.style.transform = "scale(1)";
+        helpButton.style.boxShadow = "0 2px 8px rgba(59, 130, 246, 0.3)";
+      });
+
+      // Make status element relative positioned so the button can be positioned absolutely within it
+      statusElement.style.position = "relative";
+      statusElement.appendChild(helpButton);
+
+      // Add event listener (will be picked up by initializeButtonEventListeners)
+      helpButton.addEventListener("click", () => {
+        gameState.lastInteractionTime = Date.now();
+        this.playTutorialSequence();
+      });
+    }
   },
 
   checkIdleState() {
@@ -133,24 +253,13 @@ const eventManager = {
     }
   },
 
-  startTutorialScrolling() {
-    // Start tutorial message cycling
-    this.tutorialScrollInterval = setInterval(() => {
-      // Only show tutorial messages when no other notifications are active
-      if (!this.isShowingNotification && this.notificationQueue.length === 0) {
-        const now = Date.now();
-        if (now - this.lastTutorialTime >= this.tutorialScrollDelay) {
-          this.showTutorialMessage();
-          this.lastTutorialTime = now;
-        }
-      }
-    }, 1000); // Check every second
-  },
-
   showTutorialMessage() {
+    if (this.currentTutorialIndex >= this.tutorialMessages.length) {
+      return;
+    }
+
     const message = this.tutorialMessages[this.currentTutorialIndex];
-    this.currentTutorialIndex =
-      (this.currentTutorialIndex + 1) % this.tutorialMessages.length;
+    this.currentTutorialIndex++;
 
     // Show tutorial message with a different style
     this.showTutorialNotification(message);
@@ -177,6 +286,8 @@ const eventManager = {
 
     this.notificationOffset += 80;
 
+    const displayTime = this.initialTutorialComplete ? 5000 : 3500; // Shorter for initial cycle
+
     setTimeout(() => {
       notification.style.transform = "translateX(100%)";
       notification.style.opacity = "0";
@@ -185,7 +296,7 @@ const eventManager = {
         notification.remove();
         this.notificationOffset -= 80;
       }, 500);
-    }, 6000); // Show tutorial messages longer than achievements
+    }, displayTime);
   },
 
   startInitialEggButtonAnimation() {
@@ -323,7 +434,12 @@ const eventManager = {
   },
 
   processNotificationQueue() {
-    if (this.isShowingNotification || this.notificationQueue.length === 0) {
+    // Don't show regular notifications while tutorial is playing (except for the initial cycle)
+    if (
+      this.isShowingNotification ||
+      this.notificationQueue.length === 0 ||
+      (this.isPlayingTutorial && this.initialTutorialComplete)
+    ) {
       return;
     }
 

@@ -61,6 +61,8 @@ function showTutorialPopup() {
 
   const closeTutorial = () => {
     popup.remove();
+    // Start the tutorial notification cycle after popup is closed
+    eventManager.startInitialTutorialCycle();
   };
 
   closeBtn.addEventListener("click", closeTutorial);
@@ -102,7 +104,7 @@ function initializeGame() {
   // Add initial egg button animation
   eventManager.startInitialEggButtonAnimation();
 
-  // Initialize idle detection system
+  // Initialize idle detection system (but don't start tutorial cycle yet)
   eventManager.initializeIdleDetection();
 
   // Initialize shuffle button state (locked until auto-merge is purchased)

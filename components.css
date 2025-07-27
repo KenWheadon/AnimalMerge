@@ -239,7 +239,6 @@
   padding: 12px;
   margin-bottom: 12px;
   position: relative;
-  min-height: 140px;
   transition: all 0.3s ease;
 }
 
