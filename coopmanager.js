@@ -66,15 +66,13 @@ const coopManager = {
             </div>
           </div>
           
-          <div class="text-center mb-3">
+          <div class="text-center mb-2">
             <img src="${producedImage}" alt="${producedType}" style="width: 60px; height: 60px; object-fit: contain; margin: 0 auto;" />
           </div>
           
           <div id="${animalType}CoopUnpurchased" class="coop-unpurchased">
-            <div class="lock-icon">🔒</div>
-            <p class="coop-name">${animalName} Coop</p>
             <button id="buy${animalName}Coop" class="enhanced-button buy-button coop-buy-btn">
-              <i class="fas fa-home mr-1"></i>🏡 ($${config.buyCost})
+              <i class="fas fa-home mr-1"></i>($${config.buyCost})
             </button>
           </div>
 

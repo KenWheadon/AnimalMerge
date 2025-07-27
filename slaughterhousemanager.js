@@ -29,10 +29,6 @@ const slaughterHouseManager = {
           <div class="compact-queue-display">
             Queue:&nbsp;<span id="queueCount0">${house.queue.length}</span>/10
           </div>
-          
-          <button id="slaughterInfo0" class="info-button slaughter-info-button">
-            <i class="fas fa-info-circle"></i>
-          </button>
         </div>
         
         <div id="slaughterHouse0" class="slaughter-house" data-house-index="0">
