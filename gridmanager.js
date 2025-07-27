@@ -66,6 +66,7 @@ const gridManager = {
     );
 
     if (isPurchased) {
+      // FIX: Clear all highlighting classes when updating cell
       cell.className = "grid-cell";
       cell.removeAttribute("data-cost");
 
@@ -97,6 +98,7 @@ const gridManager = {
         cell.draggable = false;
       }
     } else {
+      // FIX: Clear all highlighting classes for grass cells too
       cell.className = "grid-cell grass";
       cell.setAttribute("data-cost", `${spotConfig.cost}`);
       cell.innerHTML = "";
@@ -154,12 +156,51 @@ const gridManager = {
       cell.addEventListener("dragenter", (e) => this.handleDragEnter(e, i, j));
       cell.addEventListener("dragleave", (e) => this.handleDragLeave(e, i, j));
 
+      // NEW: Add right-click event listener
+      cell.addEventListener("contextmenu", (e) =>
+        this.handleRightClick(e, i, j)
+      );
+
       cell.addEventListener("touchstart", (e) =>
         this.handleTouchStart(e, i, j)
       );
       cell.addEventListener("touchmove", (e) => this.handleTouchMove(e, i, j));
       cell.addEventListener("touchend", (e) => this.handleTouchEnd(e, i, j));
     });
+  },
+
+  // NEW: Handle right-click to send animals to butcher
+  handleRightClick(e, i, j) {
+    e.preventDefault(); // Prevent context menu
+    gameState.lastInteractionTime = Date.now(); // Track interaction
+
+    // Only work on purchased cells with animals
+    if (!gameState.purchasedCells.has(`${i}-${j}`) || !gameState.grid[i][j]) {
+      return;
+    }
+
+    const animalType = gameState.grid[i][j];
+    const animalConfig = GAME_CONFIG.animalTypes[animalType];
+
+    // Only sellable animals can be sent to butcher
+    if (animalConfig.sellPrice <= 0) {
+      audioManager.playSound("invalid-action");
+      updateStatus(`${animalConfig.name} cannot be sold! 😕`);
+      return;
+    }
+
+    // Check if butcher has space
+    const house = gameState.slaughterHouses[0];
+    if (!house || house.queue.length >= 10) {
+      audioManager.playSound("invalid-action");
+      updateStatus("Butcher shop queue is full! 😕");
+      return;
+    }
+
+    // Send to butcher
+    if (slaughterHouseManager.addAnimalToQueue(0, animalType, i, j)) {
+      updateStatus(`Right-clicked ${animalConfig.name} to butcher! 🔪`);
+    }
   },
 
   handleMouseDown(e, i, j) {
@@ -198,6 +239,9 @@ const gridManager = {
 
     const cell = document.getElementById(`cell-${i}-${j}`);
     cell.classList.add("drag-preview");
+
+    // FIX: Clear any existing highlights before showing new ones
+    this.clearValidTargets();
 
     // FIX: Only show valid targets for the specific cell being dragged
     this.showValidTargets(i, j);
@@ -328,6 +372,9 @@ const gridManager = {
     gameState.draggedCell = { i, j };
     const cell = document.getElementById(`cell-${i}-${j}`);
     cell.classList.add("drag-preview");
+
+    // FIX: Clear any existing highlights before showing new ones
+    this.clearValidTargets();
     this.showValidTargets(i, j);
 
     // Check if dragged animal can be sold and trigger butcher wiggle
@@ -490,25 +537,27 @@ const gridManager = {
     return true;
   },
 
-  // FIX: Only show valid targets for the specific cell being dragged, not all occupied cells
+  // FIX: Completely rewritten to only highlight actual valid targets
   showValidTargets(sourceI, sourceJ) {
     const sourceType = gameState.grid[sourceI][sourceJ];
     if (!sourceType) return;
 
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
-      if (gameState.purchasedCells.has(`${i}-${j}`)) {
-        if (i === sourceI && j === sourceJ) return;
+      // Skip the source cell itself
+      if (i === sourceI && j === sourceJ) return;
 
-        if (
-          this.canMerge(sourceI, sourceJ, i, j) ||
-          this.canSwap(sourceI, sourceJ, i, j) ||
-          this.canMoveToEmpty(sourceI, sourceJ, i, j)
-        ) {
-          const cell = document.getElementById(`cell-${i}-${j}`);
-          if (cell) {
-            cell.classList.add("drag-valid-target");
-          }
-        }
+      // Only check purchased cells
+      if (!gameState.purchasedCells.has(`${i}-${j}`)) return;
+
+      const cell = document.getElementById(`cell-${i}-${j}`);
+      if (!cell) return;
+
+      if (
+        this.canMerge(sourceI, sourceJ, i, j) ||
+        this.canSwap(sourceI, sourceJ, i, j) ||
+        this.canMoveToEmpty(sourceI, sourceJ, i, j)
+      ) {
+        cell.classList.add("drag-valid-target");
       }
     });
   },
@@ -547,12 +596,22 @@ const gridManager = {
     saveManager.saveOnAction(); // Save after swapping animals
   },
 
+  // FIX: More thorough clearing of all highlighting classes
   clearValidTargets() {
-    document.querySelectorAll(".drag-valid-target").forEach((cell) => {
-      cell.classList.remove("drag-valid-target");
-    });
-    document.querySelectorAll(".drag-invalid-target").forEach((cell) => {
-      cell.classList.remove("drag-invalid-target");
+    // Remove all drag-related classes from all grid cells
+    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+      const cell = document.getElementById(`cell-${i}-${j}`);
+      if (cell) {
+        cell.classList.remove(
+          "drag-valid-target",
+          "drag-invalid-target",
+          "auto-merge-glow",
+          "border-purple-500",
+          "border-2",
+          "border-green-500",
+          "new-animal-spawn"
+        );
+      }
     });
   },
 };

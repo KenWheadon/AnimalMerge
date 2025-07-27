@@ -14,6 +14,7 @@ const eventManager = {
     "🥚 Click the free Egg button to place your first animal!",
     "🔄 Drag identical animals together to merge and upgrade them!",
     "💰 Drag animals to the butcher shop to sell them for money!",
+    "🖱️ Right-click animals to quickly send them to the butcher!",
     "🌱 Click grass squares with your money to expand your farm!",
     "🏡 Create better animals to unlock coops that generate eggs automatically!",
     "⚙️ Buy Auto-Merge to automatically combine animals every 25 seconds!",

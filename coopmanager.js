@@ -934,6 +934,7 @@ const coopManager = {
     updateStatus("Animals shuffled! 🔀");
   },
 
+  // FIX: More thorough clearing of auto-merge highlighting
   clearAutoMergeHighlight() {
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
       if (gameState.purchasedCells.has(`${i}-${j}`)) {
@@ -1102,6 +1103,7 @@ const coopManager = {
 
     this.updateMergeablePairsForAutoMerge();
 
+    // FIX: Clear auto-merge highlighting after processing
     setTimeout(() => this.clearAutoMergeHighlight(), 1500);
     updateAnimalValues();
 
