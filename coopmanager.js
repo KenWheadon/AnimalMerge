@@ -72,7 +72,12 @@ const coopManager = {
       const coopState = gameState[`${animalType}Coop`] || {
         level: 1,
         stored: 0,
+        owned: false,
       };
+
+      // FIX: Determine visibility classes based on actual ownership state
+      const unpurchasedClass = coopState.owned ? "hidden" : "";
+      const purchasedClass = coopState.owned ? "" : "hidden";
 
       // Start hidden - will be shown when unlocked
       html += `
@@ -89,13 +94,13 @@ const coopManager = {
             </button>
           </div>
           
-          <div id="${animalType}CoopUnpurchased" class="coop-unpurchased">
+          <div id="${animalType}CoopUnpurchased" class="coop-unpurchased ${unpurchasedClass}">
             <button id="buy${animalName}Coop" class="enhanced-button buy-button coop-buy-btn">
               <i class="fas fa-home mr-1"></i>(${config.buyCost})
             </button>
           </div>
 
-          <div id="${animalType}CoopPurchased" class="coop-purchased hidden">
+          <div id="${animalType}CoopPurchased" class="coop-purchased ${purchasedClass}">
             <div class="coop-stats">
               <div class="coop-progress-container">
                 <div class="coop-progress-label">Next ${producedConfig.name}</div>

@@ -60,7 +60,7 @@ const slaughterHouseManager = {
       gameState.slaughterHouses = [
         {
           level: 1,
-          processTime: 5.0,
+          processTime: 3.5,
           timer: 0,
           queue: [],
           currentAnimal: null,
