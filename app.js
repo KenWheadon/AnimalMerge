@@ -245,7 +245,7 @@ function generateMainHTML() {
                         <div class="mb-2" style="height: 4px;"></div>
                         <div class="space-y-1">
                             <button id="buyShuffle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white ${shuffleBuyHidden}" style="background: linear-gradient(145deg, #f59e0b, #d97706);">
-                                <span id="shuffleButtonText">Buy ($10)</span>
+                                <span id="shuffleButtonText">Buy ($50)</span>
                             </button>
                             <button id="shuffleToggle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white ${shuffleToggleHidden} ${shuffleToggleClass}">
                                 ${shuffleToggleText}

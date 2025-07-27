@@ -576,7 +576,7 @@ const coopManager = {
         shuffleButton.disabled = false;
         shuffleButton.style.opacity = "1";
         shuffleButton.style.cursor = "pointer";
-        shuffleButtonText.textContent = "Buy ($10)";
+        shuffleButtonText.textContent = "Buy ($50)";
         shuffleButton.title = "";
       }
     }
