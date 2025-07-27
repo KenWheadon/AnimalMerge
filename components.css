@@ -249,7 +249,12 @@
 }
 
 .coop-header {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+.coop-next-level {
+  display: flex;
+  justify-content: space-between;
 }
 
 .coop-title {
@@ -1023,7 +1028,7 @@
 }
 
 .butcher-image {
-  width: 250px;
+  width: 100px;
   height: auto;
   object-fit: contain;
   transition: transform 0.2s ease;

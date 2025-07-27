@@ -1,6 +1,6 @@
 const saveManager = {
-  SAVE_KEY: "animalMergeFarmSave3",
-  COOKIE_KEY: "animalMergeFarmSave3",
+  SAVE_KEY: "animalMergeFarmSave11",
+  COOKIE_KEY: "animalMergeFarmSave11",
   SAVE_VERSION: 1,
   autoSaveInterval: null,
 
@@ -67,7 +67,7 @@ const saveManager = {
       };
     }
 
-    // Save coop states including levels
+    // Save coop states including levels and egg merge progress
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const coopKey = `${animalType}Coop`;
       if (gameState[coopKey]) {
@@ -77,6 +77,7 @@ const saveManager = {
           baseTime: gameState[coopKey].baseTime,
           timer: gameState[coopKey].timer,
           stored: gameState[coopKey].stored,
+          eggsMerged: gameState[coopKey].eggsMerged || 0, // Save eggs merged progress
         };
       }
     }
@@ -136,7 +137,7 @@ const saveManager = {
       }
     }
 
-    // Coop states - FIX: Load coop levels from save data
+    // Coop states - FIX: Load coop levels and egg merge progress from save data
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const coopKey = `${animalType}Coop`;
       if (saveData[coopKey]) {
@@ -147,6 +148,7 @@ const saveManager = {
             baseTime: config.baseTime,
             timer: config.baseTime,
             stored: 0,
+            eggsMerged: 0,
           };
         }
         gameState[coopKey].owned = saveData[coopKey].owned || false;
@@ -155,6 +157,7 @@ const saveManager = {
           saveData[coopKey].baseTime || config.baseTime;
         gameState[coopKey].timer = saveData[coopKey].timer || config.baseTime;
         gameState[coopKey].stored = saveData[coopKey].stored || 0;
+        gameState[coopKey].eggsMerged = saveData[coopKey].eggsMerged || 0; // Load eggs merged progress
       }
     }
   },

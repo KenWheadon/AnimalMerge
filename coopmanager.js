@@ -12,6 +12,7 @@ const coopManager = {
           baseTime: config.baseTime,
           timer: config.baseTime,
           stored: 0,
+          eggsMerged: 0, // Track total eggs merged for this coop's type
         };
       }
     }
@@ -73,22 +74,33 @@ const coopManager = {
         level: 1,
         stored: 0,
         owned: false,
+        eggsMerged: 0,
       };
 
       // FIX: Determine visibility classes based on actual ownership state
       const unpurchasedClass = coopState.owned ? "hidden" : "";
       const purchasedClass = coopState.owned ? "" : "hidden";
 
+      // Calculate current production time and next level requirement
+      const currentTime = this.calculateCoopProductionTime(
+        animalType,
+        coopState.level
+      );
+      const nextLevelRequirement = this.getCoopNextLevelRequirement(
+        coopState.level
+      );
+
       // Start hidden - will be shown when unlocked
       html += `
         <div id="${animalType}Coop" class="compact-coop hidden">
           <div class="coop-header">
             <div class="flex justify-between items-center">
-              <h3 class="coop-title">${animalName} Coop (Lv.${coopState.level})</h3>
+              <h3 class="coop-title">${animalName} Coop</h3>
+              <span class="text-xs text-gray-600">Lv.${coopState.level}</span>
             </div>
           </div>
           
-          <div class="text-center mb-2">
+          <div class="text-center">
             <button id="place${producedType}" class="coop-egg-button hidden" style="background: none; border: none; cursor: pointer; padding: 0;">
               <img src="${producedImage}" alt="${producedType}" style="width: 60px; height: 60px; object-fit: contain; margin: 0 auto; border-radius: 8px; transition: transform 0.2s ease;" />
             </button>
@@ -102,15 +114,47 @@ const coopManager = {
 
           <div id="${animalType}CoopPurchased" class="coop-purchased ${purchasedClass}">
             <div class="coop-stats">
-              <div class="coop-progress-container">
-                <div class="coop-progress-label">Next ${producedConfig.name}</div>
-                <div class="coop-progress-bar">
-                  <div id="${animalType}CoopProgress" class="coop-progress-fill" style="width: 0%"></div>
+              <div class="space-y-1 text-xs">
+                <div class="flex justify-between">
+                  <span>Interval:</span>
+                  <span id="${animalType}CoopTimer" class="font-mono">${currentTime.toFixed(
+        1
+      )}s</span>
+                </div>
+                <div id="${animalType}CoopProgress" class="text-gray-500">${
+        coopState.eggsMerged
+      }/${nextLevelRequirement} ${producedConfig.name}s merged</div>
+              </div>
+              
+              
+              <div id="${animalType}CoopLevelContainer" class="">
+                <div class="coop-progress-bar h-1">
+                  <div id="${animalType}CoopLevelBar" class="coop-progress-fill" style="width: 0%"></div>
                 </div>
               </div>
-              <div class="coop-stored-display">
-                <span id="${animalType}CoopStored">Stored: ${coopState.stored}</span>
+              
+
+              <div class="coop-next-level">
+              
+                            <div class="coop-progress-container">
+                <div class="coop-progress-label">Next ${
+                  producedConfig.name
+                }</div>
+                <div class="coop-progress-bar">
+                  <div id="${animalType}CoopProductionProgress" class="coop-progress-fill" style="width: 0%"></div>
+                </div>
               </div>
+              
+                <div class="coop-stored-display">
+                  <span id="${animalType}CoopStored">Stored: ${
+        coopState.stored
+      }</span>
+                </div>
+              </div>
+
+
+
+
             </div>
           </div>
         </div>
@@ -515,6 +559,21 @@ const coopManager = {
     }
   },
 
+  // FIX: New method to calculate eggs needed for next coop level
+  getCoopNextLevelRequirement(currentLevel) {
+    // Similar to auto-merge, but for coop leveling: 5, 10, 20, 35, 55, 80, 110, 145, etc.
+    // Each level requires 5 more eggs than the previous gap
+    let requirement = 5;
+    let gap = 5;
+
+    for (let level = 1; level < currentLevel; level++) {
+      requirement += gap;
+      gap += 5;
+    }
+
+    return requirement;
+  },
+
   // FIX: New method to calculate production time based on level
   calculateCoopProductionTime(animalType, level) {
     const config = GAME_CONFIG.coopConfig[animalType];
@@ -530,46 +589,99 @@ const coopManager = {
         const coop = gameState[`${animalType}Coop`];
         if (coop && coop.owned) {
           const oldLevel = coop.level;
-          coop.level += 1;
+          coop.eggsMerged += 1; // Increment eggs merged counter
 
-          // Update the timer with new production time
-          const newTime = this.calculateCoopProductionTime(
-            animalType,
+          const nextLevelRequirement = this.getCoopNextLevelRequirement(
             coop.level
           );
-          coop.timer = Math.min(coop.timer, newTime); // Don't extend current timer
 
-          // Update UI
-          const coopTitle = document.querySelector(
-            `#${animalType}Coop .coop-title`
+          // Update progress display
+          const progressElement = document.getElementById(
+            `${animalType}CoopProgress`
           );
-          if (coopTitle) {
-            const animalName =
-              animalType.charAt(0).toUpperCase() + animalType.slice(1);
-            coopTitle.textContent = `${animalName} Coop (Lv.${coop.level})`;
+          const levelBarElement = document.getElementById(
+            `${animalType}CoopLevelBar`
+          );
+          const producedConfig = GAME_CONFIG.animalTypes[config.producesType];
+
+          if (progressElement) {
+            progressElement.textContent = `${coop.eggsMerged}/${nextLevelRequirement} ${producedConfig.name}s merged`;
           }
 
-          // Show achievement
-          eventManager.showAchievement(
-            `🆙 ${
-              animalType.charAt(0).toUpperCase() + animalType.slice(1)
-            } Coop Level ${coop.level}!`
-          );
+          if (levelBarElement) {
+            const progress = (coop.eggsMerged / nextLevelRequirement) * 100;
+            levelBarElement.style.width = `${Math.min(progress, 100)}%`;
 
-          // Play level up sound
-          audioManager.playSound("achievement-awarded");
+            if (progress >= 90) {
+              levelBarElement.classList.add("urgent");
+            } else {
+              levelBarElement.classList.remove("urgent");
+            }
+          }
 
-          updateStatus(
-            `${
-              animalType.charAt(0).toUpperCase() + animalType.slice(1)
-            } coop leveled up! Production 10% faster! 🆙`
-          );
+          // Check if coop should level up
+          if (coop.eggsMerged >= nextLevelRequirement) {
+            coop.level += 1;
+            coop.eggsMerged = 0; // Reset counter for next level
 
-          console.log(
-            `${animalType} coop leveled up from ${oldLevel} to ${coop.level} due to ${eggType} merge`
-          );
+            // Update the timer with new production time
+            const newTime = this.calculateCoopProductionTime(
+              animalType,
+              coop.level
+            );
+            coop.timer = Math.min(coop.timer, newTime); // Don't extend current timer
 
-          saveManager.saveOnAction(); // Save after coop level up
+            // Update UI elements
+            const levelDisplay = document.querySelector(
+              `#${animalType}Coop .text-xs.text-gray-600`
+            );
+            const timerDisplay = document.getElementById(
+              `${animalType}CoopTimer`
+            );
+
+            if (levelDisplay) {
+              levelDisplay.textContent = `Lv.${coop.level}`;
+            }
+
+            if (timerDisplay) {
+              timerDisplay.textContent = `${newTime.toFixed(1)}s`;
+            }
+
+            // Reset progress displays for next level
+            const newNextRequirement = this.getCoopNextLevelRequirement(
+              coop.level
+            );
+            if (progressElement) {
+              progressElement.textContent = `${coop.eggsMerged}/${newNextRequirement} ${producedConfig.name}s merged`;
+            }
+
+            if (levelBarElement) {
+              levelBarElement.style.width = "0%";
+              levelBarElement.classList.remove("urgent");
+            }
+
+            // Show achievement
+            eventManager.showAchievement(
+              `🆙 ${
+                animalType.charAt(0).toUpperCase() + animalType.slice(1)
+              } Coop Level ${coop.level}!`
+            );
+
+            // Play level up sound
+            audioManager.playSound("achievement-awarded");
+
+            updateStatus(
+              `${
+                animalType.charAt(0).toUpperCase() + animalType.slice(1)
+              } coop leveled up! Production 10% faster! 🆙`
+            );
+
+            console.log(
+              `${animalType} coop leveled up from ${oldLevel} to ${coop.level} due to ${eggType} merge`
+            );
+          }
+
+          saveManager.saveOnAction(); // Save after coop progress update
           break;
         }
       }
@@ -586,7 +698,7 @@ const coopManager = {
         coop.timer -= 1;
 
         const progressElement = document.getElementById(
-          `${animalType}CoopProgress`
+          `${animalType}CoopProductionProgress`
         );
         if (progressElement) {
           // FIX: Use the new calculation method for max time
@@ -638,7 +750,7 @@ const coopManager = {
           // eventManager.showAchievement(`${producedConfig.name} Ready!`);
 
           const progressElement = document.getElementById(
-            `${animalType}CoopProgress`
+            `${animalType}CoopProductionProgress`
           );
           if (progressElement) {
             progressElement.style.width = "0%";
