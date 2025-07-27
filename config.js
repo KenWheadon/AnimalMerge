@@ -71,9 +71,9 @@ const GAME_CONFIG = {
   },
   purchaseConfig: {
     Egg: { cost: 0, unlocked: true },
-    CatEgg: { cost: 5, unlocked: false },
-    PandaEgg: { cost: 50, unlocked: false },
-    VultureEgg: { cost: 1000, unlocked: false },
+    CatEgg: { cost: 4, unlocked: false },
+    PandaEgg: { cost: 45, unlocked: false },
+    VultureEgg: { cost: 950, unlocked: false },
   },
   coopConfig: {
     cat: {
