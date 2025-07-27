@@ -102,7 +102,7 @@ const GAME_CONFIG = {
     buyCost: 1,
     baseInterval: 25,
     intervalReductionFactor: 0.9,
-    animalRequirements: [0, 10, 25, 50, 80, 120, 175, 250, 500, 1000],
+    animalRequirements: [0, 10, 20, 40, 70, 100, 140, 190, 250, 300, 375, 525],
     glowTriggerTimes: [1.5, 1, 0.5, 0.25],
   },
   shuffleConfig: {
