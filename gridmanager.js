@@ -63,11 +63,27 @@ const gridManager = {
       cell.className = "grid-cell";
       cell.removeAttribute("data-cost");
 
+      // Remove any existing value display
+      const existingValue = cell.querySelector(".grid-cell-value");
+      if (existingValue) {
+        existingValue.remove();
+      }
+
       if (gameState.grid[i][j]) {
+        const animalType = gameState.grid[i][j];
+        const animalConfig = GAME_CONFIG.animalTypes[animalType];
+
         cell.classList.add("occupied");
-        cell.innerHTML = `<img src="${
-          GAME_CONFIG.animalImages[gameState.grid[i][j]]
-        }" alt="${gameState.grid[i][j]}" class="animal-image" />`;
+        cell.innerHTML = `<img src="${GAME_CONFIG.animalImages[animalType]}" alt="${animalType}" class="animal-image" />`;
+
+        // Add butcher value display if animal has sell price > 0
+        if (animalConfig.sellPrice > 0) {
+          const valueDisplay = document.createElement("div");
+          valueDisplay.className = "grid-cell-value";
+          valueDisplay.textContent = `💰${animalConfig.sellPrice}`;
+          cell.appendChild(valueDisplay);
+        }
+
         cell.draggable = true;
       } else {
         cell.classList.remove("occupied");
@@ -149,6 +165,16 @@ const gridManager = {
     cell.classList.add("drag-preview");
 
     this.showValidTargets(i, j);
+
+    // Check if dragged animal can be sold and trigger butcher wiggle
+    const animalType = gameState.grid[i][j];
+    const animalConfig = GAME_CONFIG.animalTypes[animalType];
+    if (animalConfig.sellPrice > 0) {
+      const butcherImage = document.querySelector(".butcher-image");
+      if (butcherImage) {
+        butcherImage.classList.add("butcher-wiggle");
+      }
+    }
   },
 
   handleDragOver(e, i, j) {
@@ -221,6 +247,13 @@ const gridManager = {
     if (sourceCell) {
       sourceCell.classList.remove("drag-preview");
     }
+
+    // Remove butcher wiggle
+    const butcherImage = document.querySelector(".butcher-image");
+    if (butcherImage) {
+      butcherImage.classList.remove("butcher-wiggle");
+    }
+
     gameState.draggedCell = null;
   },
 
@@ -231,6 +264,13 @@ const gridManager = {
     }
 
     this.clearValidTargets();
+
+    // Remove butcher wiggle
+    const butcherImage = document.querySelector(".butcher-image");
+    if (butcherImage) {
+      butcherImage.classList.remove("butcher-wiggle");
+    }
+
     gameState.draggedCell = null;
   },
 
@@ -242,6 +282,16 @@ const gridManager = {
     const cell = document.getElementById(`cell-${i}-${j}`);
     cell.classList.add("drag-preview");
     this.showValidTargets(i, j);
+
+    // Check if dragged animal can be sold and trigger butcher wiggle
+    const animalType = gameState.grid[i][j];
+    const animalConfig = GAME_CONFIG.animalTypes[animalType];
+    if (animalConfig.sellPrice > 0) {
+      const butcherImage = document.querySelector(".butcher-image");
+      if (butcherImage) {
+        butcherImage.classList.add("butcher-wiggle");
+      }
+    }
   },
 
   handleTouchMove(e, i, j) {
@@ -318,6 +368,13 @@ const gridManager = {
     if (sourceCell) {
       sourceCell.classList.remove("drag-preview");
     }
+
+    // Remove butcher wiggle
+    const butcherImage = document.querySelector(".butcher-image");
+    if (butcherImage) {
+      butcherImage.classList.remove("butcher-wiggle");
+    }
+
     gameState.draggedCell = null;
   },
 
@@ -417,7 +474,8 @@ const gridManager = {
 
     updateMergeablePairs();
 
-    updateStatus(`Moved ${sourceType} to empty space! 📦`);
+    const animalConfig = GAME_CONFIG.animalTypes[sourceType];
+    updateStatus(`Moved ${animalConfig.name} to empty space! 📦`);
   },
 
   swapAnimals(sourceI, sourceJ, targetI, targetJ) {
@@ -432,7 +490,9 @@ const gridManager = {
 
     updateMergeablePairs();
 
-    updateStatus(`Swapped ${sourceType} and ${targetType}! 🔄`);
+    const sourceConfig = GAME_CONFIG.animalTypes[sourceType];
+    const targetConfig = GAME_CONFIG.animalTypes[targetType];
+    updateStatus(`Swapped ${sourceConfig.name} and ${targetConfig.name}! 🔄`);
   },
 
   clearValidTargets() {

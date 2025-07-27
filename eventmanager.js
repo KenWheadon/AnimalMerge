@@ -2,7 +2,6 @@ const eventManager = {
   notificationQueue: [],
   isShowingNotification: false,
   notificationOffset: 0,
-  initialEggAnimationInterval: null,
 
   initializeButtonEventListeners() {
     const buyAutoMergeBtn = document.getElementById("buyAutoMerge");
@@ -33,13 +32,37 @@ const eventManager = {
     }
   },
 
-  // REMOVED: startInitialEggButtonAnimation - no more initial egg animation
+  startInitialEggButtonAnimation() {
+    console.log("startInitialEggButtonAnimation called");
+    console.log(`gameState.eggButtonClicked: ${gameState.eggButtonClicked}`);
 
-  // REMOVED: stopInitialEggButtonAnimation - no more initial egg animation
+    // The animation is now applied via CSS class in generateBuyAnimalButtons
+    // This method is called to ensure the animation starts
+    const eggButton = document.getElementById("buyEgg");
+    console.log("eggButton found:", eggButton);
 
-  // Removed checkForNewMergeablePairs method entirely
+    if (eggButton && !gameState.eggButtonClicked) {
+      console.log("Adding egg-button-pulse class");
+      eggButton.classList.add("egg-button-pulse");
+    } else {
+      console.log("Not adding animation - button not found or already clicked");
+    }
+  },
 
-  // Removed animateNewMergeablePair method entirely
+  stopInitialEggButtonAnimation() {
+    console.log("stopInitialEggButtonAnimation called");
+    const eggButton = document.getElementById("buyEgg");
+    console.log("eggButton found:", eggButton);
+
+    if (eggButton) {
+      console.log("Removing egg-button-pulse class");
+      console.log("Classes before removal:", eggButton.className);
+      eggButton.classList.remove("egg-button-pulse");
+      console.log("Classes after removal:", eggButton.className);
+    } else {
+      console.log("Egg button not found when trying to stop animation");
+    }
+  },
 
   showDemoEndedPopup() {
     const backdrop = document.createElement("div");
@@ -71,6 +94,7 @@ const eventManager = {
       animation: popupScale 0.5s ease-out;
     `;
 
+    const endDemoConfig = GAME_CONFIG.animalTypes.EndDemoAnimal;
     popup.innerHTML = `
       <div style="margin-bottom: 1.5rem;">
         <img src="${GAME_CONFIG.animalImages.EndDemoAnimal}" alt="End Demo Animal" style="width: 120px; height: 120px; object-fit: contain; margin: 0 auto; display: block; border-radius: 0.5rem;" />
@@ -78,7 +102,7 @@ const eventManager = {
       <h2 style="color: #fbbf24; font-size: 2rem; font-weight: bold; margin-bottom: 1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🎉 Demo Ended! 🎉</h2>
       <p style="color: #d1d5db; font-size: 1.1rem; margin-bottom: 1.5rem; line-height: 1.6;">
         Congratulations! You've reached the final animal and completed this demo. 
-        The <strong style="color: #fbbf24;">End Demo Animal</strong> can be sold but cannot merge any further.
+        The <strong style="color: #fbbf24;">${endDemoConfig.name}</strong> can be sold but cannot merge any further.
       </p>
       <button id="closeDemoPopup" style="
         background: linear-gradient(145deg, #fbbf24, #f59e0b);

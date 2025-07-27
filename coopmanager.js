@@ -17,19 +17,37 @@ const coopManager = {
   },
 
   generateBuyAnimalButtons() {
+    console.log("generateBuyAnimalButtons called");
+    console.log(`gameState.eggButtonClicked: ${gameState.eggButtonClicked}`);
+
     let html = "";
 
     for (const [animalType, config] of Object.entries(
       GAME_CONFIG.purchaseConfig
     )) {
+      const animalConfig = GAME_CONFIG.animalTypes[animalType];
       const imageSrc = GAME_CONFIG.animalImages[animalType];
       const costText = config.cost === 0 ? "Free" : `${config.cost}`;
       const hiddenClass = config.unlocked ? "" : "hidden";
-      // REMOVED: No more initial animation class
+
+      // Add initial animation class only for the free egg if it hasn't been clicked
+      let animationClass = "";
+      if (
+        animalType === "Egg" &&
+        config.cost === 0 &&
+        !gameState.eggButtonClicked
+      ) {
+        console.log("Adding egg-button-pulse class to Egg button");
+        animationClass = "egg-button-pulse";
+      } else if (animalType === "Egg") {
+        console.log(
+          `Not adding animation to Egg button - cost: ${config.cost}, clicked: ${gameState.eggButtonClicked}`
+        );
+      }
 
       html += `
-        <button id="buy${animalType}" class="egg-buy-button enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white ${hiddenClass}">
-            <span>${animalType} (${costText})</span> <img src="${imageSrc}" alt="${animalType}" class="inline-animal-icon" />
+        <button id="buy${animalType}" class="egg-buy-button enhanced-button buy-button w-full px-4 py-3 rounded-xl shadow-lg font-bold text-white ${hiddenClass} ${animationClass}">
+            <span>${animalConfig.name} (${costText})</span> <img src="${imageSrc}" alt="${animalType}" class="inline-animal-icon" />
         </button>
       `;
     }
@@ -49,6 +67,7 @@ const coopManager = {
         animalType.charAt(0).toUpperCase() + animalType.slice(1);
       const producedType = config.producesType;
       const producedImage = GAME_CONFIG.animalImages[producedType];
+      const producedConfig = GAME_CONFIG.animalTypes[producedType];
       const coopState = gameState[`${animalType}Coop`] || {
         level: 1,
         stored: 0,
@@ -67,19 +86,21 @@ const coopManager = {
           </div>
           
           <div class="text-center mb-2">
-            <img src="${producedImage}" alt="${producedType}" style="width: 60px; height: 60px; object-fit: contain; margin: 0 auto;" />
+            <button id="place${producedType}" class="coop-egg-button hidden" style="background: none; border: none; cursor: pointer; padding: 0;">
+              <img src="${producedImage}" alt="${producedType}" style="width: 60px; height: 60px; object-fit: contain; margin: 0 auto; border-radius: 8px; transition: transform 0.2s ease;" />
+            </button>
           </div>
           
           <div id="${animalType}CoopUnpurchased" class="coop-unpurchased">
             <button id="buy${animalName}Coop" class="enhanced-button buy-button coop-buy-btn">
-              <i class="fas fa-home mr-1"></i>($${config.buyCost})
+              <i class="fas fa-home mr-1"></i>(${config.buyCost})
             </button>
           </div>
 
           <div id="${animalType}CoopPurchased" class="coop-purchased hidden">
             <div class="coop-stats">
               <div class="coop-progress-container">
-                <div class="coop-progress-label">Next ${producedType}</div>
+                <div class="coop-progress-label">Next ${producedConfig.name}</div>
                 <div class="coop-progress-bar">
                   <div id="${animalType}CoopProgress" class="coop-progress-fill" style="width: 0%"></div>
                 </div>
@@ -87,12 +108,6 @@ const coopManager = {
               <div class="coop-stored-display">
                 <span id="${animalType}CoopStored">Stored: ${coopState.stored}</span>
               </div>
-            </div>
-            
-            <div class="coop-actions">
-              <button id="place${producedType}" class="enhanced-button place-button hidden">
-                <i class="fas fa-plus mr-1"></i>Place ${producedType}
-              </button>
             </div>
           </div>
         </div>
@@ -109,17 +124,41 @@ const coopManager = {
   },
 
   initializeFarmBuildingEventListeners() {
+    console.log("initializeFarmBuildingEventListeners called");
+
     for (const [animalType, config] of Object.entries(
       GAME_CONFIG.purchaseConfig
     )) {
       const buyButton = document.getElementById(`buy${animalType}`);
+      console.log(
+        `Setting up event listener for ${animalType} button:`,
+        buyButton
+      );
+
       if (buyButton) {
         if (config.cost === 0) {
-          buyButton.addEventListener("click", () => placeAnimal(animalType));
+          console.log(`${animalType} is free - adding placeAnimal listener`);
+          buyButton.addEventListener("click", () => {
+            console.log(`Free ${animalType} button clicked`);
+
+            // Handle egg button clicked state for free eggs
+            if (animalType === "Egg" && !gameState.eggButtonClicked) {
+              console.log("Setting eggButtonClicked to true for free egg");
+              gameState.eggButtonClicked = true;
+              eventManager.stopInitialEggButtonAnimation();
+              this.updateBuyAnimalButtons();
+            }
+
+            placeAnimal(animalType);
+          });
         } else {
-          buyButton.addEventListener("click", () =>
-            buyAnimal(animalType, config.cost)
+          console.log(
+            `${animalType} costs ${config.cost} - adding buyAnimal listener`
           );
+          buyButton.addEventListener("click", () => {
+            console.log(`Paid ${animalType} button clicked`);
+            buyAnimal(animalType, config.cost);
+          });
         }
       }
     }
@@ -152,10 +191,15 @@ const coopManager = {
   },
 
   updateBuyAnimalButtons() {
+    console.log("updateBuyAnimalButtons called");
+    console.log(`gameState.eggButtonClicked: ${gameState.eggButtonClicked}`);
+
     for (const [animalType, config] of Object.entries(
       GAME_CONFIG.purchaseConfig
     )) {
       const button = document.getElementById(`buy${animalType}`);
+      console.log(`Checking button for ${animalType}:`, button);
+
       if (button) {
         if (config.unlocked) {
           button.classList.remove("hidden");
@@ -163,7 +207,15 @@ const coopManager = {
           button.classList.add("hidden");
         }
 
-        // REMOVED: No more initial egg glow removal since the class is never added
+        // Remove egg button pulse animation if egg was clicked
+        if (animalType === "Egg" && gameState.eggButtonClicked) {
+          console.log(
+            "Removing egg-button-pulse class from Egg button in updateBuyAnimalButtons"
+          );
+          console.log("Classes before removal:", button.className);
+          button.classList.remove("egg-button-pulse");
+          console.log("Classes after removal:", button.className);
+        }
       }
     }
   },
@@ -224,6 +276,7 @@ const coopManager = {
     const config = GAME_CONFIG.coopConfig[animalType];
     const animalName = animalType.charAt(0).toUpperCase() + animalType.slice(1);
     const producedType = config.producesType;
+    const producedConfig = GAME_CONFIG.animalTypes[producedType];
     const infoButton = document.getElementById(`coopInfo${animalType}`);
 
     if (!coop.owned || !infoButton) return;
@@ -244,7 +297,7 @@ const coopManager = {
       </div>
       <div class="tooltip-content">
         <div class="tooltip-row">Level: ${coop.level}</div>
-        <div class="tooltip-row">Produces: ${producedType}</div>
+        <div class="tooltip-row">Produces: ${producedConfig.name}</div>
         <div class="tooltip-row">Generation time: ${currentTime}s</div>
         <div class="tooltip-row">Stored: ${coop.stored}</div>
       </div>
@@ -373,8 +426,21 @@ const coopManager = {
         if (coop.stored > 0 && !isGridFull()) {
           placeButton.classList.remove("hidden");
           placeButton.classList.add("pulse");
+
+          // Add hover effect to egg image
+          const eggImage = placeButton.querySelector("img");
+          if (eggImage) {
+            eggImage.style.transform = "scale(1.1)";
+          }
         } else {
           placeButton.classList.remove("pulse");
+
+          // Reset egg image transform
+          const eggImage = placeButton.querySelector("img");
+          if (eggImage) {
+            eggImage.style.transform = "scale(1)";
+          }
+
           if (coop.stored === 0) {
             placeButton.classList.add("hidden");
           }
@@ -392,7 +458,8 @@ const coopManager = {
           `New unlock detected: ${newAnimalType} -> ${lowerAnimalType} coop`
         );
         this.updateCoopVisibility();
-        eventManager.showAchievement(`🏡 ${newAnimalType} Coop Unlocked!`);
+        const animalConfig = GAME_CONFIG.animalTypes[newAnimalType];
+        eventManager.showAchievement(`🏡 ${animalConfig.name} Coop Unlocked!`);
       }
     }
   },
@@ -401,6 +468,7 @@ const coopManager = {
     for (const [animalType, config] of Object.entries(GAME_CONFIG.coopConfig)) {
       const coop = gameState[`${animalType}Coop`];
       const producedType = config.producesType;
+      const producedConfig = GAME_CONFIG.animalTypes[producedType];
 
       if (coop.owned) {
         coop.timer -= 1;
@@ -444,7 +512,7 @@ const coopManager = {
             config.baseTime *
             Math.pow(config.timeReductionFactor, coop.level - 1);
 
-          eventManager.showAchievement(`${producedType} Ready!`);
+          eventManager.showAchievement(`${producedConfig.name} Ready!`);
 
           const progressElement = document.getElementById(
             `${animalType}CoopProgress`
@@ -712,7 +780,9 @@ const coopManager = {
           document.getElementById(`cell-${target.i}-${target.j}`)
         );
 
-        if (!mergedTypes.includes(newType)) mergedTypes.push(newType);
+        const newAnimalConfig = GAME_CONFIG.animalTypes[newType];
+        if (!mergedTypes.includes(newAnimalConfig.name))
+          mergedTypes.push(newAnimalConfig.name);
         mergesMade = true;
 
         this.checkForNewUnlocks(newType);

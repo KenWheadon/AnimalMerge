@@ -76,11 +76,12 @@ const slaughterHouseManager = {
       return false;
     }
 
+    const animalConfig = GAME_CONFIG.animalTypes[animalType];
     house.queue.push({
       type: animalType,
       gridI,
       gridJ,
-      value: GAME_CONFIG.animalTypes[animalType].sellPrice,
+      value: animalConfig.sellPrice,
     });
 
     gameState.grid[gridI][gridJ] = null;
@@ -90,7 +91,7 @@ const slaughterHouseManager = {
     this.updateSlaughterHouseQueue(0);
     this.processQueue(0);
 
-    updateStatus(`Added ${animalType} to slaughter queue!`);
+    updateStatus(`Added ${animalConfig.name} to slaughter queue!`);
     return true;
   },
 
@@ -306,7 +307,8 @@ const slaughterHouseManager = {
         house.currentAnimal = null;
         this.processQueue(0);
 
-        updateStatus(`Processed ${animal.type} for 💰${animal.value}!`);
+        const animalConfig = GAME_CONFIG.animalTypes[animal.type];
+        updateStatus(`Processed ${animalConfig.name} for 💰${animal.value}!`);
       }
     }
   },
@@ -451,11 +453,12 @@ const slaughterHouseManager = {
 
     const { i, j } = gameState.draggedCell;
     const type = gameState.grid[i][j];
+    const animalConfig = GAME_CONFIG.animalTypes[type];
 
-    if (GAME_CONFIG.animalTypes[type].sellPrice > 0) {
+    if (animalConfig.sellPrice > 0) {
       this.addAnimalToQueue(0, type, i, j);
     } else {
-      updateStatus(`${type} cannot be sold! 😕`);
+      updateStatus(`${animalConfig.name} cannot be sold! 😕`);
     }
 
     const sourceCell = document.getElementById(`cell-${i}-${j}`);
@@ -477,11 +480,12 @@ const slaughterHouseManager = {
 
     const { i, j } = gameState.draggedCell;
     const type = gameState.grid[i][j];
+    const animalConfig = GAME_CONFIG.animalTypes[type];
 
-    if (GAME_CONFIG.animalTypes[type].sellPrice > 0) {
+    if (animalConfig.sellPrice > 0) {
       this.addAnimalToQueue(0, type, i, j);
     } else {
-      updateStatus(`${type} cannot be sold! 😕`);
+      updateStatus(`${animalConfig.name} cannot be sold! 😕`);
     }
 
     const sourceCell = document.getElementById(`cell-${i}-${j}`);
@@ -535,14 +539,14 @@ const slaughterHouseManager = {
     `;
 
     let hasAnimals = false;
-    for (const [type, { sellPrice }] of Object.entries(
+    for (const [type, animalConfig] of Object.entries(
       GAME_CONFIG.animalTypes
     )) {
-      if (sellPrice > 0 && gameState.createdAnimals.has(type)) {
+      if (animalConfig.sellPrice > 0 && gameState.createdAnimals.has(type)) {
         tooltipContent += `
           <div class="tooltip-animal-row">
-            <span class="animal-info"><img src="${GAME_CONFIG.animalImages[type]}" alt="${type}" class="inline-animal-icon" /> ${type}</span>
-            <span class="animal-value">💰${sellPrice}</span>
+            <span class="animal-info"><img src="${GAME_CONFIG.animalImages[type]}" alt="${type}" class="inline-animal-icon" /> ${animalConfig.name}</span>
+            <span class="animal-value">💰${animalConfig.sellPrice}</span>
           </div>
         `;
         hasAnimals = true;

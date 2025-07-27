@@ -303,7 +303,30 @@
   }
 }
 
-/* REMOVED: @keyframes wiggle - no more wiggle animation */
+/* NEW: Egg button initial animation */
+@keyframes eggButtonPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* NEW: Butcher wiggle animation */
+@keyframes butcherWiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
 
 @keyframes glow {
   0% {
@@ -429,14 +452,19 @@
   }
 }
 
-/* REMOVED: Initial Egg Button Animation keyframes - no more wiggle or glow for egg button */
-
 /* Animation Classes */
 .slaughter-anim {
   animation: slaughterEffect 0.8s ease-out;
 }
 
-/* REMOVED: .wiggle class - no more wiggle animation */
+/* NEW: Animation classes for new features */
+.egg-button-pulse {
+  animation: eggButtonPulse 1.5s ease-in-out infinite;
+}
+
+.butcher-wiggle {
+  animation: butcherWiggle 0.5s ease-in-out infinite;
+}
 
 .glow {
   animation: glow 2s ease-in-out 3;

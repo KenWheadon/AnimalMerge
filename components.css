@@ -66,6 +66,20 @@
   height: auto;
 }
 
+/* NEW: Coop egg button styles */
+.coop-egg-button {
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.coop-egg-button:hover img {
+  transform: scale(1.1) !important;
+}
+
+.coop-egg-button:active img {
+  transform: scale(0.95) !important;
+}
+
 .sell-button {
   background: linear-gradient(
     145deg,
@@ -829,6 +843,7 @@
   width: 250px;
   height: auto;
   object-fit: contain;
+  transition: transform 0.2s ease;
 }
 
 /* Repositioned Info Button */

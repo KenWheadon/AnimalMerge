@@ -98,7 +98,8 @@ function initializeGame() {
 
   startGameTimers();
 
-  // REMOVED: Initial egg button animation start
+  // Add initial egg button animation
+  eventManager.startInitialEggButtonAnimation();
 
   showTutorialPopup();
 }
@@ -327,6 +328,11 @@ function isGridFull() {
 }
 
 function placeAnimal(type) {
+  console.log(`placeAnimal called with type: ${type}`);
+  console.log(
+    `gameState.eggButtonClicked in placeAnimal: ${gameState.eggButtonClicked}`
+  );
+
   for (const { row: i, col: j } of GAME_CONFIG.gridConfig.availableSpots) {
     if (gameState.purchasedCells.has(`${i}-${j}`) && !gameState.grid[i][j]) {
       gameState.grid[i][j] = type;
@@ -340,11 +346,11 @@ function placeAnimal(type) {
 
       eventManager.createParticles(cell);
 
-      const animalType = GAME_CONFIG.animalTypes[type];
+      const animalConfig = GAME_CONFIG.animalTypes[type];
       updateStatus(
-        gameState.createdAnimals.size === 1 && animalType.sellPrice > 0
-          ? `${type} created! You can sell it for 💰${animalType.sellPrice}`
-          : `Placed ${type}`
+        gameState.createdAnimals.size === 1 && animalConfig.sellPrice > 0
+          ? `${animalConfig.name} created! You can sell it for 💰${animalConfig.sellPrice}`
+          : `Placed ${animalConfig.name}`
       );
 
       coopManager.checkForNewUnlocks(type);
@@ -360,22 +366,30 @@ function placeAnimal(type) {
 }
 
 function buyAnimal(type, cost) {
+  console.log(`buyAnimal called with type: ${type}, cost: ${cost}`);
+  console.log(
+    `gameState.eggButtonClicked before: ${gameState.eggButtonClicked}`
+  );
+
   if (gameState.money >= cost) {
     gameState.money -= cost;
 
     // Mark egg button as clicked if this is an egg purchase
     if (type === "Egg" && !gameState.eggButtonClicked) {
+      console.log("Setting eggButtonClicked to true and stopping animation");
       gameState.eggButtonClicked = true;
-      // REMOVED: Stop initial egg button animation call
+      eventManager.stopInitialEggButtonAnimation();
       coopManager.updateBuyAnimalButtons(); // Update button states
     }
 
     if (placeAnimal(type)) {
       updateMoney();
-      updateStatus(`Bought and placed ${type}`);
+      const animalConfig = GAME_CONFIG.animalTypes[type];
+      updateStatus(`Bought and placed ${animalConfig.name}`);
     }
   } else {
-    updateStatus(`Not enough money for ${type}! 😕`);
+    const animalConfig = GAME_CONFIG.animalTypes[type];
+    updateStatus(`Not enough money for ${animalConfig.name}! 😕`);
     document.body.classList.add("screen-shake");
     setTimeout(() => document.body.classList.remove("screen-shake"), 500);
   }
@@ -427,11 +441,12 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
     eventManager.showDemoEndedPopup();
   }
 
-  const sellPrice = GAME_CONFIG.animalTypes[newType].sellPrice;
+  const newAnimalConfig = GAME_CONFIG.animalTypes[newType];
+  const sellPrice = newAnimalConfig.sellPrice;
   updateStatus(
     sellPrice > 0
-      ? `Merged into ${newType}! You can sell it for 💰${sellPrice}`
-      : `Merged into ${newType}!`
+      ? `Merged into ${newAnimalConfig.name}! You can sell it for 💰${sellPrice}`
+      : `Merged into ${newAnimalConfig.name}!`
   );
 }
 
