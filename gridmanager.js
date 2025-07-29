@@ -118,9 +118,13 @@ const gridManager = {
     cell.addEventListener("click", () => {
       gameState.lastInteractionTime = Date.now(); // Track interaction
 
+      // FIXED: Check money first, but don't deduct until after successful purchase
       if (gameState.money >= cost) {
-        gameState.money -= cost;
+        // FIXED: Add the cell to purchased set first (this is the "action")
         gameState.purchasedCells.add(`${i}-${j}`);
+
+        // FIXED: Only deduct money AFTER successful purchase
+        gameState.money -= cost;
 
         // Play grid expansion sound
         audioManager.playSound("grid-expansion");

@@ -303,9 +303,13 @@ const coopManager = {
     const animalName = animalType.charAt(0).toUpperCase() + animalType.slice(1);
     const producedType = config.producesType;
 
+    // FIXED: Check money first, but don't deduct until after successful purchase
     if (gameState.money >= cost) {
-      gameState.money -= cost;
+      // FIXED: Set ownership first (this is the "action")
       gameState[`${animalType}Coop`].owned = true;
+
+      // FIXED: Only deduct money AFTER successful purchase
+      gameState.money -= cost;
 
       // Play coop bought sound
       audioManager.playSound("coop-bought");
@@ -756,10 +760,14 @@ const coopManager = {
   },
 
   buyAutoMerge() {
+    // FIXED: Check money first, but don't deduct until after successful purchase
     if (gameState.money >= GAME_CONFIG.autoMergeConfig.buyCost) {
-      gameState.money -= GAME_CONFIG.autoMergeConfig.buyCost;
+      // FIXED: Set ownership first (this is the "action")
       gameState.autoMerge.owned = true;
       gameState.autoMerge.timer = gameState.autoMerge.currentInterval;
+
+      // FIXED: Only deduct money AFTER successful purchase
+      gameState.money -= GAME_CONFIG.autoMergeConfig.buyCost;
 
       // Play coop bought sound for auto-merge purchase
       audioManager.playSound("coop-bought");
@@ -840,9 +848,13 @@ const coopManager = {
       return;
     }
 
+    // FIXED: Check money first, but don't deduct until after successful purchase
     if (gameState.money >= GAME_CONFIG.shuffleConfig.buyCost) {
-      gameState.money -= GAME_CONFIG.shuffleConfig.buyCost;
+      // FIXED: Set ownership first (this is the "action")
       gameState.shuffle.owned = true;
+
+      // FIXED: Only deduct money AFTER successful purchase
+      gameState.money -= GAME_CONFIG.shuffleConfig.buyCost;
 
       // Play coop bought sound for shuffle purchase
       audioManager.playSound("coop-bought");

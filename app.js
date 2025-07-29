@@ -664,9 +664,8 @@ function buyAnimal(type, cost) {
 
   trackPlayerInteraction(); // Track interaction
 
+  // FIXED: Check money first, but don't deduct until after successful placement
   if (gameState.money >= cost) {
-    gameState.money -= cost;
-
     // Mark egg button as clicked if this is an egg purchase
     if (type === "Egg" && !gameState.eggButtonClicked) {
       console.log("Setting eggButtonClicked to true and stopping animation");
@@ -675,7 +674,9 @@ function buyAnimal(type, cost) {
       coopManager.updateBuyAnimalButtons(); // Update button states
     }
 
+    // FIXED: Only deduct money AFTER successful placement
     if (placeAnimal(type)) {
+      gameState.money -= cost; // Deduct money only on successful placement
       updateMoney();
       const animalConfig = GAME_CONFIG.animalTypes[type];
       updateStatus(`Bought and placed ${animalConfig.name}`);
@@ -683,6 +684,13 @@ function buyAnimal(type, cost) {
 
       // Check achievements after buying animal
       achievementManager.checkAchievements();
+    } else {
+      // If placement failed, reset egg button state if it was changed
+      if (type === "Egg" && gameState.eggButtonClicked) {
+        gameState.eggButtonClicked = false;
+        eventManager.startInitialEggButtonAnimation();
+        coopManager.updateBuyAnimalButtons();
+      }
     }
   } else {
     // Play invalid action sound for insufficient funds
