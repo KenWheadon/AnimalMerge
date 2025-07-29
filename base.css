@@ -2,10 +2,11 @@ body {
   font-family: "Nunito", sans-serif;
   background: linear-gradient(135deg, #87ceeb 0%, #98fb98 50%, #90ee90 100%);
   position: relative;
-  overflow: hidden;
   margin: 0;
   padding: 0;
-  height: 100vh;
+  /* FIX: Remove overflow hidden and height constraint to allow scrolling */
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
 /* Floating background particles */
@@ -38,6 +39,9 @@ body::before {
   z-index: 2;
   justify-content: center;
   overflow: visible;
+  /* FIX: Remove height constraint and allow natural flow */
+  min-height: 100vh;
+  padding: 20px 0;
 }
 
 /* Ensure slaughter house area doesn't clip tooltips */

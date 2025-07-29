@@ -25,6 +25,8 @@ let gameState = {
   },
   slaughterHouses: [],
   lastInteractionTime: Date.now(), // Track last player interaction for idle detection
+  // FIX: Add flag to prevent concurrent operations during auto-merge
+  isAutoMergeInProgress: false,
 };
 
 function showTutorialPopup() {
@@ -356,8 +358,8 @@ function generateMainHTML() {
     : "bg-red-500";
 
   return `
-    <div class="game-container flex h-screen">
-        <div class="w-40 bg-white shadow-lg flex flex-col">
+    <div class="game-container flex">
+        <div class="w-40 bg-white shadow-lg flex flex-col" style="height: fit-content; max-height: 100vh;">
             <div class="p-4 border-b">
                 <div id="money" class="money-display text-center">Money: 💰${
                   gameState.money
@@ -442,7 +444,7 @@ function generateMainHTML() {
 
         </div>
 
-        <div class="w-60 bg-white shadow-lg flex flex-col">
+        <div class="w-60 bg-white shadow-lg flex flex-col" style="height: fit-content; max-height: 100vh;">
             <div class="p-2 border-b">
                 <h2 class="text-xl font-bold text-green-800">🏭 Buildings</h2>
             </div>
@@ -605,6 +607,13 @@ function placeAnimal(type) {
 
   trackPlayerInteraction(); // Track interaction
 
+  // FIX: Prevent placing animals during auto-merge to avoid race conditions
+  if (gameState.isAutoMergeInProgress) {
+    audioManager.playSound("invalid-action");
+    updateStatus("Wait for auto-merge to complete! ⚙️");
+    return false;
+  }
+
   for (const { row: i, col: j } of GAME_CONFIG.gridConfig.availableSpots) {
     if (gameState.purchasedCells.has(`${i}-${j}`) && !gameState.grid[i][j]) {
       gameState.grid[i][j] = type;
@@ -694,6 +703,13 @@ function sellAnimal(i, j, type) {
 
 function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   trackPlayerInteraction(); // Track interaction
+
+  // FIX: Prevent manual merging during auto-merge to avoid race conditions
+  if (gameState.isAutoMergeInProgress) {
+    audioManager.playSound("invalid-action");
+    updateStatus("Wait for auto-merge to complete! ⚙️");
+    return;
+  }
 
   const sourceType = gameState.grid[sourceI][sourceJ];
   const newType = GAME_CONFIG.animalTypes[sourceType].mergeTo;

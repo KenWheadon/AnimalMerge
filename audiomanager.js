@@ -34,9 +34,6 @@ const audioManager = {
     "manual-merge": "audio/manual-merge.mp3",
     shuffle: "audio/shuffle.mp3",
     "egg-placement": "audio/egg-placement.mp3",
-    // "egg-timer-cat": "audio/egg-timer-cat.mp3",
-    // "egg-timer-panda": "audio/egg-timer-panda.mp3",
-    // "egg-timer-vulture": "audio/egg-timer-vulture.mp3",
     "grid-expansion": "audio/grid-expansion.mp3",
     "auto-merge-fail": "audio/auto-merge-fail.mp3",
     "auto-merge-win": "audio/auto-merge-win.mp3",
@@ -223,24 +220,68 @@ const audioManager = {
       return;
     }
 
-    // Fade out current track
-    if (this.currentTrack) {
+    console.log(`Switching to music: ${trackName}`);
+
+    // FIX: Improved music switching - fade out current, then start new
+    if (this.currentTrack && !this.currentTrack.paused) {
+      // Fade out current track
       this.fadeOut(this.currentTrack, 1000, () => {
         this.currentTrack.pause();
         this.currentTrack.currentTime = 0;
-      });
-    }
 
-    // Fade in new track
+        // Start new track after fade out completes
+        this.startNewTrack(newTrack, trackName);
+      });
+    } else {
+      // No current track or it's already paused, start new one immediately
+      this.startNewTrack(newTrack, trackName);
+    }
+  },
+
+  // FIX: Separate method to start new track reliably
+  startNewTrack(newTrack, trackName) {
     this.currentTrack = newTrack;
     this.currentTrackName = trackName;
-    newTrack.volume = 0;
-    newTrack.play().catch((e) => {
-      console.warn("Failed to play music:", e);
-    });
-    this.fadeIn(newTrack, this.musicVolume * this.masterVolume, 1000);
 
-    console.log(`Switched to music: ${trackName}`);
+    // Reset track to beginning
+    newTrack.currentTime = 0;
+    newTrack.volume = 0;
+
+    // Start playing
+    const playPromise = newTrack.play();
+
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          // Fade in after play starts successfully
+          this.fadeIn(newTrack, this.musicVolume * this.masterVolume, 1000);
+          console.log(`Successfully started playing: ${trackName}`);
+        })
+        .catch((e) => {
+          console.warn("Failed to play music:", e);
+          // Try again after a short delay
+          setTimeout(() => {
+            newTrack
+              .play()
+              .then(() => {
+                this.fadeIn(
+                  newTrack,
+                  this.musicVolume * this.masterVolume,
+                  1000
+                );
+                console.log(
+                  `Successfully started playing on retry: ${trackName}`
+                );
+              })
+              .catch((e2) => {
+                console.warn("Failed to play music on retry:", e2);
+              });
+          }, 500);
+        });
+    } else {
+      // Older browser support
+      this.fadeIn(newTrack, this.musicVolume * this.masterVolume, 1000);
+    }
   },
 
   // Play a sound effect
@@ -255,6 +296,7 @@ const audioManager = {
 
     // Clone the audio for overlapping sounds
     const soundClone = sound.cloneNode();
+    // FIX: Apply current volume settings when playing sounds
     soundClone.volume = this.sfxVolume * this.masterVolume * volume;
     soundClone.play().catch((e) => {
       console.warn(`Failed to play sound: ${soundName}`, e);
@@ -322,10 +364,14 @@ const audioManager = {
     audio.volume = startVolume;
 
     const fadeInterval = setInterval(() => {
-      if (audio.volume < targetVolume) {
+      if (audio.volume < targetVolume && !audio.paused && !audio.ended) {
         audio.volume = Math.min(audio.volume + volumeStep, targetVolume);
       } else {
         clearInterval(fadeInterval);
+        // FIX: Ensure final volume is set correctly
+        if (!audio.paused && !audio.ended) {
+          audio.volume = targetVolume;
+        }
       }
     }, 50);
   },
@@ -356,14 +402,22 @@ const audioManager = {
   // Set music volume
   setMusicVolume(volume) {
     this.musicVolume = Math.max(0, Math.min(1, volume));
-    if (this.currentTrack) {
+    // FIX: Update current playing track volume immediately
+    if (this.currentTrack && !this.isMuted) {
       this.currentTrack.volume = this.musicVolume * this.masterVolume;
     }
+    // Update all loaded music volumes
+    Object.values(this.loadedMusic).forEach((music) => {
+      if (music !== this.currentTrack) {
+        music.volume = this.musicVolume * this.masterVolume;
+      }
+    });
   },
 
   // Set sound effects volume
   setSfxVolume(volume) {
     this.sfxVolume = Math.max(0, Math.min(1, volume));
+    // FIX: Update all loaded sound volumes
     Object.values(this.loadedSounds).forEach((sound) => {
       sound.volume = this.sfxVolume * this.masterVolume;
     });
@@ -372,9 +426,12 @@ const audioManager = {
   // Update all audio volumes
   updateAllVolumes() {
     // Update music volume
-    if (this.currentTrack) {
+    if (this.currentTrack && !this.isMuted) {
       this.currentTrack.volume = this.musicVolume * this.masterVolume;
     }
+    Object.values(this.loadedMusic).forEach((music) => {
+      music.volume = this.musicVolume * this.masterVolume;
+    });
 
     // Update sound effect volumes
     Object.values(this.loadedSounds).forEach((sound) => {
@@ -396,6 +453,8 @@ const audioManager = {
           console.warn("Failed to resume music:", e);
         });
       }
+      // FIX: Apply current volume settings when unmuting
+      this.updateAllVolumes();
     }
 
     console.log(`Audio ${this.isMuted ? "muted" : "unmuted"}`);
@@ -417,6 +476,7 @@ const audioManager = {
       font-size: 12px;
       z-index: 10000;
       display: none;
+      user-select: none;
     `;
 
     controlsContainer.innerHTML = `
@@ -426,13 +486,13 @@ const audioManager = {
         </button>
       </div>
       <div style="margin-bottom: 5px;">
-        Master: <input type="range" id="masterVolume" min="0" max="1" step="0.1" value="${this.masterVolume}" style="width: 100px;">
+        Master: <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="${this.masterVolume}" style="width: 100px; cursor: pointer;">
       </div>
       <div style="margin-bottom: 5px;">
-        Music: <input type="range" id="musicVolume" min="0" max="1" step="0.1" value="${this.musicVolume}" style="width: 100px;">
+        Music: <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="${this.musicVolume}" style="width: 100px; cursor: pointer;">
       </div>
       <div>
-        SFX: <input type="range" id="sfxVolume" min="0" max="1" step="0.1" value="${this.sfxVolume}" style="width: 100px;">
+        SFX: <input type="range" id="sfxVolume" min="0" max="1" step="0.01" value="${this.sfxVolume}" style="width: 100px; cursor: pointer;">
       </div>
     `;
 
@@ -471,16 +531,44 @@ const audioManager = {
         : "🔊 Mute";
     });
 
-    document.getElementById("masterVolume").addEventListener("input", (e) => {
+    // FIX: Proper slider event handling with both input and change events
+    const masterSlider = document.getElementById("masterVolume");
+    const musicSlider = document.getElementById("musicVolume");
+    const sfxSlider = document.getElementById("sfxVolume");
+
+    // FIX: Use both 'input' for real-time and 'change' for final value
+    masterSlider.addEventListener("input", (e) => {
+      this.setMasterVolume(parseFloat(e.target.value));
+    });
+    masterSlider.addEventListener("change", (e) => {
       this.setMasterVolume(parseFloat(e.target.value));
     });
 
-    document.getElementById("musicVolume").addEventListener("input", (e) => {
+    musicSlider.addEventListener("input", (e) => {
+      this.setMusicVolume(parseFloat(e.target.value));
+    });
+    musicSlider.addEventListener("change", (e) => {
       this.setMusicVolume(parseFloat(e.target.value));
     });
 
-    document.getElementById("sfxVolume").addEventListener("input", (e) => {
+    sfxSlider.addEventListener("input", (e) => {
       this.setSfxVolume(parseFloat(e.target.value));
+    });
+    sfxSlider.addEventListener("change", (e) => {
+      this.setSfxVolume(parseFloat(e.target.value));
+    });
+
+    // FIX: Prevent drag interference by stopping event propagation
+    [masterSlider, musicSlider, sfxSlider].forEach((slider) => {
+      slider.addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+      });
+      slider.addEventListener("touchstart", (e) => {
+        e.stopPropagation();
+      });
+      slider.addEventListener("dragstart", (e) => {
+        e.preventDefault();
+      });
     });
   },
 

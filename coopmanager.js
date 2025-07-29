@@ -24,9 +24,12 @@ const coopManager = {
 
     let html = "";
 
-    for (const [animalType, config] of Object.entries(
+    // FIX: Reverse the order so most recent appears at top
+    const purchaseEntries = Object.entries(
       GAME_CONFIG.purchaseConfig
-    )) {
+    ).reverse();
+
+    for (const [animalType, config] of purchaseEntries) {
       const animalConfig = GAME_CONFIG.animalTypes[animalType];
       const imageSrc = GAME_CONFIG.animalImages[animalType];
       const costText = config.cost === 0 ? "Free" : `${config.cost}`;
@@ -719,15 +722,6 @@ const coopManager = {
         if (coop.timer <= 0) {
           coop.stored += 1;
 
-          // Play specific egg timer sound based on coop type
-          // if (animalType === "cat") {
-          //   audioManager.playSound("egg-timer-cat");
-          // } else if (animalType === "panda") {
-          //   audioManager.playSound("egg-timer-panda");
-          // } else if (animalType === "vulture") {
-          //   audioManager.playSound("egg-timer-vulture");
-          // }
-
           const storedElement = document.getElementById(
             `${animalType}CoopStored`
           );
@@ -746,8 +740,6 @@ const coopManager = {
 
           // FIX: Reset timer with new production time based on current level
           coop.timer = this.calculateCoopProductionTime(animalType, coop.level);
-
-          // eventManager.showAchievement(`${producedConfig.name} Ready!`);
 
           const progressElement = document.getElementById(
             `${animalType}CoopProductionProgress`
@@ -1024,6 +1016,9 @@ const coopManager = {
   autoMergeCheck() {
     if (!gameState.autoMerge.enabled) return;
 
+    // FIX: Set flag to prevent concurrent operations
+    gameState.isAutoMergeInProgress = true;
+
     this.clearAutoMergeHighlight();
 
     let mergedTypes = [];
@@ -1126,6 +1121,11 @@ const coopManager = {
     }
 
     this.updatePlaceButtonStates();
+
+    // FIX: Clear flag after a short delay to allow operations to complete
+    setTimeout(() => {
+      gameState.isAutoMergeInProgress = false;
+    }, 1000);
   },
 
   updateAutoMergeTimer() {
