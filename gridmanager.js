@@ -1,29 +1,23 @@
 const gridManager = {
   initializeGridState() {
-    // Only initialize if grid doesn't exist
-    if (!gameState.grid || gameState.grid.length === 0) {
-      gameState.grid = Array(5)
-        .fill(null)
-        .map(() => Array(8).fill(null));
-    }
+    gameState.grid = Array(GAME_CONFIG.gridConfig.rows)
+      .fill(null)
+      .map(() => Array(GAME_CONFIG.gridConfig.cols).fill(null));
 
-    // Only initialize if purchasedCells doesn't exist
-    if (!gameState.purchasedCells || gameState.purchasedCells.size === 0) {
-      gameState.purchasedCells = new Set();
-      GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
-        if (cost === 0) {
-          gameState.purchasedCells.add(`${row}-${col}`);
-        }
-      });
-    }
+    gameState.purchasedCells = new Set();
+    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
+      if (cost === 0) {
+        gameState.purchasedCells.add(`${row}-${col}`);
+      }
+    });
   },
 
   generateGridHTML() {
     let html = '<table class="game-grid">';
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < GAME_CONFIG.gridConfig.rows; i++) {
       html += "<tr>";
-      for (let j = 0; j < 4; j++) {
+      for (let j = 0; j < GAME_CONFIG.gridConfig.cols; j++) {
         const spotConfig = GAME_CONFIG.gridConfig.availableSpots.find(
           (spot) => spot.row === i && spot.col === j
         );
@@ -66,11 +60,9 @@ const gridManager = {
     );
 
     if (isPurchased) {
-      // FIX: Clear all highlighting classes when updating cell
       cell.className = "grid-cell";
       cell.removeAttribute("data-cost");
 
-      // Remove any existing value display
       const existingValue = cell.querySelector(".grid-cell-value");
       if (existingValue) {
         existingValue.remove();
@@ -83,11 +75,12 @@ const gridManager = {
         cell.classList.add("occupied");
         cell.innerHTML = `<img src="${GAME_CONFIG.animalImages[animalType]}" alt="${animalType}" class="animal-image" />`;
 
-        // Add butcher value display if animal has sell price > 0
         if (animalConfig.sellPrice > 0) {
-          const valueDisplay = document.createElement("div");
-          valueDisplay.className = "grid-cell-value";
-          valueDisplay.textContent = `💰${animalConfig.sellPrice}`;
+          const valueDisplay = utilityManager.createElement(
+            "div",
+            "grid-cell-value",
+            `💰${animalConfig.sellPrice}`
+          );
           cell.appendChild(valueDisplay);
         }
 
@@ -98,7 +91,6 @@ const gridManager = {
         cell.draggable = false;
       }
     } else {
-      // FIX: Clear all highlighting classes for grass cells too
       cell.className = "grid-cell grass";
       cell.setAttribute("data-cost", `${spotConfig.cost}`);
       cell.innerHTML = "";
@@ -110,41 +102,33 @@ const gridManager = {
     const cell = document.getElementById(`cell-${i}-${j}`);
     if (!cell) return;
 
-    // Add hover sound for grass cells
-    // cell.addEventListener("mouseenter", () => {
-    //   audioManager.playSound("button-hover");
-    // });
+    utilityManager.addEventListener(
+      cell,
+      "click",
+      () => {
+        gameState.lastInteractionTime = Date.now();
 
-    cell.addEventListener("click", () => {
-      gameState.lastInteractionTime = Date.now(); // Track interaction
+        if (gameState.money >= cost) {
+          gameState.purchasedCells.add(`${i}-${j}`);
+          gameState.money -= cost;
 
-      // FIXED: Check money first, but don't deduct until after successful purchase
-      if (gameState.money >= cost) {
-        // FIXED: Add the cell to purchased set first (this is the "action")
-        gameState.purchasedCells.add(`${i}-${j}`);
+          audioManager.playSound("grid-expansion");
 
-        // FIXED: Only deduct money AFTER successful purchase
-        gameState.money -= cost;
+          updateMoney();
+          this.updateCell(i, j);
+          updateMergeablePairs();
+          updateStatus(`Purchased grid spot for ${cost}! 🌱`);
+          saveManager.saveOnAction();
 
-        // Play grid expansion sound
-        audioManager.playSound("grid-expansion");
-
-        updateMoney();
-        this.updateCell(i, j);
-        updateMergeablePairs();
-        updateStatus(`Purchased grid spot for ${cost}! 🌱`);
-        saveManager.saveOnAction(); // Save after purchasing grid cell
-
-        // Check achievements after purchasing grid cell
-        achievementManager.checkAchievements();
-      } else {
-        // Play invalid action sound for insufficient funds
-        audioManager.playSound("invalid-action");
-        updateStatus(`Need ${cost} to purchase this spot! 😕`);
-        document.body.classList.add("screen-shake");
-        setTimeout(() => document.body.classList.remove("screen-shake"), 500);
-      }
-    });
+          achievementManager.checkAchievements();
+        } else {
+          audioManager.playSound("invalid-action");
+          updateStatus(`Need ${cost} to purchase this spot! 😕`);
+          utilityManager.addScreenShake();
+        }
+      },
+      `grassCell_${i}_${j}`
+    );
   },
 
   initializeGridEventListeners() {
@@ -152,33 +136,81 @@ const gridManager = {
       const cell = document.getElementById(`cell-${i}-${j}`);
       if (!cell) return;
 
-      cell.addEventListener("mousedown", (e) => this.handleMouseDown(e, i, j));
-      cell.addEventListener("dragstart", (e) => this.handleDragStart(e, i, j));
-      cell.addEventListener("dragover", (e) => this.handleDragOver(e, i, j));
-      cell.addEventListener("drop", (e) => this.handleDrop(e, i, j));
-      cell.addEventListener("dragend", (e) => this.handleDragEnd(e, i, j));
-      cell.addEventListener("dragenter", (e) => this.handleDragEnter(e, i, j));
-      cell.addEventListener("dragleave", (e) => this.handleDragLeave(e, i, j));
+      const cellId = `cell_${i}_${j}`;
 
-      // NEW: Add right-click event listener
-      cell.addEventListener("contextmenu", (e) =>
-        this.handleRightClick(e, i, j)
+      utilityManager.addEventListener(
+        cell,
+        "mousedown",
+        (e) => this.handleMouseDown(e, i, j),
+        `${cellId}_mousedown`
       );
-
-      cell.addEventListener("touchstart", (e) =>
-        this.handleTouchStart(e, i, j)
+      utilityManager.addEventListener(
+        cell,
+        "dragstart",
+        (e) => this.handleDragStart(e, i, j),
+        `${cellId}_dragstart`
       );
-      cell.addEventListener("touchmove", (e) => this.handleTouchMove(e, i, j));
-      cell.addEventListener("touchend", (e) => this.handleTouchEnd(e, i, j));
+      utilityManager.addEventListener(
+        cell,
+        "dragover",
+        (e) => this.handleDragOver(e, i, j),
+        `${cellId}_dragover`
+      );
+      utilityManager.addEventListener(
+        cell,
+        "drop",
+        (e) => this.handleDrop(e, i, j),
+        `${cellId}_drop`
+      );
+      utilityManager.addEventListener(
+        cell,
+        "dragend",
+        (e) => this.handleDragEnd(e, i, j),
+        `${cellId}_dragend`
+      );
+      utilityManager.addEventListener(
+        cell,
+        "dragenter",
+        (e) => this.handleDragEnter(e, i, j),
+        `${cellId}_dragenter`
+      );
+      utilityManager.addEventListener(
+        cell,
+        "dragleave",
+        (e) => this.handleDragLeave(e, i, j),
+        `${cellId}_dragleave`
+      );
+      utilityManager.addEventListener(
+        cell,
+        "contextmenu",
+        (e) => this.handleRightClick(e, i, j),
+        `${cellId}_contextmenu`
+      );
+      utilityManager.addEventListener(
+        cell,
+        "touchstart",
+        (e) => this.handleTouchStart(e, i, j),
+        `${cellId}_touchstart`
+      );
+      utilityManager.addEventListener(
+        cell,
+        "touchmove",
+        (e) => this.handleTouchMove(e, i, j),
+        `${cellId}_touchmove`
+      );
+      utilityManager.addEventListener(
+        cell,
+        "touchend",
+        (e) => this.handleTouchEnd(e, i, j),
+        `${cellId}_touchend`
+      );
     });
   },
 
-  // NEW: Handle right-click to send animals to butcher
   handleRightClick(e, i, j) {
-    e.preventDefault(); // Prevent context menu
-    gameState.lastInteractionTime = Date.now(); // Track interaction
+    e.preventDefault();
+    gameState.lastInteractionTime = Date.now();
 
-    // Only work on purchased cells with animals
     if (!gameState.purchasedCells.has(`${i}-${j}`) || !gameState.grid[i][j]) {
       return;
     }
@@ -186,29 +218,29 @@ const gridManager = {
     const animalType = gameState.grid[i][j];
     const animalConfig = GAME_CONFIG.animalTypes[animalType];
 
-    // Only sellable animals can be sent to butcher
     if (animalConfig.sellPrice <= 0) {
       audioManager.playSound("invalid-action");
       updateStatus(`${animalConfig.name} cannot be sold! 😕`);
       return;
     }
 
-    // Check if butcher has space
     const house = gameState.slaughterHouses[0];
-    if (!house || house.queue.length >= 10) {
+    if (
+      !house ||
+      house.queue.length >= GAME_CONFIG.gameplayConfig.slaughterHouseQueueMax
+    ) {
       audioManager.playSound("invalid-action");
       updateStatus("Butcher shop queue is full! 😕");
       return;
     }
 
-    // Send to butcher
     if (slaughterHouseManager.addAnimalToQueue(0, animalType, i, j)) {
       updateStatus(`Right-clicked ${animalConfig.name} to butcher! 🔪`);
     }
   },
 
   handleMouseDown(e, i, j) {
-    gameState.lastInteractionTime = Date.now(); // Track interaction
+    gameState.lastInteractionTime = Date.now();
 
     if (!gameState.purchasedCells.has(`${i}-${j}`) || !gameState.grid[i][j])
       return;
@@ -221,18 +253,16 @@ const gridManager = {
   },
 
   handleDragStart(e, i, j) {
-    gameState.lastInteractionTime = Date.now(); // Track interaction
+    gameState.lastInteractionTime = Date.now();
 
     if (!gameState.purchasedCells.has(`${i}-${j}`) || !gameState.grid[i][j]) {
       e.preventDefault();
       return;
     }
 
-    // Play random "ooh" sound when picking up an animal (not eggs)
     const animalType = gameState.grid[i][j];
     const animalConfig = GAME_CONFIG.animalTypes[animalType];
     if (animalConfig.sellPrice > 0) {
-      // Only animals, not eggs, have sell price
       audioManager.playRandomSound("ooh");
     }
 
@@ -244,13 +274,9 @@ const gridManager = {
     const cell = document.getElementById(`cell-${i}-${j}`);
     cell.classList.add("drag-preview");
 
-    // FIX: Clear any existing highlights before showing new ones
     this.clearValidTargets();
-
-    // FIX: Only show valid targets for the specific cell being dragged
     this.showValidTargets(i, j);
 
-    // Check if dragged animal can be sold and trigger butcher wiggle
     if (animalConfig.sellPrice > 0) {
       const butcherImage = document.querySelector(".butcher-image");
       if (butcherImage) {
@@ -284,13 +310,11 @@ const gridManager = {
 
     const cell = document.getElementById(`cell-${i}-${j}`);
 
-    if (this.canMerge(sourceI, sourceJ, i, j)) {
-      cell.classList.add("drag-valid-target");
-      cell.classList.remove("drag-invalid-target");
-    } else if (this.canSwap(sourceI, sourceJ, i, j)) {
-      cell.classList.add("drag-valid-target");
-      cell.classList.remove("drag-invalid-target");
-    } else if (this.canMoveToEmpty(sourceI, sourceJ, i, j)) {
+    if (
+      this.canMerge(sourceI, sourceJ, i, j) ||
+      this.canSwap(sourceI, sourceJ, i, j) ||
+      this.canMoveToEmpty(sourceI, sourceJ, i, j)
+    ) {
       cell.classList.add("drag-valid-target");
       cell.classList.remove("drag-invalid-target");
     } else {
@@ -306,7 +330,7 @@ const gridManager = {
 
   handleDrop(e, i, j) {
     e.preventDefault();
-    gameState.lastInteractionTime = Date.now(); // Track interaction
+    gameState.lastInteractionTime = Date.now();
 
     if (!gameState.draggedCell) {
       return;
@@ -322,7 +346,6 @@ const gridManager = {
     } else if (this.canMoveToEmpty(sourceI, sourceJ, i, j)) {
       this.moveToEmpty(sourceI, sourceJ, i, j);
     } else {
-      // Play invalid action sound for unsuccessful drop
       audioManager.playSound("invalid-action");
       updateStatus("Cannot perform this action! 😕");
     }
@@ -333,7 +356,6 @@ const gridManager = {
       sourceCell.classList.remove("drag-preview");
     }
 
-    // Remove butcher wiggle
     const butcherImage = document.querySelector(".butcher-image");
     if (butcherImage) {
       butcherImage.classList.remove("butcher-wiggle");
@@ -350,7 +372,6 @@ const gridManager = {
 
     this.clearValidTargets();
 
-    // Remove butcher wiggle
     const butcherImage = document.querySelector(".butcher-image");
     if (butcherImage) {
       butcherImage.classList.remove("butcher-wiggle");
@@ -360,16 +381,14 @@ const gridManager = {
   },
 
   handleTouchStart(e, i, j) {
-    gameState.lastInteractionTime = Date.now(); // Track interaction
+    gameState.lastInteractionTime = Date.now();
 
     if (!gameState.purchasedCells.has(`${i}-${j}`) || !gameState.grid[i][j])
       return;
 
-    // Play random "ooh" sound when picking up an animal (not eggs) on touch
     const animalType = gameState.grid[i][j];
     const animalConfig = GAME_CONFIG.animalTypes[animalType];
     if (animalConfig.sellPrice > 0) {
-      // Only animals, not eggs, have sell price
       audioManager.playRandomSound("ooh");
     }
 
@@ -377,11 +396,9 @@ const gridManager = {
     const cell = document.getElementById(`cell-${i}-${j}`);
     cell.classList.add("drag-preview");
 
-    // FIX: Clear any existing highlights before showing new ones
     this.clearValidTargets();
     this.showValidTargets(i, j);
 
-    // Check if dragged animal can be sold and trigger butcher wiggle
     if (animalConfig.sellPrice > 0) {
       const butcherImage = document.querySelector(".butcher-image");
       if (butcherImage) {
@@ -396,7 +413,7 @@ const gridManager = {
 
   handleTouchEnd(e, i, j) {
     e.preventDefault();
-    gameState.lastInteractionTime = Date.now(); // Track interaction
+    gameState.lastInteractionTime = Date.now();
 
     if (!gameState.draggedCell) return;
 
@@ -466,7 +483,6 @@ const gridManager = {
       sourceCell.classList.remove("drag-preview");
     }
 
-    // Remove butcher wiggle
     const butcherImage = document.querySelector(".butcher-image");
     if (butcherImage) {
       butcherImage.classList.remove("butcher-wiggle");
@@ -476,7 +492,6 @@ const gridManager = {
   },
 
   canMerge(sourceI, sourceJ, targetI, targetJ) {
-    // Fix: Prevent self-merging - same cell cannot merge with itself
     if (sourceI === targetI && sourceJ === targetJ) {
       return false;
     }
@@ -541,16 +556,13 @@ const gridManager = {
     return true;
   },
 
-  // FIX: Completely rewritten to only highlight actual valid targets
   showValidTargets(sourceI, sourceJ) {
     const sourceType = gameState.grid[sourceI][sourceJ];
     if (!sourceType) return;
 
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
-      // Skip the source cell itself
       if (i === sourceI && j === sourceJ) return;
 
-      // Only check purchased cells
       if (!gameState.purchasedCells.has(`${i}-${j}`)) return;
 
       const cell = document.getElementById(`cell-${i}-${j}`);
@@ -579,7 +591,7 @@ const gridManager = {
 
     const animalConfig = GAME_CONFIG.animalTypes[sourceType];
     updateStatus(`Moved ${animalConfig.name} to empty space! 📦`);
-    saveManager.saveOnAction(); // Save after moving animal
+    saveManager.saveOnAction();
   },
 
   swapAnimals(sourceI, sourceJ, targetI, targetJ) {
@@ -597,12 +609,10 @@ const gridManager = {
     const sourceConfig = GAME_CONFIG.animalTypes[sourceType];
     const targetConfig = GAME_CONFIG.animalTypes[targetType];
     updateStatus(`Swapped ${sourceConfig.name} and ${targetConfig.name}! 🔄`);
-    saveManager.saveOnAction(); // Save after swapping animals
+    saveManager.saveOnAction();
   },
 
-  // FIX: More thorough clearing of all highlighting classes
   clearValidTargets() {
-    // Remove all drag-related classes from all grid cells
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
       const cell = document.getElementById(`cell-${i}-${j}`);
       if (cell) {

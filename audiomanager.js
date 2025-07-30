@@ -1,25 +1,17 @@
 const audioManager = {
-  // Audio context and settings
   audioContext: null,
-  masterVolume: 0.7,
-  musicVolume: 0.5,
-  sfxVolume: 0.8,
+  masterVolume: GAME_CONFIG.audioConfig.masterVolume,
+  musicVolume: GAME_CONFIG.audioConfig.musicVolume,
+  sfxVolume: GAME_CONFIG.audioConfig.sfxVolume,
   isMuted: false,
 
-  // Background music tracking
   currentTrack: null,
   currentTrackName: "",
   musicProgression: ["mantis-song", "cat-song", "panda-song", "vulture-song"],
   currentMusicLevel: 0,
 
-  // FIX: Add background music retry system
-  musicRetryInterval: null,
-  lastMusicCheck: 0,
-
-  // Add cooldown tracking for overlapping sounds
   soundCooldowns: new Map(),
 
-  // Audio file paths
   musicFiles: {
     "mantis-song": "audio/mantis-song.mp3",
     "cat-song": "audio/cat-song.mp3",
@@ -60,51 +52,41 @@ const audioManager = {
     ooh14: "audio/ooh-14.mp3",
   },
 
-  // Loaded audio elements
   loadedMusic: {},
   loadedSounds: {},
 
-  // Initialize audio system
   initialize() {
-    console.log("Initializing Audio Manager...");
+    this.createAudioContext();
+    this.loadAllAudio();
+    this.startMusicRetrySystem();
+    this.addVolumeControls();
+  },
 
-    // Create audio context for better control
+  createAudioContext() {
     try {
       this.audioContext = new (window.AudioContext ||
         window.webkitAudioContext)();
     } catch (e) {
-      console.warn("Web Audio API not supported, falling back to HTML5 audio");
+      this.audioContext = null;
     }
-
-    // Load all audio files
-    this.loadAllAudio();
-
-    // FIX: Start background music retry system
-    this.startMusicRetrySystem();
-
-    // Add volume controls to UI (optional)
-    this.addVolumeControls();
-
-    console.log("Audio Manager initialized");
   },
 
-  // FIX: Start system to check and retry background music every 15 seconds
   startMusicRetrySystem() {
-    this.musicRetryInterval = setInterval(() => {
-      this.checkBackgroundMusic();
-    }, 15000); // Check every 15 seconds
+    utilityManager.setInterval(
+      () => {
+        this.checkBackgroundMusic();
+      },
+      GAME_CONFIG.audioConfig.musicRetryInterval,
+      "musicRetry"
+    );
   },
 
-  // FIX: Check if background music should be playing but isn't
   checkBackgroundMusic() {
-    // Only check if audio is not muted
     if (this.isMuted) return;
 
-    // Determine what music level should be playing
     const expectedMusicLevel = this.getExpectedMusicLevel();
     const expectedTrackName = this.musicProgression[expectedMusicLevel];
 
-    // Check if music should be playing but isn't
     const shouldBePlaying = expectedTrackName && !this.isMuted;
     const isCurrentlyPlaying =
       this.currentTrack &&
@@ -112,71 +94,50 @@ const audioManager = {
       !this.currentTrack.ended;
 
     if (shouldBePlaying && !isCurrentlyPlaying) {
-      console.log(
-        "Background music should be playing but isn't - attempting to restart"
-      );
       this.updateBackgroundMusic();
     }
   },
 
-  // FIX: Helper method to determine expected music level
   getExpectedMusicLevel() {
-    let expectedLevel = 0;
-
-    // FIX: Check for owned coops instead of just created animals to determine music progression
     if (
       gameState.vultureCoop?.owned ||
       gameState.createdAnimals.has("Vulture")
     ) {
-      expectedLevel = 3; // vulture-song
+      return 3;
     } else if (
       gameState.pandaCoop?.owned ||
       gameState.createdAnimals.has("Panda")
     ) {
-      expectedLevel = 2; // panda-song
+      return 2;
     } else if (
       gameState.catCoop?.owned ||
       gameState.createdAnimals.has("Cat")
     ) {
-      expectedLevel = 1; // cat-song
+      return 1;
     } else if (gameState.createdAnimals.has("Mantis")) {
-      expectedLevel = 0; // mantis-song (default when game starts)
-    } else {
-      expectedLevel = -1; // No music yet
+      return 0;
     }
-
-    return expectedLevel;
+    return -1;
   },
 
-  // Load all audio files
   loadAllAudio() {
-    // Load background music
     Object.entries(this.musicFiles).forEach(([name, path]) => {
       const audio = new Audio(path);
       audio.loop = true;
       audio.volume = this.musicVolume * this.masterVolume;
-      audio.addEventListener("error", (e) => {
-        console.warn(`Failed to load music: ${path}`, e);
-      });
       this.loadedMusic[name] = audio;
     });
 
-    // Load sound effects
     Object.entries(this.soundFiles).forEach(([name, path]) => {
       const audio = new Audio(path);
       audio.volume = this.sfxVolume * this.masterVolume;
-      audio.addEventListener("error", (e) => {
-        console.warn(`Failed to load sound: ${path}`, e);
-      });
       this.loadedSounds[name] = audio;
     });
   },
 
-  // Update background music based on game progression - properly determine level on load
   updateBackgroundMusic() {
     const newMusicLevel = this.getExpectedMusicLevel();
 
-    // FIX: Don't try to play music if no music should be playing yet
     if (newMusicLevel === -1) {
       if (this.currentTrack) {
         this.fadeOut(this.currentTrack, 1000, () => {
@@ -190,139 +151,100 @@ const audioManager = {
       return;
     }
 
-    // Always set the appropriate music level on load, not just when it progresses
     if (newMusicLevel !== this.currentMusicLevel) {
-      console.log(
-        `Music level changing from ${this.currentMusicLevel} to ${newMusicLevel}`
-      );
       this.currentMusicLevel = newMusicLevel;
       this.switchBackgroundMusic(this.musicProgression[newMusicLevel]);
     } else if (!this.currentTrack || this.currentTrack.paused) {
-      // If no music is playing but we should be playing music, start it
-      console.log(`Restarting music at level ${newMusicLevel}`);
       this.switchBackgroundMusic(this.musicProgression[newMusicLevel]);
     }
   },
 
-  // Switch to a different background music track
   switchBackgroundMusic(trackName) {
     if (this.isMuted) return;
 
     const newTrack = this.loadedMusic[trackName];
-    if (!newTrack) {
-      console.warn(`Music track not found: ${trackName}`);
-      return;
-    }
+    if (!newTrack) return;
 
-    // Don't switch if already playing the correct track
     if (this.currentTrack === newTrack && !this.currentTrack.paused) {
-      console.log(`Already playing ${trackName}, no need to switch`);
       return;
     }
 
-    console.log(`Switching to music: ${trackName}`);
-
-    // FIX: Improved music switching - fade out current, then start new
     if (this.currentTrack && !this.currentTrack.paused) {
-      // Fade out current track
       this.fadeOut(this.currentTrack, 1000, () => {
         this.currentTrack.pause();
         this.currentTrack.currentTime = 0;
-
-        // Start new track after fade out completes
         this.startNewTrack(newTrack, trackName);
       });
     } else {
-      // No current track or it's already paused, start new one immediately
       this.startNewTrack(newTrack, trackName);
     }
   },
 
-  // FIX: Separate method to start new track reliably
   startNewTrack(newTrack, trackName) {
     this.currentTrack = newTrack;
     this.currentTrackName = trackName;
 
-    // Reset track to beginning
     newTrack.currentTime = 0;
     newTrack.volume = 0;
 
-    // Start playing
     const playPromise = newTrack.play();
 
     if (playPromise !== undefined) {
       playPromise
         .then(() => {
-          // Fade in after play starts successfully
           this.fadeIn(newTrack, this.musicVolume * this.masterVolume, 1000);
-          console.log(`Successfully started playing: ${trackName}`);
         })
-        .catch((e) => {
-          console.warn("Failed to play music:", e);
-          // Try again after a short delay
-          setTimeout(() => {
-            newTrack
-              .play()
-              .then(() => {
-                this.fadeIn(
-                  newTrack,
-                  this.musicVolume * this.masterVolume,
-                  1000
-                );
-                console.log(
-                  `Successfully started playing on retry: ${trackName}`
-                );
-              })
-              .catch((e2) => {
-                console.warn("Failed to play music on retry:", e2);
-              });
-          }, 500);
+        .catch(() => {
+          utilityManager.setTimeout(
+            () => {
+              newTrack
+                .play()
+                .then(() => {
+                  this.fadeIn(
+                    newTrack,
+                    this.musicVolume * this.masterVolume,
+                    1000
+                  );
+                })
+                .catch(() => {});
+            },
+            500,
+            "musicRetry"
+          );
         });
     } else {
-      // Older browser support
       this.fadeIn(newTrack, this.musicVolume * this.masterVolume, 1000);
     }
   },
 
-  // Play a sound effect
   playSound(soundName, volume = 1.0) {
     if (this.isMuted) return;
 
     const sound = this.loadedSounds[soundName];
-    if (!sound) {
-      console.warn(`Sound not found: ${soundName}`);
-      return;
-    }
+    if (!sound) return;
 
-    // Clone the audio for overlapping sounds
     const soundClone = sound.cloneNode();
-    // FIX: Apply current volume settings when playing sounds
     soundClone.volume = this.sfxVolume * this.masterVolume * volume;
-    soundClone.play().catch((e) => {
-      console.warn(`Failed to play sound: ${soundName}`, e);
-    });
+    soundClone.play().catch(() => {});
   },
 
-  // Play random sound from a group with cooldown to prevent overlapping
-  playRandomSoundWithCooldown(soundGroup, cooldownMs = 500) {
+  playRandomSoundWithCooldown(
+    soundGroup,
+    cooldownMs = GAME_CONFIG.audioConfig.soundCooldown
+  ) {
     if (this.isMuted) return;
 
-    // Check if this sound group is on cooldown
     const now = Date.now();
     const lastPlayTime = this.soundCooldowns.get(soundGroup);
 
     if (lastPlayTime && now - lastPlayTime < cooldownMs) {
-      return; // Skip playing if still on cooldown
+      return;
     }
 
-    // Set cooldown
     this.soundCooldowns.set(soundGroup, now);
-
-    // Play the sound
     this.playRandomSound(soundGroup);
   },
 
-  // Play random sound from a group
   playRandomSound(soundGroup) {
     if (this.isMuted) return;
 
@@ -355,20 +277,17 @@ const audioManager = {
     }
   },
 
-  // Fade in audio element
   fadeIn(audio, targetVolume, duration) {
     if (!audio || this.isMuted) return;
 
-    const startVolume = 0;
     const volumeStep = targetVolume / (duration / 50);
-    audio.volume = startVolume;
+    audio.volume = 0;
 
     const fadeInterval = setInterval(() => {
       if (audio.volume < targetVolume && !audio.paused && !audio.ended) {
         audio.volume = Math.min(audio.volume + volumeStep, targetVolume);
       } else {
         clearInterval(fadeInterval);
-        // FIX: Ensure final volume is set correctly
         if (!audio.paused && !audio.ended) {
           audio.volume = targetVolume;
         }
@@ -376,7 +295,6 @@ const audioManager = {
     }, 50);
   },
 
-  // Fade out audio element
   fadeOut(audio, duration, callback) {
     if (!audio) return;
 
@@ -393,20 +311,16 @@ const audioManager = {
     }, 50);
   },
 
-  // Set master volume
   setMasterVolume(volume) {
-    this.masterVolume = Math.max(0, Math.min(1, volume));
+    this.masterVolume = utilityManager.clamp(volume, 0, 1);
     this.updateAllVolumes();
   },
 
-  // Set music volume
   setMusicVolume(volume) {
-    this.musicVolume = Math.max(0, Math.min(1, volume));
-    // FIX: Update current playing track volume immediately
+    this.musicVolume = utilityManager.clamp(volume, 0, 1);
     if (this.currentTrack && !this.isMuted) {
       this.currentTrack.volume = this.musicVolume * this.masterVolume;
     }
-    // Update all loaded music volumes
     Object.values(this.loadedMusic).forEach((music) => {
       if (music !== this.currentTrack) {
         music.volume = this.musicVolume * this.masterVolume;
@@ -414,18 +328,14 @@ const audioManager = {
     });
   },
 
-  // Set sound effects volume
   setSfxVolume(volume) {
-    this.sfxVolume = Math.max(0, Math.min(1, volume));
-    // FIX: Update all loaded sound volumes
+    this.sfxVolume = utilityManager.clamp(volume, 0, 1);
     Object.values(this.loadedSounds).forEach((sound) => {
       sound.volume = this.sfxVolume * this.masterVolume;
     });
   },
 
-  // Update all audio volumes
   updateAllVolumes() {
-    // Update music volume
     if (this.currentTrack && !this.isMuted) {
       this.currentTrack.volume = this.musicVolume * this.masterVolume;
     }
@@ -433,13 +343,11 @@ const audioManager = {
       music.volume = this.musicVolume * this.masterVolume;
     });
 
-    // Update sound effect volumes
     Object.values(this.loadedSounds).forEach((sound) => {
       sound.volume = this.sfxVolume * this.masterVolume;
     });
   },
 
-  // Toggle mute
   toggleMute() {
     this.isMuted = !this.isMuted;
 
@@ -449,21 +357,34 @@ const audioManager = {
       }
     } else {
       if (this.currentTrack) {
-        this.currentTrack.play().catch((e) => {
-          console.warn("Failed to resume music:", e);
-        });
+        this.currentTrack.play().catch(() => {});
       }
-      // FIX: Apply current volume settings when unmuting
       this.updateAllVolumes();
     }
-
-    console.log(`Audio ${this.isMuted ? "muted" : "unmuted"}`);
   },
 
-  // Add simple volume controls to the UI
   addVolumeControls() {
-    // Create audio controls container
-    const controlsContainer = document.createElement("div");
+    const controlsContainer = utilityManager.createElement(
+      "div",
+      "",
+      `
+      <div style="margin-bottom: 5px;">
+        <button id="muteToggle" style="background: #333; color: white; border: none; padding: 5px; border-radius: 4px; cursor: pointer;">
+          🔊 Mute
+        </button>
+      </div>
+      <div style="margin-bottom: 5px;">
+        Master: <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="${this.masterVolume}" style="width: 100px; cursor: pointer;">
+      </div>
+      <div style="margin-bottom: 5px;">
+        Music: <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="${this.musicVolume}" style="width: 100px; cursor: pointer;">
+      </div>
+      <div>
+        SFX: <input type="range" id="sfxVolume" min="0" max="1" step="0.01" value="${this.sfxVolume}" style="width: 100px; cursor: pointer;">
+      </div>
+    `
+    );
+
     controlsContainer.id = "audioControls";
     controlsContainer.style.cssText = `
       position: fixed;
@@ -479,28 +400,9 @@ const audioManager = {
       user-select: none;
     `;
 
-    controlsContainer.innerHTML = `
-      <div style="margin-bottom: 5px;">
-        <button id="muteToggle" style="background: #333; color: white; border: none; padding: 5px; border-radius: 4px; cursor: pointer;">
-          🔊 Mute
-        </button>
-      </div>
-      <div style="margin-bottom: 5px;">
-        Master: <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="${this.masterVolume}" style="width: 100px; cursor: pointer;">
-      </div>
-      <div style="margin-bottom: 5px;">
-        Music: <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="${this.musicVolume}" style="width: 100px; cursor: pointer;">
-      </div>
-      <div>
-        SFX: <input type="range" id="sfxVolume" min="0" max="1" step="0.01" value="${this.sfxVolume}" style="width: 100px; cursor: pointer;">
-      </div>
-    `;
-
     document.body.appendChild(controlsContainer);
 
-    // Add toggle button
-    const toggleButton = document.createElement("button");
-    toggleButton.textContent = "🎵";
+    const toggleButton = utilityManager.createElement("button", "", "🎵");
     toggleButton.style.cssText = `
       position: fixed;
       bottom: 10px;
@@ -515,80 +417,85 @@ const audioManager = {
       z-index: 10001;
     `;
 
-    toggleButton.addEventListener("click", () => {
-      const isVisible = controlsContainer.style.display !== "none";
-      controlsContainer.style.display = isVisible ? "none" : "block";
-      toggleButton.style.right = isVisible ? "10px" : "180px";
-    });
+    utilityManager.addEventListener(
+      toggleButton,
+      "click",
+      () => {
+        const isVisible = controlsContainer.style.display !== "none";
+        controlsContainer.style.display = isVisible ? "none" : "block";
+        toggleButton.style.right = isVisible ? "10px" : "180px";
+      },
+      "audioToggle"
+    );
 
     document.body.appendChild(toggleButton);
 
-    // Add event listeners
-    document.getElementById("muteToggle").addEventListener("click", () => {
-      this.toggleMute();
-      document.getElementById("muteToggle").textContent = this.isMuted
-        ? "🔇 Unmute"
-        : "🔊 Mute";
-    });
+    this.setupVolumeControlListeners();
+  },
 
-    // FIX: Proper slider event handling with both input and change events
+  setupVolumeControlListeners() {
+    const muteToggle = document.getElementById("muteToggle");
     const masterSlider = document.getElementById("masterVolume");
     const musicSlider = document.getElementById("musicVolume");
     const sfxSlider = document.getElementById("sfxVolume");
 
-    // FIX: Use both 'input' for real-time and 'change' for final value
-    masterSlider.addEventListener("input", (e) => {
-      this.setMasterVolume(parseFloat(e.target.value));
-    });
-    masterSlider.addEventListener("change", (e) => {
-      this.setMasterVolume(parseFloat(e.target.value));
-    });
+    if (muteToggle) {
+      utilityManager.addEventListener(
+        muteToggle,
+        "click",
+        () => {
+          this.toggleMute();
+          muteToggle.textContent = this.isMuted ? "🔇 Unmute" : "🔊 Mute";
+        },
+        "muteToggle"
+      );
+    }
 
-    musicSlider.addEventListener("input", (e) => {
-      this.setMusicVolume(parseFloat(e.target.value));
-    });
-    musicSlider.addEventListener("change", (e) => {
-      this.setMusicVolume(parseFloat(e.target.value));
-    });
+    if (masterSlider) {
+      utilityManager.addEventListener(
+        masterSlider,
+        "input",
+        (e) => {
+          this.setMasterVolume(parseFloat(e.target.value));
+        },
+        "masterSlider"
+      );
+    }
 
-    sfxSlider.addEventListener("input", (e) => {
-      this.setSfxVolume(parseFloat(e.target.value));
-    });
-    sfxSlider.addEventListener("change", (e) => {
-      this.setSfxVolume(parseFloat(e.target.value));
-    });
+    if (musicSlider) {
+      utilityManager.addEventListener(
+        musicSlider,
+        "input",
+        (e) => {
+          this.setMusicVolume(parseFloat(e.target.value));
+        },
+        "musicSlider"
+      );
+    }
 
-    // FIX: Prevent drag interference by stopping event propagation
-    [masterSlider, musicSlider, sfxSlider].forEach((slider) => {
-      slider.addEventListener("mousedown", (e) => {
-        e.stopPropagation();
-      });
-      slider.addEventListener("touchstart", (e) => {
-        e.stopPropagation();
-      });
-      slider.addEventListener("dragstart", (e) => {
-        e.preventDefault();
-      });
-    });
+    if (sfxSlider) {
+      utilityManager.addEventListener(
+        sfxSlider,
+        "input",
+        (e) => {
+          this.setSfxVolume(parseFloat(e.target.value));
+        },
+        "sfxSlider"
+      );
+    }
   },
 
-  // Helper function to handle user interaction requirement for audio
   handleFirstUserInteraction() {
     if (this.audioContext && this.audioContext.state === "suspended") {
       this.audioContext.resume();
     }
 
-    // Start music if not already playing
     if (!this.currentTrack || this.currentTrack.paused) {
       this.updateBackgroundMusic();
     }
   },
 
-  // FIX: Cleanup method to stop retry system
   cleanup() {
-    if (this.musicRetryInterval) {
-      clearInterval(this.musicRetryInterval);
-      this.musicRetryInterval = null;
-    }
+    utilityManager.clearInterval("musicRetry");
   },
 };

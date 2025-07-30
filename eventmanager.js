@@ -3,13 +3,8 @@ const eventManager = {
   isShowingNotification: false,
   notificationOffset: 0,
 
-  // FIX: Add centralized particle management
   activeParticles: new Set(),
-  particleCleanupInterval: null,
 
-  // Idle detection system
-  idleCheckInterval: null,
-  tutorialScrollInterval: null,
   tutorialMessages: [
     "🥚 Click the free Egg button to place your first animal!",
     "🔄 Drag identical animals together to merge and upgrade them!",
@@ -24,100 +19,62 @@ const eventManager = {
   ],
   currentTutorialIndex: 0,
   lastTutorialTime: 0,
-  tutorialScrollDelay: 6000, // 6 seconds between tutorial messages for initial cycle
   initialTutorialComplete: false,
   isPlayingTutorial: false,
 
   initializeButtonEventListeners() {
-    const buyAutoMergeBtn = document.getElementById("buyAutoMerge");
-    const autoMergeToggleBtn = document.getElementById("autoMergeToggle");
-    const buyShuffleBtn = document.getElementById("buyShuffle");
-    const shuffleToggleBtn = document.getElementById("shuffleToggle");
-    const helpBtn = document.getElementById("helpButton");
-
-    // FIX: Initialize particle cleanup system
     this.initializeParticleCleanup();
+    this.setupButtonListener("buyAutoMerge", () => coopManager.buyAutoMerge());
+    this.setupButtonListener("autoMergeToggle", () =>
+      coopManager.toggleAutoMerge()
+    );
+    this.setupButtonListener("buyShuffle", () => coopManager.buyShuffle());
+    this.setupButtonListener("shuffleToggle", () =>
+      coopManager.toggleShuffle()
+    );
+    this.setupButtonListener("helpButton", () => this.playTutorialSequence());
+  },
 
-    if (buyAutoMergeBtn) {
-      // Add hover sound
-      buyAutoMergeBtn.addEventListener("mouseenter", () => {
-        audioManager.playSound("button-hover");
-      });
+  setupButtonListener(id, callback) {
+    const button = document.getElementById(id);
+    if (button) {
+      utilityManager.addEventListener(
+        button,
+        "mouseenter",
+        () => {
+          audioManager.playSound("button-hover");
+        },
+        `${id}Hover`
+      );
 
-      buyAutoMergeBtn.addEventListener("click", () => {
-        gameState.lastInteractionTime = Date.now(); // Track interaction
-        audioManager.playSound("button-click");
-        coopManager.buyAutoMerge();
-      });
-    }
-
-    if (autoMergeToggleBtn) {
-      // Add hover sound
-      autoMergeToggleBtn.addEventListener("mouseenter", () => {
-        audioManager.playSound("button-hover");
-      });
-
-      autoMergeToggleBtn.addEventListener("click", () => {
-        gameState.lastInteractionTime = Date.now(); // Track interaction
-        audioManager.playSound("button-click");
-        coopManager.toggleAutoMerge();
-      });
-    }
-
-    if (buyShuffleBtn) {
-      // Add hover sound
-      buyShuffleBtn.addEventListener("mouseenter", () => {
-        audioManager.playSound("button-hover");
-      });
-
-      buyShuffleBtn.addEventListener("click", () => {
-        gameState.lastInteractionTime = Date.now(); // Track interaction
-        audioManager.playSound("button-click");
-        coopManager.buyShuffle();
-      });
-    }
-
-    if (shuffleToggleBtn) {
-      // Add hover sound
-      shuffleToggleBtn.addEventListener("mouseenter", () => {
-        audioManager.playSound("button-hover");
-      });
-
-      shuffleToggleBtn.addEventListener("click", () => {
-        gameState.lastInteractionTime = Date.now(); // Track interaction
-        audioManager.playSound("button-click");
-        coopManager.toggleShuffle();
-      });
-    }
-
-    if (helpBtn) {
-      // Add hover sound
-      helpBtn.addEventListener("mouseenter", () => {
-        audioManager.playSound("button-hover");
-      });
-
-      helpBtn.addEventListener("click", () => {
-        gameState.lastInteractionTime = Date.now(); // Track interaction
-        audioManager.playSound("button-click");
-        this.playTutorialSequence();
-      });
+      utilityManager.addEventListener(
+        button,
+        "click",
+        () => {
+          gameState.lastInteractionTime = Date.now();
+          audioManager.playSound("button-click");
+          callback();
+        },
+        `${id}Click`
+      );
     }
   },
 
-  // FIX: Initialize particle cleanup system for optimization
   initializeParticleCleanup() {
-    // Clean up orphaned particles every 5 seconds
-    this.particleCleanupInterval = setInterval(() => {
-      this.cleanupOrphanedParticles();
-    }, 5000);
+    utilityManager.setInterval(
+      () => {
+        this.cleanupOrphanedParticles();
+      },
+      GAME_CONFIG.gameplayConfig.particleCleanupInterval,
+      "particleCleanup"
+    );
   },
 
-  // FIX: Clean up particles that may have been left behind
   cleanupOrphanedParticles() {
     const particles = document.querySelectorAll(
       ".particle, .processing-particle, .flying-coin, .flying-money-value"
     );
-    const maxAge = 10000; // 10 seconds max age for any particle
+    const maxAge = 10000;
     const now = Date.now();
 
     particles.forEach((particle) => {
@@ -132,82 +89,90 @@ const eventManager = {
   },
 
   initializeIdleDetection() {
-    // Check for idle states every 2 seconds
-    this.idleCheckInterval = setInterval(() => {
-      this.checkIdleState();
-    }, 2000);
-
-    // Don't start tutorial cycle here - wait for popup to be closed
+    utilityManager.setInterval(
+      () => {
+        this.checkIdleState();
+      },
+      2000,
+      "idleCheck"
+    );
   },
 
   startInitialTutorialCycle() {
-    // Start the initial tutorial cycle immediately
     this.isPlayingTutorial = true;
     this.currentTutorialIndex = 0;
     this.lastTutorialTime = Date.now();
 
-    // Show first message immediately
     this.showTutorialMessage();
 
-    // Set up interval for the rest of the messages
-    this.tutorialScrollInterval = setInterval(() => {
-      if (this.isPlayingTutorial && !this.initialTutorialComplete) {
-        const now = Date.now();
-        if (now - this.lastTutorialTime >= this.tutorialScrollDelay) {
-          if (this.currentTutorialIndex < this.tutorialMessages.length) {
-            this.showTutorialMessage();
-            this.lastTutorialTime = now;
-          } else {
-            // Initial cycle complete
-            this.initialTutorialComplete = true;
-            this.isPlayingTutorial = false;
-            clearInterval(this.tutorialScrollInterval);
-            this.showHelpButton();
+    utilityManager.setInterval(
+      () => {
+        if (this.isPlayingTutorial && !this.initialTutorialComplete) {
+          const now = Date.now();
+          if (
+            now - this.lastTutorialTime >=
+            GAME_CONFIG.gameplayConfig.tutorialScrollDelay
+          ) {
+            if (this.currentTutorialIndex < this.tutorialMessages.length) {
+              this.showTutorialMessage();
+              this.lastTutorialTime = now;
+            } else {
+              this.initialTutorialComplete = true;
+              this.isPlayingTutorial = false;
+              utilityManager.clearInterval("initialTutorialScroll");
+              this.showHelpButton();
+            }
           }
         }
-      }
-    }, 1000);
+      },
+      1000,
+      "initialTutorialScroll"
+    );
   },
 
   playTutorialSequence() {
-    if (this.isPlayingTutorial) return; // Don't start if already playing
+    if (this.isPlayingTutorial) return;
 
     this.isPlayingTutorial = true;
     this.currentTutorialIndex = 0;
     this.lastTutorialTime = Date.now();
 
-    // Show first message immediately
     this.showTutorialMessage();
 
-    // Set up interval for manual tutorial playback
-    this.tutorialScrollInterval = setInterval(() => {
-      if (this.isPlayingTutorial) {
-        const now = Date.now();
-        if (now - this.lastTutorialTime >= this.tutorialScrollDelay) {
-          if (this.currentTutorialIndex < this.tutorialMessages.length) {
-            this.showTutorialMessage();
-            this.lastTutorialTime = now;
-          } else {
-            // Manual cycle complete
-            this.isPlayingTutorial = false;
-            clearInterval(this.tutorialScrollInterval);
+    utilityManager.setInterval(
+      () => {
+        if (this.isPlayingTutorial) {
+          const now = Date.now();
+          if (
+            now - this.lastTutorialTime >=
+            GAME_CONFIG.gameplayConfig.tutorialScrollDelay
+          ) {
+            if (this.currentTutorialIndex < this.tutorialMessages.length) {
+              this.showTutorialMessage();
+              this.lastTutorialTime = now;
+            } else {
+              this.isPlayingTutorial = false;
+              utilityManager.clearInterval("manualTutorial");
+            }
           }
         }
-      }
-    }, 1000);
+      },
+      1000,
+      "manualTutorial"
+    );
   },
 
   showHelpButton() {
-    // Add help button to the status area or a suitable location
     const statusElement = document.getElementById("status");
     if (statusElement && !document.getElementById("helpButton")) {
-      const helpButton = document.createElement("button");
+      const helpButton = utilityManager.createElement(
+        "button",
+        "help-button",
+        "❓"
+      );
       helpButton.id = "helpButton";
-      helpButton.className = "help-button";
-      helpButton.innerHTML = "❓";
       helpButton.title = "Show tutorial tips";
 
-      // Position the help button in the corner of the status area
       helpButton.style.cssText = `
         position: absolute;
         top: 8px;
@@ -228,28 +193,40 @@ const eventManager = {
         z-index: 10;
       `;
 
-      // Add hover effect
-      helpButton.addEventListener("mouseenter", () => {
-        audioManager.playSound("button-hover");
-        helpButton.style.transform = "scale(1.1)";
-        helpButton.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.4)";
-      });
+      utilityManager.addEventListener(
+        helpButton,
+        "mouseenter",
+        () => {
+          audioManager.playSound("button-hover");
+          helpButton.style.transform = "scale(1.1)";
+          helpButton.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.4)";
+        },
+        "helpHover"
+      );
 
-      helpButton.addEventListener("mouseleave", () => {
-        helpButton.style.transform = "scale(1)";
-        helpButton.style.boxShadow = "0 2px 8px rgba(59, 130, 246, 0.3)";
-      });
+      utilityManager.addEventListener(
+        helpButton,
+        "mouseleave",
+        () => {
+          helpButton.style.transform = "scale(1)";
+          helpButton.style.boxShadow = "0 2px 8px rgba(59, 130, 246, 0.3)";
+        },
+        "helpLeave"
+      );
 
-      // Make status element relative positioned so the button can be positioned absolutely within it
+      utilityManager.addEventListener(
+        helpButton,
+        "click",
+        () => {
+          gameState.lastInteractionTime = Date.now();
+          audioManager.playSound("button-click");
+          this.playTutorialSequence();
+        },
+        "helpClick"
+      );
+
       statusElement.style.position = "relative";
       statusElement.appendChild(helpButton);
-
-      // Add event listener (will be picked up by initializeButtonEventListeners)
-      helpButton.addEventListener("click", () => {
-        gameState.lastInteractionTime = Date.now();
-        audioManager.playSound("button-click");
-        this.playTutorialSequence();
-      });
     }
   },
 
@@ -257,21 +234,21 @@ const eventManager = {
     const now = Date.now();
     const timeSinceLastInteraction = now - gameState.lastInteractionTime;
 
-    // Check for 10 second idle + open space for egg glow
-    if (timeSinceLastInteraction >= 10000) {
+    if (
+      timeSinceLastInteraction >= GAME_CONFIG.gameplayConfig.idleDetectionTime
+    ) {
       this.handleEggGlowIdle();
     }
 
-    // Check for 20 second idle + animals present for wiggle
-    if (timeSinceLastInteraction >= 20000) {
+    if (
+      timeSinceLastInteraction >= GAME_CONFIG.gameplayConfig.animalWiggleTime
+    ) {
       this.handleAnimalWiggleIdle();
-      // Reset the interaction time to prevent constant wiggling
-      gameState.lastInteractionTime = now - 15000; // Reset to 15 seconds ago
+      gameState.lastInteractionTime = now - 15000;
     }
   },
 
   handleEggGlowIdle() {
-    // Check if there's an open space on the board
     const hasOpenSpace = GAME_CONFIG.gridConfig.availableSpots.some(
       ({ row, col }) =>
         gameState.purchasedCells.has(`${row}-${col}`) &&
@@ -279,19 +256,21 @@ const eventManager = {
     );
 
     if (hasOpenSpace && !gameState.eggButtonClicked) {
-      // Make the free egg button glow and scale once
       const eggButton = document.getElementById("buyEgg");
       if (eggButton && !eggButton.classList.contains("egg-button-pulse")) {
         eggButton.classList.add("glow", "pulse");
-        setTimeout(() => {
-          eggButton.classList.remove("glow", "pulse");
-        }, 3000); // Remove after 3 seconds (glow animation runs 3 times)
+        utilityManager.setTimeout(
+          () => {
+            eggButton.classList.remove("glow", "pulse");
+          },
+          3000,
+          "eggGlow"
+        );
       }
     }
   },
 
   handleAnimalWiggleIdle() {
-    // Find all animals/eggs on the board
     const occupiedCells = [];
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col }) => {
       if (
@@ -303,7 +282,6 @@ const eventManager = {
     });
 
     if (occupiedCells.length > 0) {
-      // Pick a random animal to wiggle
       const randomCell =
         occupiedCells[Math.floor(Math.random() * occupiedCells.length)];
       const cellElement = document.getElementById(
@@ -311,11 +289,14 @@ const eventManager = {
       );
 
       if (cellElement) {
-        // Add wiggle animation
         cellElement.classList.add("butcher-wiggle");
-        setTimeout(() => {
-          cellElement.classList.remove("butcher-wiggle");
-        }, 1000); // Remove after 1 second
+        utilityManager.setTimeout(
+          () => {
+            cellElement.classList.remove("butcher-wiggle");
+          },
+          1000,
+          "animalWiggle"
+        );
       }
     }
   },
@@ -327,46 +308,25 @@ const eventManager = {
 
     const message = this.tutorialMessages[this.currentTutorialIndex];
     this.currentTutorialIndex++;
-
-    // FIX: Use status system instead of achievement notifications for tutorial messages
     updateStatus(message);
   },
 
   startInitialEggButtonAnimation() {
-    console.log("startInitialEggButtonAnimation called");
-    console.log(`gameState.eggButtonClicked: ${gameState.eggButtonClicked}`);
-
-    // The animation is now applied via CSS class in generateBuyAnimalButtons
-    // This method is called to ensure the animation starts
     const eggButton = document.getElementById("buyEgg");
-    console.log("eggButton found:", eggButton);
-
     if (eggButton && !gameState.eggButtonClicked) {
-      console.log("Adding egg-button-pulse class");
       eggButton.classList.add("egg-button-pulse");
-    } else {
-      console.log("Not adding animation - button not found or already clicked");
     }
   },
 
   stopInitialEggButtonAnimation() {
-    console.log("stopInitialEggButtonAnimation called");
     const eggButton = document.getElementById("buyEgg");
-    console.log("eggButton found:", eggButton);
-
     if (eggButton) {
-      console.log("Removing egg-button-pulse class");
-      console.log("Classes before removal:", eggButton.className);
       eggButton.classList.remove("egg-button-pulse");
-      console.log("Classes after removal:", eggButton.className);
-    } else {
-      console.log("Egg button not found when trying to stop animation");
     }
   },
 
   showDemoEndedPopup() {
-    const backdrop = document.createElement("div");
-    backdrop.className = "demo-ended-backdrop";
+    const backdrop = utilityManager.createElement("div", "demo-ended-backdrop");
     backdrop.style.cssText = `
       position: fixed;
       top: 0;
@@ -380,8 +340,7 @@ const eventManager = {
       justify-content: center;
     `;
 
-    const popup = document.createElement("div");
-    popup.className = "demo-ended-popup";
+    const popup = utilityManager.createElement("div", "demo-ended-popup");
     popup.style.cssText = `
       background: linear-gradient(145deg, #1f2937, #374151);
       padding: 2rem;
@@ -460,37 +419,71 @@ const eventManager = {
     const closeButton = document.getElementById("closeDemoPopup");
     const creditsButton = document.getElementById("showDemoCredits");
 
-    closeButton.addEventListener("mouseenter", () => {
-      audioManager.playSound("button-hover");
-    });
-    closeButton.addEventListener("click", () => {
-      audioManager.playSound("button-click");
-      backdrop.remove();
-    });
+    utilityManager.addEventListener(
+      closeButton,
+      "mouseenter",
+      () => {
+        audioManager.playSound("button-hover");
+      },
+      "demoCloseHover"
+    );
 
-    creditsButton.addEventListener("mouseenter", () => {
-      audioManager.playSound("button-hover");
-    });
-    creditsButton.addEventListener("click", () => {
-      audioManager.playSound("button-click");
-      showCreditsGallery();
-    });
-
-    backdrop.addEventListener("click", (e) => {
-      if (e.target === backdrop) {
+    utilityManager.addEventListener(
+      closeButton,
+      "click",
+      () => {
         audioManager.playSound("button-click");
         backdrop.remove();
-      }
-    });
+      },
+      "demoClose"
+    );
+
+    utilityManager.addEventListener(
+      creditsButton,
+      "mouseenter",
+      () => {
+        audioManager.playSound("button-hover");
+      },
+      "demoCreditsHover"
+    );
+
+    utilityManager.addEventListener(
+      creditsButton,
+      "click",
+      () => {
+        audioManager.playSound("button-click");
+        if (typeof showCreditsGallery === "function") {
+          showCreditsGallery();
+        }
+      },
+      "demoCredits"
+    );
+
+    utilityManager.addEventListener(
+      backdrop,
+      "click",
+      (e) => {
+        if (e.target === backdrop) {
+          audioManager.playSound("button-click");
+          backdrop.remove();
+        }
+      },
+      "demoBackdrop"
+    );
 
     const escapeHandler = (e) => {
       if (e.key === "Escape") {
         audioManager.playSound("button-click");
         backdrop.remove();
-        document.removeEventListener("keydown", escapeHandler);
+        utilityManager.removeEventListeners("demoEscape");
       }
     };
-    document.addEventListener("keydown", escapeHandler);
+    utilityManager.addEventListener(
+      document,
+      "keydown",
+      escapeHandler,
+      "demoEscape"
+    );
   },
 
   queueNotification(message) {
@@ -499,7 +492,6 @@ const eventManager = {
   },
 
   processNotificationQueue() {
-    // Don't show regular notifications while tutorial is playing (except for the initial cycle)
     if (
       this.isShowingNotification ||
       this.notificationQueue.length === 0 ||
@@ -514,15 +506,18 @@ const eventManager = {
   },
 
   showNotification(message) {
-    const notification = document.createElement("div");
-    notification.className = "achievement-popup";
+    const notification = utilityManager.createElement(
+      "div",
+      "achievement-popup",
+      `
+      <div class="flex items-center space-x-2">
+        <div class="text-2xl">🏆</div>
+        <div class="font-bold text-yellow-800">${message}</div>
+      </div>
+    `
+    );
+
     notification.style.top = `${20 + this.notificationOffset}px`;
-    notification.innerHTML = `
-        <div class="flex items-center space-x-2">
-            <div class="text-2xl">🏆</div>
-            <div class="font-bold text-yellow-800">${message}</div>
-        </div>
-    `;
     document.body.appendChild(notification);
 
     requestAnimationFrame(() => {
@@ -532,17 +527,25 @@ const eventManager = {
 
     this.notificationOffset += 80;
 
-    setTimeout(() => {
-      notification.style.transform = "translateX(100%)";
-      notification.style.opacity = "0";
+    utilityManager.setTimeout(
+      () => {
+        notification.style.transform = "translateX(100%)";
+        notification.style.opacity = "0";
 
-      setTimeout(() => {
-        notification.remove();
-        this.notificationOffset -= 80;
-        this.isShowingNotification = false;
-        this.processNotificationQueue();
-      }, 500);
-    }, GAME_CONFIG.animationConfig.achievementDuration);
+        utilityManager.setTimeout(
+          () => {
+            notification.remove();
+            this.notificationOffset -= 80;
+            this.isShowingNotification = false;
+            this.processNotificationQueue();
+          },
+          500,
+          "notificationRemove"
+        );
+      },
+      GAME_CONFIG.animationConfig.achievementDuration,
+      "notificationHide"
+    );
   },
 
   clearWiggleGlow() {
@@ -558,58 +561,53 @@ const eventManager = {
   },
 
   showAchievement(message) {
-    // Play achievement awarded sound
     audioManager.playSound("achievement-awarded");
     this.queueNotification(message);
   },
 
   showFloatingNumber(text, parent) {
-    const number = document.createElement("div");
-    number.className = "floating-number";
-    number.textContent = text;
+    const number = utilityManager.createElement("div", "floating-number", text);
     number.style.left = "50%";
     number.style.top = "50%";
     number.style.transform = "translate(-50%, -50%)";
-
-    // FIX: Add timestamp for cleanup tracking
     number.dataset.created = Date.now().toString();
 
     parent.appendChild(number);
     this.activeParticles.add(number);
 
-    setTimeout(() => {
-      if (number.parentNode) {
-        number.parentNode.removeChild(number);
-      }
-      this.activeParticles.delete(number);
-    }, GAME_CONFIG.animationConfig.floatingNumberDuration);
+    utilityManager.setTimeout(
+      () => {
+        if (number.parentNode) {
+          number.parentNode.removeChild(number);
+        }
+        this.activeParticles.delete(number);
+      },
+      GAME_CONFIG.animationConfig.floatingNumberDuration,
+      "floatingNumber"
+    );
   },
 
-  // FIX: Enhanced particle creation with limits and optimization
   createParticles(element, value = null) {
     const rect = element.getBoundingClientRect();
     const container = document.body;
 
-    // FIX: Dynamic particle count based on value with reasonable limits
-    let particleCount = GAME_CONFIG.animationConfig.particleCount; // Default 20
+    let particleCount = GAME_CONFIG.animationConfig.particleCount;
 
     if (value !== null) {
-      // Scale particle count based on value, but cap it for performance
-      const minParticles = 5;
-      const maxParticles = 30; // Maximum for performance
-      const scaledCount = Math.floor(value / 100) + minParticles; // 1 particle per 100 value
-      particleCount = Math.min(scaledCount, maxParticles);
+      const scaledCount =
+        Math.floor(value / 100) + GAME_CONFIG.animationConfig.minParticles;
+      particleCount = Math.min(
+        scaledCount,
+        GAME_CONFIG.animationConfig.maxParticles
+      );
     }
 
     for (let i = 0; i < particleCount; i++) {
-      const particle = document.createElement("div");
-      particle.className = "particle";
+      const particle = utilityManager.createElement("div", "particle");
       particle.style.left = `${rect.left + rect.width / 2}px`;
       particle.style.top = `${rect.top + rect.height / 2}px`;
       particle.style.animationDelay = `${Math.random() * 0.5}s`;
       particle.style.animationDuration = `${1 + Math.random() * 1}s`;
-
-      // FIX: Add timestamp for cleanup tracking
       particle.dataset.created = Date.now().toString();
 
       const angle = (Math.PI * 2 * i) / particleCount;
@@ -620,33 +618,25 @@ const eventManager = {
       container.appendChild(particle);
       this.activeParticles.add(particle);
 
-      setTimeout(() => {
-        if (particle.parentNode) {
-          particle.parentNode.removeChild(particle);
-        }
-        this.activeParticles.delete(particle);
-      }, 2000);
+      utilityManager.setTimeout(
+        () => {
+          if (particle.parentNode) {
+            particle.parentNode.removeChild(particle);
+          }
+          this.activeParticles.delete(particle);
+        },
+        2000,
+        `particle_${i}`
+      );
     }
   },
 
-  // FIX: Cleanup method to be called when game is shut down
   cleanup() {
-    if (this.particleCleanupInterval) {
-      clearInterval(this.particleCleanupInterval);
-      this.particleCleanupInterval = null;
-    }
+    utilityManager.clearInterval("particleCleanup");
+    utilityManager.clearInterval("idleCheck");
+    utilityManager.clearInterval("initialTutorialScroll");
+    utilityManager.clearInterval("manualTutorial");
 
-    if (this.idleCheckInterval) {
-      clearInterval(this.idleCheckInterval);
-      this.idleCheckInterval = null;
-    }
-
-    if (this.tutorialScrollInterval) {
-      clearInterval(this.tutorialScrollInterval);
-      this.tutorialScrollInterval = null;
-    }
-
-    // Remove all active particles
     this.activeParticles.forEach((particle) => {
       if (particle.parentNode) {
         particle.parentNode.removeChild(particle);

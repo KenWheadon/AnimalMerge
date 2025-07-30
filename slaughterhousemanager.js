@@ -1,22 +1,11 @@
 const slaughterHouseManager = {
-  domCache: new Map(),
-  eventListeners: new Map(),
-  tooltipCache: null,
-  processingIntervals: new Map(),
-  particleIntervals: new Map(),
-  // FIX: Track if splat sound has been played for current animal
   splatSoundPlayed: new Map(),
 
   generateSlaughterHouseHTML() {
-    // Check if slaughter house should be visible (Mantis has been created)
     const shouldShowSlaughterHouse = gameState.createdAnimals.has("Mantis");
 
     if (!shouldShowSlaughterHouse) {
-      // Return placeholder that maintains layout but is invisible/empty
-      return `
-        <div id="slaughterHousePlaceholder" class="hidden">
-        </div>
-      `;
+      return `<div id="slaughterHousePlaceholder" class="hidden"></div>`;
     }
 
     const house = gameState.slaughterHouses[0];
@@ -29,7 +18,7 @@ const slaughterHouseManager = {
           </div>
           
           <div class="compact-queue-display">
-            Queue:&nbsp;<span id="queueCount0">${house.queue.length}</span>/10
+            Queue:&nbsp;<span id="queueCount0">${house.queue.length}</span>/${GAME_CONFIG.gameplayConfig.slaughterHouseQueueMax}
           </div>
         </div>
         
@@ -45,35 +34,33 @@ const slaughterHouseManager = {
     const container = document.getElementById("slaughterHouseContainer");
     if (!container) return;
 
-    // Check if visibility state has changed
     const shouldShowSlaughterHouse = gameState.createdAnimals.has("Mantis");
     const currentlyVisible = !container.querySelector(
       "#slaughterHousePlaceholder"
     );
 
     if (shouldShowSlaughterHouse !== currentlyVisible) {
-      // Regenerate the HTML with new visibility state
       this.updateSlaughterHouseDisplay();
     }
   },
 
   initializeSlaughterHouses() {
-    if (!gameState.slaughterHouses || gameState.slaughterHouses.length === 0) {
-      gameState.slaughterHouses = [
-        {
-          level: 1,
-          processTime: 5.0,
-          timer: 0,
-          queue: [],
-          currentAnimal: null,
-        },
-      ];
-    }
+    gameState.slaughterHouses = [
+      {
+        level: 1,
+        processTime: GAME_CONFIG.gameplayConfig.slaughterHouseProcessTime,
+        timer: 0,
+        queue: [],
+        currentAnimal: null,
+      },
+    ];
   },
 
   addAnimalToQueue(houseIndex, animalType, gridI, gridJ) {
-    const house = gameState.slaughterHouses[0]; // Always use first house since there's only one
-    if (house.queue.length >= 10) {
+    const house = gameState.slaughterHouses[0];
+    if (
+      house.queue.length >= GAME_CONFIG.gameplayConfig.slaughterHouseQueueMax
+    ) {
       audioManager.playSound("invalid-action");
       updateStatus("Slaughter house queue is full! 😕");
       return false;
@@ -104,7 +91,6 @@ const slaughterHouseManager = {
     if (!house.currentAnimal && house.queue.length > 0) {
       house.currentAnimal = house.queue.shift();
       house.timer = house.processTime;
-      // FIX: Reset splat sound flag for new animal
       this.splatSoundPlayed.set(0, false);
       this.updateSlaughterHouseQueue(0);
       this.startProcessingAnimation(0);
@@ -113,20 +99,23 @@ const slaughterHouseManager = {
 
   startProcessingAnimation(houseIndex) {
     const house = gameState.slaughterHouses[0];
-    const slaughterHouse = document.getElementById(`slaughterHouse0`);
+    const slaughterHouse = document.getElementById("slaughterHouse0");
     if (!slaughterHouse || !house.currentAnimal) return;
 
-    // Play butcher shop sound when processing actually starts
     audioManager.playSound("butcher-shop");
 
     this.clearProcessingAnimation(0);
 
-    const processingAnimal = document.createElement("div");
-    processingAnimal.className = "processing-animal";
+    const processingAnimal = utilityManager.createElement(
+      "div",
+      "processing-animal",
+      `
+      <img src="${GAME_CONFIG.animalImages[house.currentAnimal.type]}" alt="${
+        house.currentAnimal.type
+      }" class="processing-animal-image" />
+    `
+    );
     processingAnimal.id = `processingAnimal0`;
-    processingAnimal.innerHTML = `<img src="${
-      GAME_CONFIG.animalImages[house.currentAnimal.type]
-    }" alt="${house.currentAnimal.type}" class="processing-animal-image" />`;
     slaughterHouse.appendChild(processingAnimal);
 
     this.startProcessingParticles(0);
@@ -138,57 +127,60 @@ const slaughterHouseManager = {
   },
 
   startProcessingParticles(houseIndex) {
-    const slaughterHouse = document.getElementById(`slaughterHouse0`);
+    const slaughterHouse = document.getElementById("slaughterHouse0");
     if (!slaughterHouse) return;
 
-    const existingParticles = slaughterHouse.querySelectorAll(
-      ".processing-particle"
+    utilityManager.removeElementsByClass("processing-particle");
+
+    utilityManager.setInterval(
+      () => {
+        const house = gameState.slaughterHouses[0];
+        if (!house.currentAnimal) {
+          utilityManager.clearInterval("processingParticles");
+          return;
+        }
+
+        for (let i = 0; i < utilityManager.randomBetween(3, 6); i++) {
+          const particle = utilityManager.createElement(
+            "div",
+            "processing-particle"
+          );
+          particle.style.left = `${utilityManager.randomBetween(10, 90)}%`;
+          particle.style.top = `${utilityManager.randomBetween(10, 90)}%`;
+          particle.style.animationDelay = `${utilityManager.randomBetween(
+            0,
+            0.5
+          )}s`;
+          slaughterHouse.appendChild(particle);
+
+          utilityManager.setTimeout(
+            () => {
+              if (particle.parentNode) {
+                particle.parentNode.removeChild(particle);
+              }
+            },
+            1000,
+            `particle_${Date.now()}_${i}`
+          );
+        }
+      },
+      200,
+      "processingParticles"
     );
-    existingParticles.forEach((particle) => particle.remove());
-
-    const particleInterval = setInterval(() => {
-      const house = gameState.slaughterHouses[0];
-      if (!house.currentAnimal) {
-        clearInterval(particleInterval);
-        return;
-      }
-
-      for (let i = 0; i < Math.random() * 3 + 3; i++) {
-        const particle = document.createElement("div");
-        particle.className = "processing-particle";
-        particle.style.left = `${Math.random() * 80 + 10}%`;
-        particle.style.top = `${Math.random() * 80 + 10}%`;
-        particle.style.animationDelay = `${Math.random() * 0.5}s`;
-        slaughterHouse.appendChild(particle);
-
-        setTimeout(() => {
-          if (particle.parentNode) {
-            particle.parentNode.removeChild(particle);
-          }
-        }, 1000);
-      }
-    }, 200);
-
-    this.particleIntervals.set(0, particleInterval);
   },
 
   clearProcessingAnimation(houseIndex) {
-    const slaughterHouse = document.getElementById(`slaughterHouse0`);
+    const slaughterHouse = document.getElementById("slaughterHouse0");
     if (!slaughterHouse) return;
 
-    const processingAnimal = document.getElementById(`processingAnimal0`);
+    const processingAnimal = document.getElementById("processingAnimal0");
     if (processingAnimal) {
       processingAnimal.remove();
     }
 
-    const particleInterval = this.particleIntervals.get(0);
-    if (particleInterval) {
-      clearInterval(particleInterval);
-      this.particleIntervals.delete(0);
-    }
+    utilityManager.clearInterval("processingParticles");
 
-    const particles = slaughterHouse.querySelectorAll(".processing-particle");
-    particles.forEach((particle) => particle.remove());
+    utilityManager.removeElementsByClass("processing-particle");
 
     const dropZoneText = slaughterHouse.querySelector(".drop-zone-text");
     if (dropZoneText) {
@@ -197,23 +189,25 @@ const slaughterHouseManager = {
   },
 
   createProcessingBurst(houseIndex) {
-    const slaughterHouse = document.getElementById(`slaughterHouse0`);
+    const slaughterHouse = document.getElementById("slaughterHouse0");
     if (!slaughterHouse) return;
 
-    const burst = document.createElement("div");
-    burst.className = "processing-burst";
-    burst.textContent = "💥";
+    const burst = utilityManager.createElement("div", "processing-burst", "💥");
     slaughterHouse.appendChild(burst);
 
-    setTimeout(() => {
-      if (burst.parentNode) {
-        burst.parentNode.removeChild(burst);
-      }
-    }, 800);
+    utilityManager.setTimeout(
+      () => {
+        if (burst.parentNode) {
+          burst.parentNode.removeChild(burst);
+        }
+      },
+      800,
+      "processingBurst"
+    );
   },
 
   createFlyingCoins(houseIndex, value) {
-    const slaughterHouse = document.getElementById(`slaughterHouse0`);
+    const slaughterHouse = document.getElementById("slaughterHouse0");
     const moneyDisplay = document.getElementById("money");
 
     if (!slaughterHouse || !moneyDisplay) return;
@@ -221,69 +215,78 @@ const slaughterHouseManager = {
     const slaughterRect = slaughterHouse.getBoundingClientRect();
     const moneyRect = moneyDisplay.getBoundingClientRect();
 
-    // FIX: Limit number of coins based on value with reasonable maximum
-    const maxCoins = 15; // Maximum number of coins to prevent performance issues
-    const baseCoins = Math.ceil(value / 10);
-    const numCoins = Math.min(baseCoins, maxCoins);
+    const maxCoins = Math.min(
+      Math.ceil(value / 10),
+      GAME_CONFIG.animationConfig.maxParticles
+    );
     const displayValue = `+${value}`;
 
-    const moneyValue = document.createElement("div");
-    moneyValue.className = "flying-money-value";
-    moneyValue.textContent = displayValue;
+    const moneyValue = utilityManager.createElement(
+      "div",
+      "flying-money-value",
+      displayValue
+    );
     moneyValue.style.left = `${slaughterRect.left + slaughterRect.width / 2}px`;
     moneyValue.style.top = `${slaughterRect.top + slaughterRect.height / 2}px`;
     document.body.appendChild(moneyValue);
 
-    setTimeout(() => {
-      if (moneyValue.parentNode) {
-        moneyValue.parentNode.removeChild(moneyValue);
-      }
-    }, 2000);
+    utilityManager.setTimeout(
+      () => {
+        if (moneyValue.parentNode) {
+          moneyValue.parentNode.removeChild(moneyValue);
+        }
+      },
+      2000,
+      "flyingMoneyValue"
+    );
 
-    for (let i = 0; i < numCoins; i++) {
-      setTimeout(() => {
-        const coin = document.createElement("div");
-        coin.className = "flying-coin";
-        coin.style.left = `${
-          slaughterRect.left + slaughterRect.width / 2 - 16
-        }px`;
-        coin.style.top = `${
-          slaughterRect.top + slaughterRect.height / 2 - 16
-        }px`;
-        document.body.appendChild(coin);
+    for (let i = 0; i < maxCoins; i++) {
+      utilityManager.setTimeout(
+        () => {
+          const coin = utilityManager.createElement("div", "flying-coin");
+          coin.style.left = `${
+            slaughterRect.left + slaughterRect.width / 2 - 16
+          }px`;
+          coin.style.top = `${
+            slaughterRect.top + slaughterRect.height / 2 - 16
+          }px`;
+          document.body.appendChild(coin);
 
-        const deltaX =
-          moneyRect.left +
-          moneyRect.width / 2 -
-          (slaughterRect.left + slaughterRect.width / 2);
-        const deltaY =
-          moneyRect.top +
-          moneyRect.height / 2 -
-          (slaughterRect.top + slaughterRect.height / 2);
+          const deltaX =
+            moneyRect.left +
+            moneyRect.width / 2 -
+            (slaughterRect.left + slaughterRect.width / 2);
+          const deltaY =
+            moneyRect.top +
+            moneyRect.height / 2 -
+            (slaughterRect.top + slaughterRect.height / 2);
 
-        coin
-          .animate(
-            [
+          coin
+            .animate(
+              [
+                {
+                  transform: "translate(0, 0) scale(1) rotate(0deg)",
+                  opacity: 1,
+                },
+                {
+                  transform: `translate(${deltaX}px, ${deltaY}px) scale(0.8) rotate(360deg)`,
+                  opacity: 0,
+                },
+              ],
               {
-                transform: "translate(0, 0) scale(1) rotate(0deg)",
-                opacity: 1,
-              },
-              {
-                transform: `translate(${deltaX}px, ${deltaY}px) scale(0.8) rotate(360deg)`,
-                opacity: 0,
-              },
-            ],
-            {
-              duration: 1000 + i * 100,
-              easing: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-            }
-          )
-          .addEventListener("finish", () => {
-            if (coin.parentNode) {
-              coin.parentNode.removeChild(coin);
-            }
-          });
-      }, i * 50);
+                duration: 1000 + i * 100,
+                easing: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+              }
+            )
+            .addEventListener("finish", () => {
+              if (coin.parentNode) {
+                coin.parentNode.removeChild(coin);
+              }
+            });
+        },
+        i * 50,
+        `flyingCoin_${i}`
+      );
     }
   },
 
@@ -292,13 +295,12 @@ const slaughterHouseManager = {
     if (house && house.currentAnimal) {
       house.timer -= 1;
 
-      const progressBar = document.getElementById(`processingProgress0`);
+      const progressBar = document.getElementById("processingProgress0");
       if (progressBar) {
         const progress =
           ((house.processTime - house.timer) / house.processTime) * 100;
         progressBar.style.width = `${progress}%`;
 
-        // FIX: Play splat sound at 90% completion (before reward sound)
         if (progress >= 90 && !this.splatSoundPlayed.get(0)) {
           audioManager.playRandomSound("butcher-done");
           this.splatSoundPlayed.set(0, true);
@@ -310,21 +312,19 @@ const slaughterHouseManager = {
         gameState.money += animal.value;
         gameState.totalSlaughtered += 1;
 
-        // Play earn money sound (reward sound plays after splat)
         audioManager.playSound("earn-money");
 
         updateMoney();
         updateAutoMergeLevel();
-        saveManager.saveOnAction(); // Save after selling animal
+        saveManager.saveOnAction();
 
-        // Check achievements after selling animal
         achievementManager.checkAchievements();
 
         this.createProcessingBurst(0);
         this.createFlyingCoins(0, animal.value);
         this.clearProcessingAnimation(0);
 
-        const progressBar = document.getElementById(`processingProgress0`);
+        const progressBar = document.getElementById("processingProgress0");
         if (progressBar) {
           progressBar.style.width = "0%";
         }
@@ -340,7 +340,7 @@ const slaughterHouseManager = {
 
   updateSlaughterHouseQueue(index) {
     const house = gameState.slaughterHouses[0];
-    const queueCount = document.getElementById(`queueCount0`);
+    const queueCount = document.getElementById("queueCount0");
 
     if (queueCount) {
       queueCount.textContent = house.queue.length;
@@ -351,55 +351,22 @@ const slaughterHouseManager = {
     const container = document.getElementById("slaughterHouseContainer");
     if (!container) return;
 
-    this.domCache.clear();
-    this.cleanupEventListeners();
-    this.cleanupAnimations();
+    utilityManager.removeEventListeners("slaughterHouse");
+    this.clearProcessingAnimation(0);
 
     container.innerHTML = this.generateSlaughterHouseHTML();
     this.initializeSlaughterHouseEventListeners();
   },
 
-  cleanupAnimations() {
-    this.processingIntervals.forEach((interval) => clearInterval(interval));
-    this.processingIntervals.clear();
-
-    this.particleIntervals.forEach((interval) => clearInterval(interval));
-    this.particleIntervals.clear();
-
-    document
-      .querySelectorAll(
-        ".processing-animal, .processing-particle, .processing-burst, .flying-coin, .flying-money-value"
-      )
-      .forEach((element) => {
-        if (element.parentNode) {
-          element.parentNode.removeChild(element);
-        }
-      });
-  },
-
-  cleanupEventListeners() {
-    this.eventListeners.forEach((listeners, element) => {
-      listeners.forEach(({ event, handler }) => {
-        element.removeEventListener(event, handler);
-      });
-    });
-    this.eventListeners.clear();
-  },
-
   initializeSlaughterHouseEventListeners() {
-    // Only initialize if slaughter house is visible
     const shouldShowSlaughterHouse = gameState.createdAnimals.has("Mantis");
     if (!shouldShowSlaughterHouse) return;
 
-    const slaughterHouse = document.getElementById(`slaughterHouse0`);
+    const slaughterHouse = document.getElementById("slaughterHouse0");
     if (slaughterHouse) {
-      this.domCache.set(`slaughterHouse0`, slaughterHouse);
-
-      // Add hover sound for slaughter house
       const dragOverHandler = (e) => {
         e.preventDefault();
         slaughterHouse.classList.add("drag-over");
-        // audioManager.playSound("button-hover");
       };
       const dragLeaveHandler = () => {
         slaughterHouse.classList.remove("drag-over");
@@ -407,34 +374,44 @@ const slaughterHouseManager = {
       const dropHandler = (e) => this.handleSlaughterDrop(e, 0);
       const touchEndHandler = (e) => this.handleSlaughterTouchEnd(e, 0);
 
-      slaughterHouse.addEventListener("dragover", dragOverHandler);
-      slaughterHouse.addEventListener("dragleave", dragLeaveHandler);
-      slaughterHouse.addEventListener("drop", dropHandler);
-      slaughterHouse.addEventListener("touchend", touchEndHandler);
-
-      this.eventListeners.set(slaughterHouse, [
-        { event: "dragover", handler: dragOverHandler },
-        { event: "dragleave", handler: dragLeaveHandler },
-        { event: "drop", handler: dropHandler },
-        { event: "touchend", handler: touchEndHandler },
-      ]);
+      utilityManager.addEventListener(
+        slaughterHouse,
+        "dragover",
+        dragOverHandler,
+        "slaughterHouseDragOver"
+      );
+      utilityManager.addEventListener(
+        slaughterHouse,
+        "dragleave",
+        dragLeaveHandler,
+        "slaughterHouseDragLeave"
+      );
+      utilityManager.addEventListener(
+        slaughterHouse,
+        "drop",
+        dropHandler,
+        "slaughterHouseDrop"
+      );
+      utilityManager.addEventListener(
+        slaughterHouse,
+        "touchend",
+        touchEndHandler,
+        "slaughterHouseTouchEnd"
+      );
     }
 
-    // Also add event listeners to the entire slaughter house section for full-area dropping
     const slaughterSection = document.querySelector(".slaughter-house-section");
     if (slaughterSection) {
       const sectionDragOverHandler = (e) => {
         e.preventDefault();
-        const slaughterHouse = document.getElementById(`slaughterHouse0`);
+        const slaughterHouse = document.getElementById("slaughterHouse0");
         if (slaughterHouse) {
           slaughterHouse.classList.add("drag-over");
-          // audioManager.playSound("button-hover");
         }
       };
       const sectionDragLeaveHandler = (e) => {
-        // Only remove if we're leaving the entire section
         if (!slaughterSection.contains(e.relatedTarget)) {
-          const slaughterHouse = document.getElementById(`slaughterHouse0`);
+          const slaughterHouse = document.getElementById("slaughterHouse0");
           if (slaughterHouse) {
             slaughterHouse.classList.remove("drag-over");
           }
@@ -443,37 +420,36 @@ const slaughterHouseManager = {
       const sectionDropHandler = (e) => this.handleSlaughterDrop(e, 0);
       const sectionTouchEndHandler = (e) => this.handleSlaughterTouchEnd(e, 0);
 
-      slaughterSection.addEventListener("dragover", sectionDragOverHandler);
-      slaughterSection.addEventListener("dragleave", sectionDragLeaveHandler);
-      slaughterSection.addEventListener("drop", sectionDropHandler);
-      slaughterSection.addEventListener("touchend", sectionTouchEndHandler);
-
-      this.eventListeners.set(slaughterSection, [
-        { event: "dragover", handler: sectionDragOverHandler },
-        { event: "dragleave", handler: sectionDragLeaveHandler },
-        { event: "drop", handler: sectionDropHandler },
-        { event: "touchend", handler: sectionTouchEndHandler },
-      ]);
-    }
-
-    const infoButton = document.getElementById(`slaughterInfo0`);
-    if (infoButton) {
-      const infoHandler = (e) => {
-        e.stopPropagation();
-        audioManager.playSound("button-click");
-        this.toggleMergedTooltip(0);
-      };
-      infoButton.addEventListener("click", infoHandler);
-
-      this.eventListeners.set(infoButton, [
-        { event: "click", handler: infoHandler },
-      ]);
+      utilityManager.addEventListener(
+        slaughterSection,
+        "dragover",
+        sectionDragOverHandler,
+        "slaughterSectionDragOver"
+      );
+      utilityManager.addEventListener(
+        slaughterSection,
+        "dragleave",
+        sectionDragLeaveHandler,
+        "slaughterSectionDragLeave"
+      );
+      utilityManager.addEventListener(
+        slaughterSection,
+        "drop",
+        sectionDropHandler,
+        "slaughterSectionDrop"
+      );
+      utilityManager.addEventListener(
+        slaughterSection,
+        "touchend",
+        sectionTouchEndHandler,
+        "slaughterSectionTouchEnd"
+      );
     }
   },
 
   handleSlaughterDrop(e, houseIndex) {
     e.preventDefault();
-    const slaughterHouse = document.getElementById(`slaughterHouse0`);
+    const slaughterHouse = document.getElementById("slaughterHouse0");
     if (slaughterHouse) {
       slaughterHouse.classList.remove("drag-over");
     }
@@ -501,7 +477,7 @@ const slaughterHouseManager = {
 
   handleSlaughterTouchEnd(e, houseIndex) {
     e.preventDefault();
-    const slaughterHouse = document.getElementById(`slaughterHouse0`);
+    const slaughterHouse = document.getElementById("slaughterHouse0");
     if (slaughterHouse) {
       slaughterHouse.classList.remove("drag-over");
     }
@@ -525,118 +501,5 @@ const slaughterHouseManager = {
     }
     gridManager.clearValidTargets();
     gameState.draggedCell = null;
-  },
-
-  toggleMergedTooltip(houseIndex) {
-    const existingTooltip = document.getElementById("mergedSlaughterTooltip");
-    if (existingTooltip) {
-      this.hideMergedTooltip();
-    } else {
-      this.showMergedTooltip(0);
-    }
-  },
-
-  showMergedTooltip(houseIndex) {
-    const house = gameState.slaughterHouses[0];
-    const infoButton = document.getElementById(`slaughterInfo0`);
-
-    if (!infoButton) return;
-
-    this.hideMergedTooltip();
-
-    const tooltip = document.createElement("div");
-    tooltip.id = "mergedSlaughterTooltip";
-    tooltip.className = "merged-slaughter-tooltip";
-
-    let tooltipContent = `
-      <div class="tooltip-header">
-        <div class="tooltip-title">
-          <strong>Butcher Shop</strong>
-        </div>
-      </div>
-      <div class="tooltip-divider"></div>
-      <div class="tooltip-content">
-        <div class="tooltip-section-title">Processing Info:</div>
-        <div class="tooltip-animal-row">
-          <span class="animal-info">Process Time: ${house.processTime.toFixed(
-            1
-          )}s</span>
-        </div>
-        <div class="tooltip-animal-row">
-          <span class="animal-info">Queue Capacity: 10 animals</span>
-        </div>
-        <div class="tooltip-divider"></div>
-        <div class="tooltip-section-title">Animal Values:</div>
-    `;
-
-    let hasAnimals = false;
-    for (const [type, animalConfig] of Object.entries(
-      GAME_CONFIG.animalTypes
-    )) {
-      if (animalConfig.sellPrice > 0 && gameState.createdAnimals.has(type)) {
-        tooltipContent += `
-          <div class="tooltip-animal-row">
-            <span class="animal-info"><img src="${GAME_CONFIG.animalImages[type]}" alt="${type}" class="inline-animal-icon" /> ${animalConfig.name}</span>
-            <span class="animal-value">💰${animalConfig.sellPrice}</span>
-          </div>
-        `;
-        hasAnimals = true;
-      }
-    }
-
-    if (!hasAnimals) {
-      tooltipContent += `<div class="tooltip-no-animals">No sellable animals created yet</div>`;
-    }
-
-    tooltipContent += `
-      </div>
-    `;
-
-    tooltip.innerHTML = tooltipContent;
-    document.body.appendChild(tooltip);
-
-    const buttonRect = infoButton.getBoundingClientRect();
-    const tooltipRect = tooltip.getBoundingClientRect();
-
-    let left = buttonRect.left - tooltipRect.width - 10;
-    let top = buttonRect.top + (buttonRect.height - tooltipRect.height) / 2;
-
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    if (left < 10) {
-      left = buttonRect.right + 10;
-    } else if (left + tooltipRect.width > viewportWidth - 10) {
-      left = viewportWidth - tooltipRect.width - 10;
-    }
-
-    if (top < 10) {
-      top = 10;
-    } else if (top + tooltipRect.height > viewportHeight - 10) {
-      top = viewportHeight - tooltipRect.height - 10;
-    }
-
-    tooltip.style.left = `${left}px`;
-    tooltip.style.top = `${top}px`;
-
-    this.tooltipCache = tooltip;
-
-    setTimeout(() => {
-      const clickOutsideHandler = (e) => {
-        if (!tooltip.contains(e.target) && e.target !== infoButton) {
-          this.hideMergedTooltip();
-          document.removeEventListener("click", clickOutsideHandler);
-        }
-      };
-      document.addEventListener("click", clickOutsideHandler);
-    }, 100);
-  },
-
-  hideMergedTooltip() {
-    const tooltip = document.getElementById("mergedSlaughterTooltip");
-    if (tooltip) {
-      tooltip.remove();
-    }
-    this.tooltipCache = null;
   },
 };

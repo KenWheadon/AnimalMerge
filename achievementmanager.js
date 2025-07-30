@@ -1,7 +1,5 @@
 const achievementManager = {
-  // Define all achievements with their properties
   achievementDefinitions: [
-    // Building Related (100-500 points)
     {
       id: "first_coop",
       name: "Coop Builder",
@@ -33,8 +31,6 @@ const achievementManager = {
         );
       },
     },
-
-    // Merging Related (100-2000 points)
     {
       id: "first_merge",
       name: "Merger Novice",
@@ -68,8 +64,6 @@ const achievementManager = {
       earned: false,
       checkCondition: () => gameState.createdAnimals.has("EndDemoAnimal"),
     },
-
-    // Selling Related (100-1000 points)
     {
       id: "first_sale",
       name: "First Sale",
@@ -103,8 +97,6 @@ const achievementManager = {
       earned: false,
       checkCondition: () => gameState.totalSlaughtered >= 100,
     },
-
-    // Money Related (200-2000 points)
     {
       id: "first_thousand",
       name: "Wealthy Farmer",
@@ -127,8 +119,6 @@ const achievementManager = {
       earned: false,
       checkCondition: () => gameState.money >= 10000,
     },
-
-    // Discovery Related (100-1500 points)
     {
       id: "discover_6",
       name: "Animal Collector",
@@ -154,8 +144,6 @@ const achievementManager = {
         return gameState.createdAnimals.size >= totalAnimals;
       },
     },
-
-    // Grid Related (200-800 points)
     {
       id: "expand_grid",
       name: "Land Owner",
@@ -183,7 +171,6 @@ const achievementManager = {
     },
   ],
 
-  // Rarity colors and point values
   rarityConfig: {
     Common: { color: "#9ca3af", points: 100 },
     Uncommon: { color: "#10b981", points: 300 },
@@ -192,7 +179,6 @@ const achievementManager = {
     Legendary: { color: "#f59e0b", points: 2000 },
   },
 
-  // Initialize achievements in game state
   initializeAchievements() {
     if (!gameState.achievements) {
       gameState.achievements = this.achievementDefinitions.map((def) => ({
@@ -203,7 +189,6 @@ const achievementManager = {
     }
   },
 
-  // Check all achievements and mark newly earned ones
   checkAchievements() {
     let newAchievements = [];
 
@@ -213,7 +198,6 @@ const achievementManager = {
       );
 
       if (!savedAchievement?.earned && def.checkCondition()) {
-        // Mark as earned
         if (savedAchievement) {
           savedAchievement.earned = true;
           savedAchievement.earnedDate = Date.now();
@@ -223,15 +207,12 @@ const achievementManager = {
       }
     });
 
-    // Show notifications for new achievements
     newAchievements.forEach((achievement) => {
       eventManager.showAchievement(
         `${achievement.icon} ${achievement.name} (+${achievement.points} pts)`
       );
     });
 
-    // FIX: Always update the achievements display when new achievements are earned
-    // This ensures the panel refreshes even if it's not currently open
     if (newAchievements.length > 0) {
       this.refreshAchievementDrawer();
     }
@@ -239,20 +220,13 @@ const achievementManager = {
     return newAchievements.length > 0;
   },
 
-  // FIX: New method to completely refresh the achievement drawer content
   refreshAchievementDrawer() {
     const drawer = document.getElementById("achievementDrawer");
     if (drawer) {
-      // Regenerate the entire drawer HTML
       const newDrawerHTML = this.generateAchievementDrawerHTML();
-
-      // Extract just the inner content (excluding the toggle button)
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = newDrawerHTML;
+      const tempDiv = utilityManager.createElement("div", "", newDrawerHTML);
       const newDrawerElement = tempDiv.querySelector("#achievementDrawer");
-      const toggleButton = tempDiv.querySelector("#achievementDrawerToggle");
 
-      // Replace the drawer content while preserving its open/closed state
       const wasOpen = drawer.classList.contains("open");
       drawer.innerHTML = newDrawerElement.innerHTML;
 
@@ -260,12 +234,10 @@ const achievementManager = {
         drawer.classList.add("open");
       }
 
-      // Reinitialize event listeners for the refreshed content
       this.initializeEventListeners();
     }
   },
 
-  // Get earned achievements count and total points
   getAchievementStats() {
     const earnedAchievements =
       gameState.achievements?.filter((a) => a.earned) || [];
@@ -291,13 +263,9 @@ const achievementManager = {
     };
   },
 
-  // Generate achievement drawer HTML
   generateAchievementDrawerHTML() {
     const stats = this.getAchievementStats();
 
-    let achievementsHTML = "";
-
-    // Sort achievements: earned first, then by rarity points desc, then alphabetical
     const sortedAchievements = [...this.achievementDefinitions].sort((a, b) => {
       const aEarned =
         gameState.achievements?.find((ach) => ach.id === a.id)?.earned || false;
@@ -313,15 +281,16 @@ const achievementManager = {
       return 0;
     });
 
-    sortedAchievements.forEach((def) => {
-      const savedAchievement = gameState.achievements?.find(
-        (a) => a.id === def.id
-      );
-      const isEarned = savedAchievement?.earned || false;
-      const rarityColor = this.rarityConfig[def.rarity]?.color || "#9ca3af";
+    const achievementsHTML = sortedAchievements
+      .map((def) => {
+        const savedAchievement = gameState.achievements?.find(
+          (a) => a.id === def.id
+        );
+        const isEarned = savedAchievement?.earned || false;
+        const rarityColor = this.rarityConfig[def.rarity]?.color || "#9ca3af";
 
-      if (isEarned) {
-        achievementsHTML += `
+        if (isEarned) {
+          return `
           <div class="achievement-item earned">
             <div class="achievement-icon">${def.icon}</div>
             <div class="achievement-content">
@@ -334,8 +303,8 @@ const achievementManager = {
             </div>
           </div>
         `;
-      } else {
-        achievementsHTML += `
+        } else {
+          return `
           <div class="achievement-item locked">
             <div class="achievement-icon">🔒</div>
             <div class="achievement-content">
@@ -348,8 +317,9 @@ const achievementManager = {
             </div>
           </div>
         `;
-      }
-    });
+        }
+      })
+      .join("");
 
     return `
       <div id="achievementDrawer" class="achievement-drawer">
@@ -362,7 +332,9 @@ const achievementManager = {
             <span>${stats.earnedCount}/${stats.totalCount} Unlocked</span>
           </div>
           <div class="stats-row">
-            <span>${stats.earnedPoints.toLocaleString()}/${stats.totalPoints.toLocaleString()} points</span>
+            <span>${utilityManager.formatNumber(
+              stats.earnedPoints
+            )}/${utilityManager.formatNumber(stats.totalPoints)} points</span>
           </div>
         </div>
         <div class="achievement-list">
@@ -373,12 +345,10 @@ const achievementManager = {
     `;
   },
 
-  // Update the achievement display (kept for backwards compatibility but now calls refreshAchievementDrawer)
   updateAchievementDisplay() {
     this.refreshAchievementDrawer();
   },
 
-  // Toggle drawer open/closed
   toggleDrawer() {
     const drawer = document.getElementById("achievementDrawer");
     const toggle = document.getElementById("achievementDrawerToggle");
@@ -393,38 +363,55 @@ const achievementManager = {
     }
   },
 
-  // Initialize event listeners
   initializeEventListeners() {
     const toggleBtn = document.getElementById("achievementDrawerToggle");
     const closeBtn = document.getElementById("achievementDrawerClose");
 
     if (toggleBtn) {
-      // Add hover sound
-      toggleBtn.addEventListener("mouseenter", () => {
-        audioManager.playSound("button-hover");
-      });
+      utilityManager.addEventListener(
+        toggleBtn,
+        "mouseenter",
+        () => {
+          audioManager.playSound("button-hover");
+        },
+        "achievementToggleHover"
+      );
 
-      // Remove existing listeners to prevent duplicates
       const newToggleBtn = toggleBtn.cloneNode(true);
       toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
 
-      newToggleBtn.addEventListener("click", () => {
-        trackPlayerInteraction();
-        audioManager.playSound("button-click");
-        this.toggleDrawer();
-      });
+      utilityManager.addEventListener(
+        newToggleBtn,
+        "click",
+        () => {
+          trackPlayerInteraction();
+          audioManager.playSound("button-click");
+          this.toggleDrawer();
+        },
+        "achievementToggleClick"
+      );
     }
 
     if (closeBtn) {
-      closeBtn.addEventListener("mouseenter", () => {
-        audioManager.playSound("button-hover");
-      });
+      utilityManager.addEventListener(
+        closeBtn,
+        "mouseenter",
+        () => {
+          audioManager.playSound("button-hover");
+        },
+        "achievementCloseHover"
+      );
 
-      closeBtn.addEventListener("click", () => {
-        trackPlayerInteraction();
-        audioManager.playSound("button-click");
-        this.toggleDrawer();
-      });
+      utilityManager.addEventListener(
+        closeBtn,
+        "click",
+        () => {
+          trackPlayerInteraction();
+          audioManager.playSound("button-click");
+          this.toggleDrawer();
+        },
+        "achievementCloseClick"
+      );
     }
   },
 };

@@ -11,6 +11,7 @@ let gameState = {
   previousMergeablePairs: [],
   totalSlaughtered: 0,
   eggButtonClicked: false,
+  achievements: [],
   autoMerge: {
     owned: false,
     level: 1,
@@ -24,18 +25,16 @@ let gameState = {
     enabled: true,
   },
   slaughterHouses: [],
-  lastInteractionTime: Date.now(), // Track last player interaction for idle detection
-  // FIX: Add flag to prevent concurrent operations during auto-merge
+  lastInteractionTime: Date.now(),
   isAutoMergeInProgress: false,
 };
 
 function showTutorialPopup() {
-  const popup = document.createElement("div");
-  popup.id = "tutorialPopup";
-  popup.className = "tutorial-popup-backdrop";
-
-  popup.innerHTML = `
-       <div class="tutorial-popup">
+  const popup = utilityManager.createElement(
+    "div",
+    "tutorial-popup-backdrop",
+    `
+    <div class="tutorial-popup">
       <button id="closeTutorial" class="tutorial-close-btn">×</button>
       <div class="tutorial-content">
         <div class="tutorial-character">
@@ -57,8 +56,10 @@ function showTutorialPopup() {
         </div>
       </div>
     </div>
-  `;
+  `
+  );
 
+  popup.id = "tutorialPopup";
   document.body.appendChild(popup);
 
   const closeBtn = document.getElementById("closeTutorial");
@@ -66,34 +67,51 @@ function showTutorialPopup() {
   const creditsBtn = document.getElementById("showCredits");
 
   const closeTutorial = () => {
-    // Handle first user interaction for audio
     audioManager.handleFirstUserInteraction();
     popup.remove();
-    // Start the tutorial notification cycle after popup is closed
     eventManager.startInitialTutorialCycle();
   };
 
-  closeBtn.addEventListener("click", closeTutorial);
-  startBtn.addEventListener("click", closeTutorial);
+  utilityManager.addEventListener(
+    closeBtn,
+    "click",
+    closeTutorial,
+    "tutorialClose"
+  );
+  utilityManager.addEventListener(
+    startBtn,
+    "click",
+    closeTutorial,
+    "tutorialStart"
+  );
+  utilityManager.addEventListener(
+    creditsBtn,
+    "click",
+    () => {
+      audioManager.playSound("button-click");
+      if (typeof showCreditsGallery === "function") {
+        showCreditsGallery();
+      }
+    },
+    "tutorialCredits"
+  );
 
-  creditsBtn.addEventListener("click", () => {
-    audioManager.playSound("button-click");
-    showCreditsGallery();
-  });
-
-  popup.addEventListener("click", (e) => {
-    if (e.target === popup) {
-      closeTutorial();
-    }
-  });
+  utilityManager.addEventListener(
+    popup,
+    "click",
+    (e) => {
+      if (e.target === popup) {
+        closeTutorial();
+      }
+    },
+    "tutorialBackdrop"
+  );
 }
 
 function showCreditsGallery() {
-  const modal = document.createElement("div");
-  modal.className = "credits-gallery-modal";
+  const modal = utilityManager.createElement("div", "credits-gallery-modal");
   modal.id = "creditsModal";
 
-  // Ensure modal is positioned properly
   modal.style.cssText = `
     position: fixed;
     top: 0;
@@ -122,7 +140,6 @@ function showCreditsGallery() {
             <p class="credits-game-title">Game Credits</p>
             <p class="credits-company-name">Weird Demon Games</p>
           </div>
-         
         </div>
         <button class="credits-gallery-close" id="closeCredits">×</button>
       </div>
@@ -173,70 +190,87 @@ function showCreditsGallery() {
 
   document.body.appendChild(modal);
 
-  // Show modal with proper animation
   requestAnimationFrame(() => {
     modal.style.opacity = "1";
     modal.style.visibility = "visible";
     modal.style.pointerEvents = "auto";
   });
 
-  // Event listeners
-  document
-    .getElementById("closeCredits")
-    .addEventListener("click", hideCreditsGallery);
+  utilityManager.addEventListener(
+    document.getElementById("closeCredits"),
+    "click",
+    hideCreditsGallery,
+    "creditsClose"
+  );
 
-  // Filter buttons
   document.querySelectorAll(".credits-filter-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      document
-        .querySelectorAll(".credits-filter-btn")
-        .forEach((b) => b.classList.remove("active"));
-      e.target.classList.add("active");
+    utilityManager.addEventListener(
+      btn,
+      "click",
+      (e) => {
+        document
+          .querySelectorAll(".credits-filter-btn")
+          .forEach((b) => b.classList.remove("active"));
+        e.target.classList.add("active");
 
-      const filter = e.target.dataset.filter;
-      const cards = document.querySelectorAll(".credits-card");
+        const filter = e.target.dataset.filter;
+        const cards = document.querySelectorAll(".credits-card");
 
-      cards.forEach((card) => {
-        if (filter === "all" || card.dataset.department === filter) {
-          card.style.display = "block";
-        } else {
-          card.style.display = "none";
-        }
-      });
-    });
+        cards.forEach((card) => {
+          if (filter === "all" || card.dataset.department === filter) {
+            card.style.display = "block";
+          } else {
+            card.style.display = "none";
+          }
+        });
+      },
+      `creditsFilter_${btn.dataset.filter}`
+    );
   });
 
-  // Card clicks
   document.querySelectorAll(".credits-card").forEach((card) => {
-    card.addEventListener("click", () => {
-      const personKey = card.dataset.person;
-      const person = CREDITS[personKey];
+    utilityManager.addEventListener(
+      card,
+      "click",
+      () => {
+        const personKey = card.dataset.person;
+        const person = CREDITS[personKey];
 
-      document.getElementById("creditsDetailImage").src = person.fullImage;
-      document.getElementById("creditsDetailImage").alt = person.name;
-      document.getElementById("creditsDetailName").textContent = person.name;
-      document.getElementById("creditsDetailTitle").textContent =
-        person.jobTitle;
-      document.getElementById("creditsDetailDepartment").textContent =
-        person.department;
-      document.getElementById("creditsDetailDescription").textContent =
-        person.description;
+        document.getElementById("creditsDetailImage").src = person.fullImage;
+        document.getElementById("creditsDetailImage").alt = person.name;
+        document.getElementById("creditsDetailName").textContent = person.name;
+        document.getElementById("creditsDetailTitle").textContent =
+          person.jobTitle;
+        document.getElementById("creditsDetailDepartment").textContent =
+          person.department;
+        document.getElementById("creditsDetailDescription").textContent =
+          person.description;
 
-      document.getElementById("creditsDetailView").classList.add("active");
-    });
+        document.getElementById("creditsDetailView").classList.add("active");
+      },
+      `creditsCard_${card.dataset.person}`
+    );
   });
 
-  // Detail back button
-  document.getElementById("creditsDetailBack").addEventListener("click", () => {
-    document.getElementById("creditsDetailView").classList.remove("active");
-  });
+  utilityManager.addEventListener(
+    document.getElementById("creditsDetailBack"),
+    "click",
+    () => {
+      document.getElementById("creditsDetailView").classList.remove("active");
+    },
+    "creditsDetailBack"
+  );
 
-  // Close on backdrop click
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      hideCreditsGallery();
-    }
-  });
+  utilityManager.addEventListener(
+    modal,
+    "click",
+    (e) => {
+      if (e.target === modal) {
+        hideCreditsGallery();
+      }
+    },
+    "creditsModalBackdrop"
+  );
 }
 
 function hideCreditsGallery() {
@@ -245,46 +279,38 @@ function hideCreditsGallery() {
     modal.style.opacity = "0";
     modal.style.visibility = "hidden";
     modal.style.pointerEvents = "none";
-    setTimeout(() => modal.remove(), 300);
+    utilityManager.setTimeout(() => modal.remove(), 300, "creditsModalRemove");
   }
 }
 
 function initializeGame() {
-  // Initialize save system and load saved data FIRST
   const saveLoaded = saveManager.initialize();
 
-  // Only initialize default states if no save was loaded
   if (!saveLoaded) {
     gridManager.initializeGridState();
     slaughterHouseManager.initializeSlaughterHouses();
     coopManager.initializeCoopStates();
   } else {
-    // If save was loaded, still need to ensure grid state array exists
     if (!gameState.grid || gameState.grid.length === 0) {
-      gameState.grid = Array(5)
+      gameState.grid = Array(GAME_CONFIG.gridConfig.rows)
         .fill(null)
-        .map(() => Array(8).fill(null));
+        .map(() => Array(GAME_CONFIG.gridConfig.cols).fill(null));
     }
-    // Ensure slaughter houses exist
     if (!gameState.slaughterHouses || gameState.slaughterHouses.length === 0) {
       gameState.slaughterHouses = [
         {
           level: 1,
-          processTime: 5.0,
+          processTime: GAME_CONFIG.gameplayConfig.slaughterHouseProcessTime,
           timer: 0,
           queue: [],
           currentAnimal: null,
         },
       ];
     }
-    // Ensure coop states exist
     coopManager.initializeCoopStates();
   }
 
-  // Initialize achievements system
   achievementManager.initializeAchievements();
-
-  // Initialize audio system
   audioManager.initialize();
 
   document.getElementById("gameContainer").innerHTML = generateMainHTML();
@@ -295,31 +321,26 @@ function initializeGame() {
   eventManager.initializeButtonEventListeners();
   achievementManager.initializeEventListeners();
 
-  // Update UI based on loaded/initial state
   updateAnimalValues();
   updateMergeablePairs();
   coopManager.updateEmptyMessageVisibility();
-  coopManager.updateBuyAnimalButtons(); // Update button states based on loaded data
-  coopManager.updateShuffleButtonState(); // Update shuffle state
+  coopManager.updateBuyAnimalButtons();
+  coopManager.updateShuffleButtonState();
 
-  // Update UI elements that depend on saved state
   updateMoney();
   updateAutoMergeLevel();
   updatePanelVisibility();
 
-  // Check achievements on load
   achievementManager.checkAchievements();
 
-  // If no save was loaded, show initial status
   if (!saveLoaded) {
     updateStatus(
-      `Start with initial grid spots! Click 🌱 grass squares to expand!`
+      "Start with initial grid spots! Click 🌱 grass squares to expand!"
     );
   } else {
     updateStatus("Game loaded! Welcome back! 🎉");
   }
 
-  // FIX: Only setup grass cells for unpurchased spots AFTER save loading
   GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
     if (cost > 0 && !gameState.purchasedCells.has(`${row}-${col}`)) {
       gridManager.setupGrassCell(row, col, cost);
@@ -327,21 +348,14 @@ function initializeGame() {
   });
 
   startGameTimers();
-
-  // Add initial egg button animation
   eventManager.startInitialEggButtonAnimation();
-
-  // Initialize idle detection system (but don't start tutorial cycle yet)
   eventManager.initializeIdleDetection();
-
-  // Initialize shuffle button state (locked until auto-merge is purchased)
   coopManager.updateShuffleButtonState();
 
   showTutorialPopup();
 }
 
 function generateMainHTML() {
-  // Determine button states based on current game state
   const autoMergeBuyHidden = gameState.autoMerge.owned ? "hidden" : "";
   const autoMergeToggleHidden = gameState.autoMerge.owned ? "" : "hidden";
   const autoMergeProgressHidden = gameState.autoMerge.owned ? "" : "hidden";
@@ -503,7 +517,6 @@ function updateAutoMergeLevel() {
 
   if (newLevel > oldLevel) {
     gameState.autoMerge.level = newLevel;
-    // Fixed: Properly calculate decreasing interval using config values
     gameState.autoMerge.currentInterval =
       GAME_CONFIG.autoMergeConfig.baseInterval *
       Math.pow(
@@ -530,7 +543,6 @@ function updateAutoMergeLevel() {
 }
 
 function updateMergeablePairs() {
-  // Store previous pairs for comparison
   gameState.previousMergeablePairs = [...gameState.mergeablePairs];
   gameState.mergeablePairs = [];
 
@@ -550,6 +562,7 @@ function updateMergeablePairs() {
       for (const { di, dj } of neighbors) {
         const ni = i + di;
         const nj = j + dj;
+
         if (
           GAME_CONFIG.gridConfig.availableSpots.some(
             (spot) => spot.row === ni && spot.col === nj
@@ -580,8 +593,6 @@ function updateMergeablePairs() {
     }
   });
 
-  // FIX: Clear any persistent highlights that shouldn't be there
-  // Only clear highlights if we're not currently dragging
   if (!gameState.draggedCell) {
     gridManager.clearValidTargets();
   }
@@ -594,20 +605,13 @@ function isGridFull() {
   );
 }
 
-// Function to track player interactions
 function trackPlayerInteraction() {
   gameState.lastInteractionTime = Date.now();
 }
 
 function placeAnimal(type) {
-  console.log(`placeAnimal called with type: ${type}`);
-  console.log(
-    `gameState.eggButtonClicked in placeAnimal: ${gameState.eggButtonClicked}`
-  );
+  trackPlayerInteraction();
 
-  trackPlayerInteraction(); // Track interaction
-
-  // FIX: Prevent placing animals during auto-merge to avoid race conditions
   if (gameState.isAutoMergeInProgress) {
     audioManager.playSound("invalid-action");
     updateStatus("Wait for auto-merge to complete! ⚙️");
@@ -619,7 +623,6 @@ function placeAnimal(type) {
       gameState.grid[i][j] = type;
       gameState.createdAnimals.add(type);
 
-      // Play egg placement sound
       audioManager.playSound("egg-placement");
 
       updateAnimalValues();
@@ -627,8 +630,6 @@ function placeAnimal(type) {
       updateMergeablePairs();
 
       const cell = document.getElementById(`cell-${i}-${j}`);
-      // Removed the spawn animation
-
       eventManager.createParticles(cell);
 
       const animalConfig = GAME_CONFIG.animalTypes[type];
@@ -639,53 +640,36 @@ function placeAnimal(type) {
       );
 
       coopManager.checkForNewUnlocks(type);
-
-      // Update panel visibility based on created animals
       updatePanelVisibility();
-
-      // Update background music based on new animals
       audioManager.updateBackgroundMusic();
 
       return true;
     }
   }
 
-  // Play invalid action sound if grid is full
   audioManager.playSound("invalid-action");
   updateStatus("No available space! Purchase more grid squares! 🌱");
   return false;
 }
 
 function buyAnimal(type, cost) {
-  console.log(`buyAnimal called with type: ${type}, cost: ${cost}`);
-  console.log(
-    `gameState.eggButtonClicked before: ${gameState.eggButtonClicked}`
-  );
+  trackPlayerInteraction();
 
-  trackPlayerInteraction(); // Track interaction
-
-  // FIXED: Check money first, but don't deduct until after successful placement
   if (gameState.money >= cost) {
-    // Mark egg button as clicked if this is an egg purchase
     if (type === "Egg" && !gameState.eggButtonClicked) {
-      console.log("Setting eggButtonClicked to true and stopping animation");
       gameState.eggButtonClicked = true;
       eventManager.stopInitialEggButtonAnimation();
-      coopManager.updateBuyAnimalButtons(); // Update button states
+      coopManager.updateBuyAnimalButtons();
     }
 
-    // FIXED: Only deduct money AFTER successful placement
     if (placeAnimal(type)) {
-      gameState.money -= cost; // Deduct money only on successful placement
+      gameState.money -= cost;
       updateMoney();
       const animalConfig = GAME_CONFIG.animalTypes[type];
       updateStatus(`Bought and placed ${animalConfig.name}`);
-      saveManager.saveOnAction(); // Save after buying animal
-
-      // Check achievements after buying animal
+      saveManager.saveOnAction();
       achievementManager.checkAchievements();
     } else {
-      // If placement failed, reset egg button state if it was changed
       if (type === "Egg" && gameState.eggButtonClicked) {
         gameState.eggButtonClicked = false;
         eventManager.startInitialEggButtonAnimation();
@@ -693,26 +677,23 @@ function buyAnimal(type, cost) {
       }
     }
   } else {
-    // Play invalid action sound for insufficient funds
     audioManager.playSound("invalid-action");
     const animalConfig = GAME_CONFIG.animalTypes[type];
     updateStatus(`Not enough money for ${animalConfig.name}! 😕`);
-    document.body.classList.add("screen-shake");
-    setTimeout(() => document.body.classList.remove("screen-shake"), 500);
+    utilityManager.addScreenShake();
   }
 }
 
 function sellAnimal(i, j, type) {
-  trackPlayerInteraction(); // Track interaction
+  trackPlayerInteraction();
   if (gameState.slaughterHouses.length > 0) {
     slaughterHouseManager.addAnimalToQueue(0, type, i, j);
   }
 }
 
 function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
-  trackPlayerInteraction(); // Track interaction
+  trackPlayerInteraction();
 
-  // FIX: Prevent manual merging during auto-merge to avoid race conditions
   if (gameState.isAutoMergeInProgress) {
     audioManager.playSound("invalid-action");
     updateStatus("Wait for auto-merge to complete! ⚙️");
@@ -722,28 +703,29 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   const sourceType = gameState.grid[sourceI][sourceJ];
   const newType = GAME_CONFIG.animalTypes[sourceType].mergeTo;
 
-  // Play manual merge sound
   audioManager.playSound("manual-merge");
 
   const sourceCell = document.getElementById(`cell-${sourceI}-${sourceJ}`);
-  const explosion = document.createElement("div");
-  explosion.textContent = "✨";
-  explosion.classList.add("merge-explosion", "absolute", "text-4xl");
+  const explosion = utilityManager.createElement(
+    "div",
+    "merge-explosion absolute text-4xl",
+    "✨"
+  );
   explosion.style.left = "50%";
   explosion.style.top = "50%";
   explosion.style.transform = "translate(-50%, -50%)";
   sourceCell.appendChild(explosion);
 
-  setTimeout(
+  utilityManager.setTimeout(
     () => explosion.remove(),
-    GAME_CONFIG.animationConfig.mergeExplosionDuration
+    GAME_CONFIG.animationConfig.mergeExplosionDuration,
+    "mergeExplosion"
   );
 
   gameState.grid[sourceI][sourceJ] = null;
   gameState.grid[targetI][targetJ] = newType;
   gameState.createdAnimals.add(newType);
 
-  // FIX: Check for coop leveling when eggs are merged
   coopManager.checkCoopLevelUp(sourceType);
 
   updateAnimalValues();
@@ -752,15 +734,10 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   updateMergeablePairs();
 
   const targetCell = document.getElementById(`cell-${targetI}-${targetJ}`);
-  // Removed the spawn animation
-
   eventManager.createParticles(targetCell);
   coopManager.checkForNewUnlocks(newType);
 
-  // Update panel visibility based on created animals
   updatePanelVisibility();
-
-  // Update background music based on new animals
   audioManager.updateBackgroundMusic();
 
   if (newType === "EndDemoAnimal") {
@@ -775,27 +752,7 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
       : `Merged into ${newAnimalConfig.name}!`
   );
 
-  saveManager.saveOnAction(); // Save after merging
-
-  // Check achievements after merging
-  achievementManager.checkAchievements();
-}
-
-function updatePanelVisibility() {
-  // Update slaughter house visibility
-  slaughterHouseManager.updateVisibility();
-
-  // Update farm building visibility
-  coopManager.updatePanelVisibility();
-}
-
-function updateMoney() {
-  const moneyElement = document.getElementById("money");
-  moneyElement.textContent = `Money: 💰${gameState.money}`;
-  moneyElement.classList.add("updated");
-  setTimeout(() => moneyElement.classList.remove("updated"), 500);
-
-  // Check achievements when money changes
+  saveManager.saveOnAction();
   achievementManager.checkAchievements();
 }
 
@@ -803,24 +760,55 @@ function updateStatus(message) {
   const statusElement = document.getElementById("status");
   statusElement.textContent = message;
   statusElement.classList.add("bounce-in");
-  setTimeout(() => statusElement.classList.remove("bounce-in"), 600);
+  utilityManager.setTimeout(
+    () => statusElement.classList.remove("bounce-in"),
+    600,
+    "statusBounce"
+  );
 }
 
-function updateAnimalValues() {}
+function updateAnimalValues() {
+  // This function is kept for compatibility but doesn't need implementation
+}
+
+function updatePanelVisibility() {
+  slaughterHouseManager.updateVisibility();
+  coopManager.updatePanelVisibility();
+}
+
+function updateMoney() {
+  const moneyElement = document.getElementById("money");
+  moneyElement.textContent = `Money: 💰${gameState.money}`;
+  moneyElement.classList.add("updated");
+  utilityManager.setTimeout(
+    () => moneyElement.classList.remove("updated"),
+    500,
+    "moneyUpdate"
+  );
+
+  achievementManager.checkAchievements();
+}
 
 function startGameTimers() {
-  setInterval(() => {
-    coopManager.updateCoopTimers();
-    coopManager.updatePlaceButtonStates();
-    slaughterHouseManager.updateSlaughterHouseTimers();
-  }, 1000);
+  utilityManager.setInterval(
+    () => {
+      coopManager.updateCoopTimers();
+      coopManager.updatePlaceButtonStates();
+      slaughterHouseManager.updateSlaughterHouseTimers();
+    },
+    1000,
+    "gameMainTimer"
+  );
 
-  setInterval(() => {
-    coopManager.updateAutoMergeTimer();
-  }, 100);
+  utilityManager.setInterval(
+    () => {
+      coopManager.updateAutoMergeTimer();
+    },
+    100,
+    "autoMergeTimer"
+  );
 }
 
-// Initialize the game when page loads, but start with loading screen
 document.addEventListener("DOMContentLoaded", () => {
   loadingManager.showLoadingScreen();
 });

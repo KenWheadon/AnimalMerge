@@ -22,6 +22,8 @@ const GAME_CONFIG = {
       { row: 4, col: 2, cost: 500 },
       { row: 4, col: 3, cost: 600 },
     ],
+    rows: 5,
+    cols: 4,
   },
   animalTypes: {
     Egg: { name: "Egg", sellPrice: 0, mergeTo: "Mantis" },
@@ -41,7 +43,6 @@ const GAME_CONFIG = {
     Vulture2: { name: "Strong Vulture", sellPrice: 5100, mergeTo: "Vulture3" },
     Vulture3: { name: "Mighty Vulture", sellPrice: 10500, mergeTo: "Vulture4" },
     Vulture4: { name: "Great Vulture", sellPrice: 22000, mergeTo: "Vulture5" },
-    // FIX: Corrected Vulture5 sell price - it should be higher than Vulture4, not lower
     Vulture5: {
       name: "Supreme Vulture",
       sellPrice: 15000,
@@ -114,5 +115,29 @@ const GAME_CONFIG = {
     achievementDuration: 2500,
     floatingNumberDuration: 1000,
     particleCount: 20,
+    maxParticles: 30,
+    minParticles: 5,
+  },
+  audioConfig: {
+    masterVolume: 0.7,
+    musicVolume: 0.5,
+    sfxVolume: 0.8,
+    musicRetryInterval: 15000,
+    soundCooldown: 500,
+  },
+  gameplayConfig: {
+    slaughterHouseQueueMax: 10,
+    slaughterHouseProcessTime: 5.0,
+    idleDetectionTime: 10000,
+    animalWiggleTime: 20000,
+    tutorialScrollDelay: 6000,
+    autoSaveInterval: 15000,
+    particleCleanupInterval: 5000,
+    musicCheckInterval: 15000,
+  },
+  saveConfig: {
+    key: "animalMergeFarmSave5",
+    version: 1,
+    maxCookieSize: 4000,
   },
 };
