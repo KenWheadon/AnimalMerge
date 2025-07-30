@@ -10,6 +10,7 @@ let gameState = {
   mergeablePairs: [],
   previousMergeablePairs: [],
   totalSlaughtered: 0,
+  totalMerges: 0,
   eggButtonClicked: false,
   achievements: [],
   autoMerge: {
@@ -23,6 +24,11 @@ let gameState = {
   shuffle: {
     owned: false,
     enabled: true,
+  },
+  autoButcher: {
+    owned: false,
+    enabled: true,
+    timer: GAME_CONFIG.autoButcherConfig.checkInterval,
   },
   slaughterHouses: [],
   lastInteractionTime: Date.now(),
@@ -300,10 +306,11 @@ function initializeGame() {
       gameState.slaughterHouses = [
         {
           level: 1,
-          processTime: GAME_CONFIG.gameplayConfig.slaughterHouseProcessTime,
+          processTime: GAME_CONFIG.slaughterHouseConfig.baseProcessTime,
           timer: 0,
           queue: [],
           currentAnimal: null,
+          queueMax: GAME_CONFIG.slaughterHouseConfig.baseQueueMax,
         },
       ];
     }
@@ -371,6 +378,15 @@ function generateMainHTML() {
     ? "bg-green-500"
     : "bg-red-500";
 
+  const autoButcherBuyHidden = gameState.autoButcher.owned ? "hidden" : "";
+  const autoButcherToggleHidden = gameState.autoButcher.owned ? "" : "hidden";
+  const autoButcherToggleText = gameState.autoButcher.enabled
+    ? "🔵 ON"
+    : "🔴 OFF";
+  const autoButcherToggleClass = gameState.autoButcher.enabled
+    ? "bg-green-500"
+    : "bg-red-500";
+
   return `
     <div class="game-container flex">
         <div class="w-40 bg-white shadow-lg flex flex-col" style="height: fit-content; max-height: 100vh;">
@@ -390,7 +406,7 @@ function generateMainHTML() {
 
         <div class="flex flex-col">
             <div class="flex-shrink-0 bg-white mx-4 m-2 p-1 rounded-xl shadow-lg">
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-3 gap-2">
                     <div class="automation-section">
                         <div class="flex items-center justify-between mb-2">
                             <h4 class="text-sm font-bold text-purple-800">⚙️ Auto-Merge</h4>
@@ -406,10 +422,10 @@ function generateMainHTML() {
                                 )}s</span>
                             </div>
                             <div id="autoMergeProgress" class="text-gray-500">${
-                              gameState.totalSlaughtered
+                              gameState.totalMerges
                             }/${getNextAutoMergeRequirement(
     gameState.autoMerge.level
-  )} animals slaughtered</div>
+  )} merges completed</div>
                         </div>
                         <div id="autoMergeProgressContainer" class="mb-2 ${autoMergeProgressHidden}">
                             <div class="coop-progress-bar h-1">
@@ -445,6 +461,26 @@ function generateMainHTML() {
                             </button>
                         </div>
                     </div>
+
+                    <div class="automation-section">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-bold text-red-800">🔪 Auto-Butcher</h4>
+                            <span class="text-xs text-gray-600">Auto</span>
+                        </div>
+                        <div class="space-y-1 text-xs mb-1">
+                            <div class="text-gray-500">Butchers lowest value</div>
+                            <div class="text-gray-500">animals automatically</div>
+                        </div>
+                        <div class="mb-2" style="height: 4px;"></div>
+                        <div class="space-y-1">
+                            <button id="buyAutoButcher" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white ${autoButcherBuyHidden}" style="background: linear-gradient(145deg, #dc2626, #b91c1c);">
+                                Buy ($100)
+                            </button>
+                            <button id="autoButcherToggle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white ${autoButcherToggleHidden} ${autoButcherToggleClass}">
+                                ${autoButcherToggleText}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -477,17 +513,16 @@ function generateMainHTML() {
 `;
 }
 
-function calculateAutoMergeLevel(totalSlaughtered) {
+function calculateAutoMergeLevel(totalMerges) {
   let level = 1;
-  let requirement = 6;
-  let gap = 9;
+  let requirement = 5;
+  let gap = 7;
 
-  while (totalSlaughtered >= requirement) {
+  while (totalMerges >= requirement) {
     level++;
-    if (level <= 8) {
+    if (level <= 12) {
       requirement =
-        GAME_CONFIG.autoMergeConfig.animalRequirements[level - 1] ||
-        requirement;
+        GAME_CONFIG.autoMergeConfig.mergeRequirements[level - 1] || requirement;
     } else {
       requirement += gap;
       gap += 5;
@@ -498,12 +533,12 @@ function calculateAutoMergeLevel(totalSlaughtered) {
 }
 
 function getNextAutoMergeRequirement(currentLevel) {
-  if (currentLevel < 8) {
-    return GAME_CONFIG.autoMergeConfig.animalRequirements[currentLevel];
+  if (currentLevel < 12) {
+    return GAME_CONFIG.autoMergeConfig.mergeRequirements[currentLevel];
   } else {
-    let requirement = 115;
-    let gap = 25;
-    for (let i = 8; i < currentLevel; i++) {
+    let requirement = 300;
+    let gap = 30;
+    for (let i = 12; i < currentLevel; i++) {
       requirement += gap;
       gap += 5;
     }
@@ -512,7 +547,7 @@ function getNextAutoMergeRequirement(currentLevel) {
 }
 
 function updateAutoMergeLevel() {
-  const newLevel = calculateAutoMergeLevel(gameState.totalSlaughtered);
+  const newLevel = calculateAutoMergeLevel(gameState.totalMerges);
   const oldLevel = gameState.autoMerge.level;
 
   if (newLevel > oldLevel) {
@@ -537,9 +572,10 @@ function updateAutoMergeLevel() {
   const nextRequirement = getNextAutoMergeRequirement(
     gameState.autoMerge.level
   );
-  document.getElementById(
-    "autoMergeProgress"
-  ).textContent = `${gameState.totalSlaughtered}/${nextRequirement} animals slaughtered`;
+  const progressElement = document.getElementById("autoMergeProgress");
+  if (progressElement) {
+    progressElement.textContent = `${gameState.totalMerges}/${nextRequirement} merges completed`;
+  }
 }
 
 function updateMergeablePairs() {
@@ -725,6 +761,7 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   gameState.grid[sourceI][sourceJ] = null;
   gameState.grid[targetI][targetJ] = newType;
   gameState.createdAnimals.add(newType);
+  gameState.totalMerges += 1;
 
   coopManager.checkCoopLevelUp(sourceType);
 
@@ -732,6 +769,7 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   gridManager.updateCell(sourceI, sourceJ);
   gridManager.updateCell(targetI, targetJ);
   updateMergeablePairs();
+  updateAutoMergeLevel();
 
   const targetCell = document.getElementById(`cell-${targetI}-${targetJ}`);
   eventManager.createParticles(targetCell);
@@ -795,6 +833,7 @@ function startGameTimers() {
       coopManager.updateCoopTimers();
       coopManager.updatePlaceButtonStates();
       slaughterHouseManager.updateSlaughterHouseTimers();
+      coopManager.updateAutoButcherTimer();
     },
     1000,
     "gameMainTimer"

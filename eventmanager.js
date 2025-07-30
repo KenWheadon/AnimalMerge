@@ -14,6 +14,7 @@ const eventManager = {
     "🏡 Create better animals to unlock coops that generate eggs automatically!",
     "⚙️ Buy Auto-Merge to automatically combine animals every 25 seconds!",
     "🔀 Buy Shuffle to rearrange your animals after auto-merging!",
+    "🔪 Buy Auto-Butcher to automatically sell your lowest value animals!",
     "💡 Tip: Merge two of the same animal type to create the next tier!",
     "🎯 Goal: Keep merging to discover all the different animal types!",
   ],
@@ -31,6 +32,12 @@ const eventManager = {
     this.setupButtonListener("buyShuffle", () => coopManager.buyShuffle());
     this.setupButtonListener("shuffleToggle", () =>
       coopManager.toggleShuffle()
+    );
+    this.setupButtonListener("buyAutoButcher", () =>
+      coopManager.buyAutoButcher()
+    );
+    this.setupButtonListener("autoButcherToggle", () =>
+      coopManager.toggleAutoButcher()
     );
     this.setupButtonListener("helpButton", () => this.playTutorialSequence());
   },

@@ -9,16 +9,45 @@ const slaughterHouseManager = {
     }
 
     const house = gameState.slaughterHouses[0];
+    const currentProcessTime = this.calculateSlaughterHouseProcessTime(
+      house.level
+    );
+    const nextLevelRequirement = this.getSlaughterHouseNextLevelRequirement(
+      house.level
+    );
 
     return `
       <div class="slaughter-house-section">
         <div class="slaughter-house-header">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-bold text-red-800">🔪 Butcher Shop</h3>
+            <span class="text-xs text-gray-600">Lv.${house.level}</span>
+          </div>
+          
           <div class="butcher-image-container">
             <img src="images/butcher.png" alt="Butcher" class="butcher-image" />
           </div>
           
-          <div class="compact-queue-display">
-            Queue:&nbsp;<span id="queueCount0">${house.queue.length}</span>/${GAME_CONFIG.gameplayConfig.slaughterHouseQueueMax}
+          <div class="space-y-1 text-xs mb-2">
+            <div class="flex justify-between">
+              <span>Process Time:</span>
+              <span class="font-mono">${currentProcessTime.toFixed(1)}s</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Queue:</span>
+              <span id="queueCount0">${
+                house.queue.length
+              }</span>/<span id="queueMax0">${house.queueMax}</span>
+            </div>
+            <div id="slaughterHouseProgress" class="text-gray-500">${
+              gameState.totalSlaughtered
+            }/${nextLevelRequirement} animals slaughtered</div>
+          </div>
+          
+          <div class="mb-2">
+            <div class="coop-progress-bar h-1">
+              <div id="slaughterHouseLevelBar" class="coop-progress-fill" style="width: 0%"></div>
+            </div>
           </div>
         </div>
         
@@ -28,6 +57,107 @@ const slaughterHouseManager = {
         </div>
       </div>
     `;
+  },
+
+  calculateSlaughterHouseProcessTime(level) {
+    const baseTime = GAME_CONFIG.slaughterHouseConfig.baseProcessTime;
+    const reductionFactor =
+      GAME_CONFIG.slaughterHouseConfig.timeReductionFactor;
+    const minimumTime = GAME_CONFIG.slaughterHouseConfig.minimumProcessTime;
+
+    const calculatedTime = baseTime * Math.pow(reductionFactor, level - 1);
+    return Math.max(calculatedTime, minimumTime);
+  },
+
+  calculateSlaughterHouseQueueMax(level) {
+    return GAME_CONFIG.slaughterHouseConfig.baseQueueMax + (level - 1) * 2;
+  },
+
+  getSlaughterHouseNextLevelRequirement(currentLevel) {
+    if (currentLevel < 12) {
+      return (
+        GAME_CONFIG.slaughterHouseConfig.slaughterRequirements[currentLevel] ||
+        330
+      );
+    } else {
+      let requirement = 330;
+      let gap = 45;
+      for (let i = 12; i < currentLevel; i++) {
+        requirement += gap;
+        gap += 10;
+      }
+      return requirement;
+    }
+  },
+
+  updateSlaughterHouseLevel() {
+    const house = gameState.slaughterHouses[0];
+    if (!house) return;
+
+    const currentLevel = house.level;
+    const nextRequirement =
+      this.getSlaughterHouseNextLevelRequirement(currentLevel);
+
+    if (gameState.totalSlaughtered >= nextRequirement) {
+      house.level += 1;
+      house.processTime = this.calculateSlaughterHouseProcessTime(house.level);
+      house.queueMax = this.calculateSlaughterHouseQueueMax(house.level);
+
+      // Update UI elements
+      const levelDisplay = document.querySelector(
+        ".slaughter-house-section .text-xs.text-gray-600"
+      );
+      if (levelDisplay) {
+        levelDisplay.textContent = `Lv.${house.level}`;
+      }
+
+      const processTimeDisplay = document.querySelector(
+        ".slaughter-house-section .font-mono"
+      );
+      if (processTimeDisplay) {
+        processTimeDisplay.textContent = `${house.processTime.toFixed(1)}s`;
+      }
+
+      const queueMaxDisplay = document.getElementById("queueMax0");
+      if (queueMaxDisplay) {
+        queueMaxDisplay.textContent = house.queueMax;
+      }
+
+      const newNextRequirement = this.getSlaughterHouseNextLevelRequirement(
+        house.level
+      );
+      const progressElement = document.getElementById("slaughterHouseProgress");
+      if (progressElement) {
+        progressElement.textContent = `${gameState.totalSlaughtered}/${newNextRequirement} animals slaughtered`;
+      }
+
+      const levelBarElement = document.getElementById("slaughterHouseLevelBar");
+      if (levelBarElement) {
+        levelBarElement.style.width = "0%";
+        levelBarElement.classList.remove("urgent");
+      }
+
+      eventManager.showAchievement(`🆙 Butcher Shop Level ${house.level}!`);
+      audioManager.playSound("achievement-awarded");
+      updateStatus(
+        `Butcher shop leveled up! Faster processing and bigger queue! 🆙`
+      );
+
+      saveManager.saveOnAction();
+    }
+
+    // Update progress bar
+    const levelBarElement = document.getElementById("slaughterHouseLevelBar");
+    if (levelBarElement) {
+      const progress = (gameState.totalSlaughtered / nextRequirement) * 100;
+      levelBarElement.style.width = `${Math.min(progress, 100)}%`;
+
+      if (progress >= 90) {
+        levelBarElement.classList.add("urgent");
+      } else {
+        levelBarElement.classList.remove("urgent");
+      }
+    }
   },
 
   updateVisibility() {
@@ -48,19 +178,18 @@ const slaughterHouseManager = {
     gameState.slaughterHouses = [
       {
         level: 1,
-        processTime: GAME_CONFIG.gameplayConfig.slaughterHouseProcessTime,
+        processTime: GAME_CONFIG.slaughterHouseConfig.baseProcessTime,
         timer: 0,
         queue: [],
         currentAnimal: null,
+        queueMax: GAME_CONFIG.slaughterHouseConfig.baseQueueMax,
       },
     ];
   },
 
   addAnimalToQueue(houseIndex, animalType, gridI, gridJ) {
     const house = gameState.slaughterHouses[0];
-    if (
-      house.queue.length >= GAME_CONFIG.gameplayConfig.slaughterHouseQueueMax
-    ) {
+    if (house.queue.length >= house.queueMax) {
       audioManager.playSound("invalid-action");
       updateStatus("Slaughter house queue is full! 😕");
       return false;
@@ -315,7 +444,7 @@ const slaughterHouseManager = {
         audioManager.playSound("earn-money");
 
         updateMoney();
-        updateAutoMergeLevel();
+        this.updateSlaughterHouseLevel();
         saveManager.saveOnAction();
 
         achievementManager.checkAchievements();
@@ -334,6 +463,34 @@ const slaughterHouseManager = {
 
         const animalConfig = GAME_CONFIG.animalTypes[animal.type];
         updateStatus(`Processed ${animalConfig.name} for 💰${animal.value}!`);
+      }
+    }
+
+    // Update slaughter house progress display
+    this.updateSlaughterHouseProgressDisplay();
+  },
+
+  updateSlaughterHouseProgressDisplay() {
+    const house = gameState.slaughterHouses[0];
+    if (!house) return;
+
+    const nextRequirement = this.getSlaughterHouseNextLevelRequirement(
+      house.level
+    );
+    const progressElement = document.getElementById("slaughterHouseProgress");
+    if (progressElement) {
+      progressElement.textContent = `${gameState.totalSlaughtered}/${nextRequirement} animals slaughtered`;
+    }
+
+    const levelBarElement = document.getElementById("slaughterHouseLevelBar");
+    if (levelBarElement) {
+      const progress = (gameState.totalSlaughtered / nextRequirement) * 100;
+      levelBarElement.style.width = `${Math.min(progress, 100)}%`;
+
+      if (progress >= 90) {
+        levelBarElement.classList.add("urgent");
+      } else {
+        levelBarElement.classList.remove("urgent");
       }
     }
   },

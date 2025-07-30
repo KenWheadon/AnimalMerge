@@ -29,10 +29,12 @@ const saveManager = {
       purchasedCells: Array.from(gameState.purchasedCells),
       createdAnimals: Array.from(gameState.createdAnimals),
       totalSlaughtered: gameState.totalSlaughtered,
+      totalMerges: gameState.totalMerges,
       eggButtonClicked: gameState.eggButtonClicked,
       achievements: gameState.achievements,
       autoMerge: gameState.autoMerge,
       shuffle: gameState.shuffle,
+      autoButcher: gameState.autoButcher,
       slaughterHouses: gameState.slaughterHouses,
       lastInteractionTime: gameState.lastInteractionTime,
       purchaseConfig: {},
@@ -62,6 +64,7 @@ const saveManager = {
     gameState.purchasedCells = new Set(saveData.purchasedCells || []);
     gameState.createdAnimals = new Set(saveData.createdAnimals || []);
     gameState.totalSlaughtered = saveData.totalSlaughtered || 0;
+    gameState.totalMerges = saveData.totalMerges || 0;
     gameState.eggButtonClicked = saveData.eggButtonClicked || false;
     gameState.lastInteractionTime = saveData.lastInteractionTime || Date.now();
     gameState.achievements = saveData.achievements || [];
@@ -74,7 +77,28 @@ const saveManager = {
       Object.assign(gameState.shuffle, saveData.shuffle);
     }
 
+    if (saveData.autoButcher) {
+      Object.assign(gameState.autoButcher, saveData.autoButcher);
+    } else {
+      // Initialize autoButcher if not present in save data
+      gameState.autoButcher = {
+        owned: false,
+        enabled: true,
+        timer: GAME_CONFIG.autoButcherConfig.checkInterval,
+      };
+    }
+
     gameState.slaughterHouses = saveData.slaughterHouses || [];
+
+    // Ensure slaughter houses have the new properties
+    if (gameState.slaughterHouses.length > 0) {
+      const house = gameState.slaughterHouses[0];
+      if (!house.level) house.level = 1;
+      if (!house.queueMax)
+        house.queueMax = GAME_CONFIG.slaughterHouseConfig.baseQueueMax;
+      if (!house.processTime)
+        house.processTime = GAME_CONFIG.slaughterHouseConfig.baseProcessTime;
+    }
 
     if (saveData.purchaseConfig) {
       Object.entries(saveData.purchaseConfig).forEach(
@@ -98,9 +122,15 @@ const saveManager = {
             timer: config.baseTime,
             stored: 0,
             eggsMerged: 0,
+            autoPlacement: true,
           };
         }
         Object.assign(gameState[coopKey], saveData[coopKey]);
+
+        // Ensure autoPlacement property exists
+        if (gameState[coopKey].autoPlacement === undefined) {
+          gameState[coopKey].autoPlacement = true;
+        }
       }
     });
   },

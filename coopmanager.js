@@ -12,7 +12,16 @@ const coopManager = {
           timer: config.baseTime,
           stored: 0,
           eggsMerged: 0,
+          autoPlacement: true,
         };
+      }
+
+      // Ensure autoPlacement property exists for existing saves
+      if (
+        gameState[coopKey] &&
+        gameState[coopKey].autoPlacement === undefined
+      ) {
+        gameState[coopKey].autoPlacement = true;
       }
     });
   },
@@ -62,6 +71,7 @@ const coopManager = {
         stored: 0,
         owned: false,
         eggsMerged: 0,
+        autoPlacement: true,
       };
 
       const unpurchasedClass = coopState.owned ? "hidden" : "";
@@ -74,6 +84,15 @@ const coopManager = {
       const nextLevelRequirement = this.getCoopNextLevelRequirement(
         coopState.level
       );
+
+      const hasAutoPlacement = coopState.level >= config.autoPlacementLevel;
+      const autoPlacementToggleClass = hasAutoPlacement ? "" : "hidden";
+      const autoPlacementText = coopState.autoPlacement
+        ? "🔵 Auto-Place ON"
+        : "🔴 Auto-Place OFF";
+      const autoPlacementButtonClass = coopState.autoPlacement
+        ? "bg-green-500"
+        : "bg-red-500";
 
       html += `
         <div id="${animalType}Coop" class="compact-coop hidden">
@@ -130,6 +149,12 @@ const coopManager = {
                   <span id="${animalType}CoopStored">Stored: ${
         coopState.stored
       }</span>
+                </div>
+                
+                <div class="coop-auto-placement ${autoPlacementToggleClass}">
+                  <button id="${animalType}AutoPlacementToggle" class="enhanced-button w-full px-2 py-1 rounded text-xs font-bold text-white ${autoPlacementButtonClass}">
+                    ${autoPlacementText}
+                  </button>
                 </div>
               </div>
             </div>
@@ -225,6 +250,30 @@ const coopManager = {
           `place${producedType}Click`
         );
       }
+
+      const autoPlacementButton = document.getElementById(
+        `${animalType}AutoPlacementToggle`
+      );
+      if (autoPlacementButton) {
+        utilityManager.addEventListener(
+          autoPlacementButton,
+          "mouseenter",
+          () => {
+            audioManager.playSound("button-hover");
+          },
+          `${animalType}AutoPlacementHover`
+        );
+
+        utilityManager.addEventListener(
+          autoPlacementButton,
+          "click",
+          () => {
+            audioManager.playSound("button-click");
+            this.toggleAutoPlacement(animalType);
+          },
+          `${animalType}AutoPlacementClick`
+        );
+      }
     });
   },
 
@@ -295,6 +344,33 @@ const coopManager = {
     }
   },
 
+  toggleAutoPlacement(animalType) {
+    const coop = gameState[`${animalType}Coop`];
+    if (!coop) return;
+
+    coop.autoPlacement = !coop.autoPlacement;
+
+    const button = document.getElementById(`${animalType}AutoPlacementToggle`);
+    if (button) {
+      if (coop.autoPlacement) {
+        button.textContent = "🔵 Auto-Place ON";
+        button.classList.remove("bg-red-500");
+        button.classList.add("bg-green-500");
+      } else {
+        button.textContent = "🔴 Auto-Place OFF";
+        button.classList.remove("bg-green-500");
+        button.classList.add("bg-red-500");
+      }
+    }
+
+    updateStatus(
+      `Auto-placement ${
+        coop.autoPlacement ? "enabled" : "disabled"
+      } for ${animalType} coop`
+    );
+    saveManager.saveOnAction();
+  },
+
   placeStoredAnimal(animalType, producedType) {
     const coop = gameState[`${animalType}Coop`];
 
@@ -316,6 +392,29 @@ const coopManager = {
       audioManager.playSound("invalid-action");
       updateStatus("Grid is full! 😕");
     }
+  },
+
+  tryAutoPlaceEgg(animalType, producedType) {
+    const coop = gameState[`${animalType}Coop`];
+    const config = GAME_CONFIG.coopConfig[animalType];
+
+    if (!coop || !coop.owned || !coop.autoPlacement) return false;
+    if (coop.level < config.autoPlacementLevel) return false;
+    if (coop.stored === 0) return false;
+
+    // Try to place the egg automatically
+    if (placeAnimal(producedType)) {
+      coop.stored -= 1;
+      document.getElementById(
+        `${animalType}CoopStored`
+      ).textContent = `Stored: ${coop.stored}`;
+
+      this.updatePlaceButtonStates();
+      saveManager.saveOnAction();
+      return true;
+    }
+
+    return false;
   },
 
   updateCoopVisibility() {
@@ -364,7 +463,11 @@ const coopManager = {
       if (placeButton && coop && coop.owned) {
         placeButton.disabled = isGridFull() || coop.stored === 0;
 
-        if (coop.stored > 0 && !isGridFull()) {
+        // Only show manual place button if auto-placement is off or level is too low
+        const hasAutoPlacement =
+          coop.level >= config.autoPlacementLevel && coop.autoPlacement;
+
+        if (coop.stored > 0 && !isGridFull() && !hasAutoPlacement) {
           placeButton.classList.remove("hidden");
           placeButton.classList.add("pulse");
 
@@ -380,7 +483,7 @@ const coopManager = {
             eggImage.style.transform = "scale(1)";
           }
 
-          if (coop.stored === 0) {
+          if (coop.stored === 0 || hasAutoPlacement) {
             placeButton.classList.add("hidden");
           }
         }
@@ -488,6 +591,21 @@ const coopManager = {
               levelBarElement.classList.remove("urgent");
             }
 
+            // Show/hide auto-placement toggle when reaching level 6
+            if (coop.level === config.autoPlacementLevel) {
+              const autoPlacementToggle = document.querySelector(
+                `#${animalType}Coop .coop-auto-placement`
+              );
+              if (autoPlacementToggle) {
+                autoPlacementToggle.classList.remove("hidden");
+                eventManager.showAchievement(
+                  `🤖 Auto-Placement Unlocked for ${
+                    animalType.charAt(0).toUpperCase() + animalType.slice(1)
+                  } Coop!`
+                );
+              }
+            }
+
             eventManager.showAchievement(
               `🆙 ${
                 animalType.charAt(0).toUpperCase() + animalType.slice(1)
@@ -543,12 +661,16 @@ const coopManager = {
             storedElement.textContent = `Stored: ${coop.stored}`;
           }
 
-          const placeButton = document.getElementById(`place${producedType}`);
-          if (placeButton) {
-            placeButton.classList.remove("hidden");
-            placeButton.classList.add("pulse");
-            if (!isGridFull()) {
-              placeButton.disabled = false;
+          // Try auto-placement first if enabled and level 6+
+          if (!this.tryAutoPlaceEgg(animalType, producedType)) {
+            // If auto-placement failed or disabled, show manual button
+            const placeButton = document.getElementById(`place${producedType}`);
+            if (placeButton) {
+              placeButton.classList.remove("hidden");
+              placeButton.classList.add("pulse");
+              if (!isGridFull()) {
+                placeButton.disabled = false;
+              }
             }
           }
 
@@ -679,6 +801,96 @@ const coopManager = {
       `Shuffle ${gameState.shuffle.enabled ? "enabled" : "disabled"}`
     );
     saveManager.saveOnAction();
+  },
+
+  buyAutoButcher() {
+    if (gameState.money >= GAME_CONFIG.autoButcherConfig.buyCost) {
+      gameState.autoButcher.owned = true;
+      gameState.autoButcher.timer = GAME_CONFIG.autoButcherConfig.checkInterval;
+      gameState.money -= GAME_CONFIG.autoButcherConfig.buyCost;
+
+      audioManager.playSound("coop-bought");
+
+      document.getElementById("buyAutoButcher").classList.add("hidden");
+      document.getElementById("autoButcherToggle").classList.remove("hidden");
+      updateMoney();
+      eventManager.showAchievement("🔪 Auto-Butcher Activated!");
+      updateStatus("Bought Auto-Butcher 🔪");
+      saveManager.saveOnAction();
+    } else {
+      audioManager.playSound("invalid-action");
+      updateStatus("Not enough money for Auto-Butcher! 😕");
+      utilityManager.addScreenShake();
+    }
+  },
+
+  toggleAutoButcher() {
+    gameState.autoButcher.enabled = !gameState.autoButcher.enabled;
+    const button = document.getElementById("autoButcherToggle");
+    if (gameState.autoButcher.enabled) {
+      button.textContent = "🔵 ON";
+      button.classList.remove("bg-red-500");
+      button.classList.add("bg-green-500");
+    } else {
+      button.textContent = "🔴 OFF";
+      button.classList.remove("bg-green-500");
+      button.classList.add("bg-red-500");
+    }
+    updateStatus(
+      `Auto-Butcher ${gameState.autoButcher.enabled ? "enabled" : "disabled"}`
+    );
+    saveManager.saveOnAction();
+  },
+
+  findLowestValueAnimal() {
+    let lowestValue = Infinity;
+    let lowestAnimal = null;
+
+    GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
+      if (gameState.purchasedCells.has(`${i}-${j}`) && gameState.grid[i][j]) {
+        const animalType = gameState.grid[i][j];
+        const animalConfig = GAME_CONFIG.animalTypes[animalType];
+
+        if (
+          animalConfig.sellPrice > 0 &&
+          animalConfig.sellPrice < lowestValue
+        ) {
+          lowestValue = animalConfig.sellPrice;
+          lowestAnimal = { i, j, type: animalType };
+        }
+      }
+    });
+
+    return lowestAnimal;
+  },
+
+  updateAutoButcherTimer() {
+    if (!gameState.autoButcher.owned || !gameState.autoButcher.enabled) return;
+
+    gameState.autoButcher.timer -= 1000;
+
+    if (gameState.autoButcher.timer <= 0) {
+      // Find the lowest value animal and try to butcher it
+      const house = gameState.slaughterHouses[0];
+      if (house && house.queue.length < house.queueMax) {
+        const lowestAnimal = this.findLowestValueAnimal();
+        if (lowestAnimal) {
+          if (
+            slaughterHouseManager.addAnimalToQueue(
+              0,
+              lowestAnimal.type,
+              lowestAnimal.i,
+              lowestAnimal.j
+            )
+          ) {
+            const animalConfig = GAME_CONFIG.animalTypes[lowestAnimal.type];
+            updateStatus(`Auto-butcher sent ${animalConfig.name} to queue! 🔪`);
+          }
+        }
+      }
+
+      gameState.autoButcher.timer = GAME_CONFIG.autoButcherConfig.checkInterval;
+    }
   },
 
   performShuffle() {
@@ -865,6 +1077,7 @@ const coopManager = {
         gameState.grid[source.i][source.j] = null;
         gameState.grid[target.i][target.j] = newType;
         gameState.createdAnimals.add(newType);
+        gameState.totalMerges += 1;
 
         this.checkCoopLevelUp(sourceType);
 
@@ -903,6 +1116,7 @@ const coopManager = {
       "clearAutoMergeHighlight"
     );
     updateAnimalValues();
+    updateAutoMergeLevel();
 
     if (mergesMade) {
       const message =

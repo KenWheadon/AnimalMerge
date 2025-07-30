@@ -84,6 +84,7 @@ const GAME_CONFIG = {
       baseTime: 8,
       timeReductionFactor: 0.95,
       upgradeCostMultiplier: 3,
+      autoPlacementLevel: 6,
     },
     panda: {
       buyCost: 45,
@@ -91,6 +92,7 @@ const GAME_CONFIG = {
       baseTime: 12,
       timeReductionFactor: 0.95,
       upgradeCostMultiplier: 3,
+      autoPlacementLevel: 6,
     },
     vulture: {
       buyCost: 185,
@@ -98,17 +100,29 @@ const GAME_CONFIG = {
       baseTime: 18,
       timeReductionFactor: 0.95,
       upgradeCostMultiplier: 3,
+      autoPlacementLevel: 6,
     },
   },
   autoMergeConfig: {
     buyCost: 1,
     baseInterval: 25,
     intervalReductionFactor: 0.9,
-    animalRequirements: [0, 5, 12, 20, 40, 65, 90, 120, 150, 180, 240, 300],
+    mergeRequirements: [0, 5, 12, 20, 40, 65, 90, 120, 150, 180, 240, 300],
   },
   shuffleConfig: {
     buyCost: 50,
     delayAfterAutoMerge: 250,
+  },
+  slaughterHouseConfig: {
+    baseProcessTime: 8.0,
+    baseQueueMax: 5,
+    timeReductionFactor: 0.95,
+    minimumProcessTime: 3.0,
+    slaughterRequirements: [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330],
+  },
+  autoButcherConfig: {
+    buyCost: 100,
+    checkInterval: 2000,
   },
   animationConfig: {
     mergeExplosionDuration: 800,
