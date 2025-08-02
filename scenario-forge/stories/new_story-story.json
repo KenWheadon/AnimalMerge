@@ -1,0 +1,717 @@
+{
+  "metadata": {
+    "title": "New Story",
+    "author": "Author",
+    "description": "A new interactive story",
+    "version": "1.0.0",
+    "tags": []
+  },
+  "totalScenes": 7,
+  "currentScene": 1,
+  "scenes": {
+    "1": {
+      "id": "scene_1",
+      "name": "New Scene",
+      "type": "choice",
+      "content": "oh mercy may - my prized golden egg. It might have cost me 1000 gold, but surely the meat from whatever creature comes out of this one, will be worth the squeeze.",
+      "choices": [],
+      "uiPositions": {
+        "textContent": {
+          "x": 41.5625,
+          "y": 92.56944444444444,
+          "width": 80
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      },
+      "background": "images/outside-barn.png",
+      "images": [
+        {
+          "src": "images/egg-pile.png",
+          "x": 25.70110971694885,
+          "y": 75.65670831070071,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 1,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          }
+        },
+        {
+          "src": "images/cow-fork-happy.png",
+          "x": 65.12294881613897,
+          "y": 55.91091797935904,
+          "scale": 0.6,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/mantis-lady.png",
+          "x": 96.41012270438509,
+          "y": 73.15372080391091,
+          "scale": 0.4,
+          "rotation": 0,
+          "zIndex": 3,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        }
+      ]
+    },
+    "2": {
+      "id": "scene_2",
+      "name": "New Scene",
+      "type": "choice",
+      "content": "Oh my - is it starting to finally move? Oh my hooves and hay! This is a wild moment for sure.",
+      "choices": [],
+      "uiPositions": {
+        "textContent": {
+          "x": 41.5625,
+          "y": 92.56944444444444,
+          "width": 80
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      },
+      "background": "images/outside-barn.png",
+      "images": [
+        {
+          "src": "images/cow-fork-confused.png",
+          "x": 65.12294881613897,
+          "y": 55.91091797935904,
+          "scale": 0.6,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/mantis-lady.png",
+          "x": 95.99296038587515,
+          "y": 73.29277566539923,
+          "scale": 0.4,
+          "rotation": 0,
+          "zIndex": 1754085356273,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/egg-pile.png",
+          "x": 23.928169863281568,
+          "y": 75.51765344921239,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 52,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        }
+      ]
+    },
+    "3": {
+      "id": "scene_3",
+      "name": "New Scene",
+      "type": "choice",
+      "content": "I wonder what will be inside",
+      "choices": [],
+      "uiPositions": {
+        "textContent": {
+          "x": 41.5625,
+          "y": 92.56944444444444,
+          "width": 80
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      },
+      "background": "images/outside-barn.png",
+      "images": [
+        {
+          "src": "images/cow-fork-confused.png",
+          "x": 65.12294881613897,
+          "y": 55.91091797935904,
+          "scale": 0.6,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/mantis-lady.png",
+          "x": 94.22002053220785,
+          "y": 73.0146659424226,
+          "scale": 0.4,
+          "rotation": 0,
+          "zIndex": 1754085360914,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/egggroup-back.png",
+          "x": 24.032460442909056,
+          "y": 78.15969581749049,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 3,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          }
+        },
+        {
+          "src": "images/giant-gold.png",
+          "x": 24.7,
+          "y": 54.7,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 5,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": "slide_to",
+          "effectEditMode": "end",
+          "moveStartX": 25.596819137321365,
+          "moveStartY": 68.98207495926127,
+          "moveEndX": 25.388237978066385,
+          "moveEndY": 47.70668115154807
+        },
+        {
+          "src": "images/egggroup-front.png",
+          "x": 26.74401551322372,
+          "y": 84.69527430744161,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 5,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          }
+        }
+      ]
+    },
+    "4": {
+      "id": "scene_4",
+      "name": "New Scene",
+      "type": "choice",
+      "content": "oh my goodness - it's hovering its cracking",
+      "choices": [],
+      "uiPositions": {
+        "textContent": {
+          "x": 41.5625,
+          "y": 92.56944444444444,
+          "width": 80
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      },
+      "background": "images/outside-barn.png",
+      "images": [
+        {
+          "src": "images/cow-fork-confused.png",
+          "x": 65.12294881613897,
+          "y": 55.91091797935904,
+          "scale": 0.6,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/mantis-lady.png",
+          "x": 94.22002053220785,
+          "y": 73.0146659424226,
+          "scale": 0.4,
+          "rotation": 0,
+          "zIndex": 1754085360914,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/egggroup-back.png",
+          "x": 24.032460442909056,
+          "y": 78.15969581749049,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 3,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          }
+        },
+        {
+          "src": "images/egg-crack1.png",
+          "x": 25.208333333333332,
+          "y": 43.40277777777778,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 5,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": "wiggle",
+          "effectEditMode": "start",
+          "moveStartX": 25.596819137321365,
+          "moveStartY": 68.98207495926127,
+          "moveEndX": 25.388237978066385,
+          "moveEndY": 47.70668115154807
+        },
+        {
+          "src": "images/egggroup-front.png",
+          "x": 26.74401551322372,
+          "y": 84.69527430744161,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 5,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          }
+        }
+      ]
+    },
+    "5": {
+      "id": "scene_5",
+      "name": "New Scene",
+      "type": "choice",
+      "content": "this is blowing my mind completely",
+      "choices": [],
+      "uiPositions": {
+        "textContent": {
+          "x": 41.5625,
+          "y": 92.56944444444444,
+          "width": 80
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      },
+      "background": "images/outside-barn.png",
+      "images": [
+        {
+          "src": "images/cow-fork-confused.png",
+          "x": 65.12294881613897,
+          "y": 55.91091797935904,
+          "scale": 0.6,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/mantis-lady.png",
+          "x": 94.22002053220785,
+          "y": 73.0146659424226,
+          "scale": 0.4,
+          "rotation": 0,
+          "zIndex": 1754085360914,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/egggroup-back.png",
+          "x": 24.032460442909056,
+          "y": 78.15969581749049,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 3,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          }
+        },
+        {
+          "src": "images/egg-crack2.png",
+          "x": 25.208333333333332,
+          "y": 43.40277777777778,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 5,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": "wiggle",
+          "effectEditMode": "start",
+          "moveStartX": 25.596819137321365,
+          "moveStartY": 68.98207495926127,
+          "moveEndX": 25.388237978066385,
+          "moveEndY": 47.70668115154807
+        },
+        {
+          "src": "images/egggroup-front.png",
+          "x": 26.74401551322372,
+          "y": 84.69527430744161,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 5,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          }
+        }
+      ]
+    },
+    "6": {
+      "id": "scene_6",
+      "name": "New Scene",
+      "type": "choice",
+      "content": "Ok this is taking too long, come on now. ",
+      "choices": [],
+      "uiPositions": {
+        "textContent": {
+          "x": 41.5625,
+          "y": 92.56944444444444,
+          "width": 80
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      },
+      "background": "images/outside-barn.png",
+      "images": [
+        {
+          "src": "images/cow-fork-angry.png",
+          "x": 65.12294881613897,
+          "y": 55.91091797935904,
+          "scale": 0.6,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/mantis-lady.png",
+          "x": 94.22002053220785,
+          "y": 73.0146659424226,
+          "scale": 0.4,
+          "rotation": 0,
+          "zIndex": 1754085360914,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/egggroup-back.png",
+          "x": 24.032460442909056,
+          "y": 78.15969581749049,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 3,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          }
+        },
+        {
+          "src": "images/egg-crack3.png",
+          "x": 25.208333333333332,
+          "y": 43.40277777777778,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 5,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": "wiggle",
+          "effectEditMode": "start",
+          "moveStartX": 25.596819137321365,
+          "moveStartY": 68.98207495926127,
+          "moveEndX": 25.388237978066385,
+          "moveEndY": 47.70668115154807
+        },
+        {
+          "src": "images/egggroup-front.png",
+          "x": 26.74401551322372,
+          "y": 84.69527430744161,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 5,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          }
+        }
+      ]
+    },
+    "7": {
+      "id": "scene_7",
+      "name": "New Scene",
+      "type": "choice",
+      "content": "New scene content",
+      "choices": [],
+      "uiPositions": {
+        "textContent": {
+          "x": 41.5625,
+          "y": 92.56944444444444,
+          "width": 80
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      },
+      "background": "images/outside-barn.png",
+      "images": [
+        {
+          "src": "images/cow-fork-confused.png",
+          "x": 65.12294881613897,
+          "y": 55.91091797935904,
+          "scale": 0.6,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/mantis-lady.png",
+          "x": 94.22002053220785,
+          "y": 73.0146659424226,
+          "scale": 0.4,
+          "rotation": 0,
+          "zIndex": 1754085360914,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": ""
+        },
+        {
+          "src": "images/egggroup-back.png",
+          "x": 24.032460442909056,
+          "y": 78.15969581749049,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 3,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          }
+        },
+        {
+          "src": "images/egg-crack3.png",
+          "x": 25.208333333333332,
+          "y": 43.40277777777778,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 5,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          },
+          "effect": "wiggle",
+          "effectEditMode": "start",
+          "moveStartX": 25.596819137321365,
+          "moveStartY": 68.98207495926127,
+          "moveEndX": 25.388237978066385,
+          "moveEndY": 47.70668115154807
+        },
+        {
+          "src": "images/egggroup-front.png",
+          "x": 26.74401551322372,
+          "y": 84.69527430744161,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 5,
+          "opacity": 1,
+          "flipped": false,
+          "animationTiming": {
+            "duration": 1000,
+            "delay": 0,
+            "easing": "ease-in-out"
+          }
+        }
+      ]
+    }
+  },
+  "defaults": {
+    "uiPositions": {
+      "textContent": {
+        "x": 50,
+        "y": 85,
+        "width": 80
+      },
+      "buttonsContainer": {
+        "x": 80,
+        "y": 85,
+        "width": 40
+      },
+      "choiceButton": {
+        "x": 80,
+        "y": 85,
+        "width": 40
+      }
+    },
+    "sceneDimensions": {
+      "width": 960,
+      "height": 720
+    },
+    "buttonColors": {
+      "choiceButton": {
+        "background": "#e74c3c",
+        "backgroundHover": "#c0392b",
+        "text": "#ffffff"
+      },
+      "continueButton": {
+        "background": "#3498db",
+        "backgroundHover": "#2980b9",
+        "text": "#ffffff"
+      }
+    },
+    "animationTiming": {
+      "duration": 1000,
+      "delay": 0,
+      "easing": "ease-in-out"
+    }
+  }
+}

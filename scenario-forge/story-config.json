@@ -1,0 +1,677 @@
+{
+  "metadata": {
+    "title": "Office Dynamics: The Team Project",
+    "author": "Demo Creator",
+    "description": "Navigate office politics and team dynamics to achieve the best outcome for your project presentation.",
+    "version": "1.0.0",
+    "tags": ["workplace", "teamwork", "decision-making", "relationships"]
+  },
+  "totalScenes": 10,
+  "currentScene": 1,
+  "scenes": {
+    "1": {
+      "id": "scene_1",
+      "name": "Morning Arrival",
+      "type": "choice",
+      "background": "images/bg-hallway.png",
+      "content": "You arrive at the office hallway, ready for an important day. Your team has been working on a big presentation, and today you'll need to make some crucial decisions about how to proceed.",
+      "images": [
+        {
+          "src": "images/astro-neutral.png",
+          "x": 18.209801143303856,
+          "y": 59.16504463386805,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/logo.png",
+          "x": 51.043142619827044,
+          "y": 35.682484283061505,
+          "scale": 0.8,
+          "rotation": 0,
+          "zIndex": 1,
+          "opacity": 1
+        }
+      ],
+      "choices": [
+        {
+          "text": "Head straight to your personal office",
+          "nextScene": "2",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 84.79540013871177,
+            "width": 33
+          }
+        },
+        {
+          "text": "Check in with your team first",
+          "nextScene": "3",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 91.79540013871177,
+            "width": 33
+          }
+        }
+      ],
+      "uiPositions": {
+        "textContent": {
+          "x": 33.21932867542874,
+          "y": 90.0932948520035,
+          "width": 65
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      },
+      "overlay": {
+        "color": "#000000",
+        "opacity": 0.2,
+        "zIndex": 1
+      }
+    },
+    "2": {
+      "id": "scene_2",
+      "name": "Personal Office - Solo Planning",
+      "type": "choice",
+      "background": "images/bg-personaloffice.png",
+      "content": "In your quiet office, you have time to think about the presentation strategy. Fern appears at your door looking concerned about the project timeline.",
+      "images": [
+        {
+          "src": "images/astro-neutral.png",
+          "x": 70,
+          "y": 60,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/fern-neutral.png",
+          "x": 20,
+          "y": 55,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        }
+      ],
+      "choices": [
+        {
+          "text": "Invite Fern in to discuss concerns",
+          "nextScene": "4",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 84.79540013871177,
+            "width": 33
+          }
+        },
+        {
+          "text": "Tell Fern you'll handle it alone",
+          "nextScene": "5",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 91.79540013871177,
+            "width": 33
+          }
+        }
+      ],
+      "uiPositions": {
+        "textContent": {
+          "x": 33.21932867542874,
+          "y": 90.0932948520035,
+          "width": 65
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      }
+    },
+    "3": {
+      "id": "scene_3",
+      "name": "Shared Office - Team Check-in",
+      "type": "choice",
+      "background": "images/bg-sharedoffice.png",
+      "content": "You enter the shared office where Sally and Tristen are already working. The atmosphere seems a bit tense - there might be some disagreements brewing.",
+      "images": [
+        {
+          "src": "images/sally-neutral.png",
+          "x": 14.978583410693636,
+          "y": 57.30362216703582,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/tristen-upset.png",
+          "x": 57.50557808504747,
+          "y": 57.446808510638306,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        }
+      ],
+      "choices": [
+        {
+          "text": "Address the tension directly",
+          "nextScene": "4",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 84.79540013871177,
+            "width": 33
+          }
+        },
+        {
+          "text": "Focus on work and ignore the tension",
+          "nextScene": "6",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 91.79540013871177,
+            "width": 33
+          }
+        }
+      ],
+      "uiPositions": {
+        "textContent": {
+          "x": 33.21932867542874,
+          "y": 90.0932948520035,
+          "width": 65
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      }
+    },
+    "4": {
+      "id": "scene_4",
+      "name": "Open Communication",
+      "type": "choice",
+      "background": "images/bg-sharedoffice.png",
+      "content": "You decide to address the issues head-on. The team gathers and you facilitate an open discussion. Everyone seems more relaxed now that concerns are being heard.",
+      "images": [
+        {
+          "src": "images/astro-happy.png",
+          "x": 21.23255321574567,
+          "y": 60.453721726290354,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 15,
+          "opacity": 1,
+          "effect": ""
+        },
+        {
+          "src": "images/fern-happy.png",
+          "x": 33.53202716568134,
+          "y": 56.58769044902342,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/sally-happy.png",
+          "x": 46.56113092620641,
+          "y": 59.88097635188044,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/tristen-happy.png",
+          "x": 66.78229996254133,
+          "y": 61.026467100700266,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 5,
+          "opacity": 1
+        }
+      ],
+      "choices": [
+        {
+          "text": "Propose a collaborative approach",
+          "nextScene": "7",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 84.79540013871177,
+            "width": 33
+          }
+        },
+        {
+          "text": "Assign specific roles to each person",
+          "nextScene": "8",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 91.79540013871177,
+            "width": 33
+          }
+        }
+      ],
+      "uiPositions": {
+        "textContent": {
+          "x": 33.21932867542874,
+          "y": 90.0932948520035,
+          "width": 65
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      }
+    },
+    "5": {
+      "id": "scene_5",
+      "name": "Going Solo",
+      "type": "choice",
+      "background": "images/bg-personaloffice.png",
+      "content": "You decide to work independently, believing you can handle the presentation better alone. Fern leaves looking disappointed, and you notice the team energy seems lower.",
+      "images": [
+        {
+          "src": "images/astro-neutral.png",
+          "x": 59.069070536310484,
+          "y": 58.87867194666308,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/fern-upset.png",
+          "x": 12.476995488672824,
+          "y": 49.42837326889948,
+          "scale": 0.8,
+          "rotation": 0,
+          "zIndex": 1,
+          "opacity": 1,
+          "effect": ""
+        }
+      ],
+      "choices": [
+        {
+          "text": "Reconsider and reach out to the team",
+          "nextScene": "4",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 84.79540013871177,
+            "width": 33
+          }
+        },
+        {
+          "text": "Continue working alone",
+          "nextScene": "9",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 91.79540013871177,
+            "width": 33
+          }
+        }
+      ],
+      "uiPositions": {
+        "textContent": {
+          "x": 33.21932867542874,
+          "y": 90.0932948520035,
+          "width": 65
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      }
+    },
+    "6": {
+      "id": "scene_6",
+      "name": "Avoiding Conflict",
+      "type": "choice",
+      "background": "images/bg-sharedoffice.png",
+      "content": "You choose to focus on the work and avoid the interpersonal issues. While productive in the short term, you can sense the underlying tensions are still there.",
+      "images": [
+        {
+          "src": "images/astro-neutral.png",
+          "x": 47.91615771730102,
+          "y": 65.17887106517216,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 3,
+          "opacity": 1
+        },
+        {
+          "src": "images/sally-upset.png",
+          "x": 9.87117473656781,
+          "y": 61.599212475110185,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/tristen-upset.png",
+          "x": 92.73627465350727,
+          "y": 63.603821285544896,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        }
+      ],
+      "choices": [
+        {
+          "text": "Try to mediate between Sally and Tristen",
+          "nextScene": "8",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 84.79540013871177,
+            "width": 33
+          }
+        },
+        {
+          "text": "Let them work it out themselves",
+          "nextScene": "10",
+          "displayMode": "text",
+          "position": {
+            "x": 83.04262145567661,
+            "y": 91.79540013871177,
+            "width": 33
+          }
+        }
+      ],
+      "uiPositions": {
+        "textContent": {
+          "x": 33.21932867542874,
+          "y": 90.0932948520035,
+          "width": 65
+        },
+        "buttonsContainer": {
+          "x": 80,
+          "y": 85,
+          "width": 40
+        }
+      }
+    },
+    "7": {
+      "id": "scene_7",
+      "name": "Collaborative Success Setup",
+      "type": "image",
+      "background": "images/bg-sharedoffice.png",
+      "nextScene": "8",
+      "content": "Your collaborative approach pays off! The team works together seamlessly, combining everyone's strengths. The presentation is taking shape beautifully with input from all team members.",
+      "images": [
+        {
+          "src": "images/astro-happy.png",
+          "x": 16.646308692040847,
+          "y": 64.60612569076224,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/fern-happy.png",
+          "x": 49.27118450839563,
+          "y": 58.87867194666308,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/sally-happy.png",
+          "x": 63.863780720183705,
+          "y": 60.02416269548292,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/tristen-happy.png",
+          "x": 36.24208074787055,
+          "y": 64.46293934715976,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        }
+      ],
+      "uiPositions": {
+        "textContent": {
+          "x": 33.21932867542874,
+          "y": 90.0932948520035,
+          "width": 65
+        },
+        "buttonsContainer": {
+          "x": 91.69394635266526,
+          "y": 95.67756225250017,
+          "width": 15
+        }
+      }
+    },
+    "8": {
+      "id": "scene_8",
+      "name": "Team Victory",
+      "type": "image",
+      "background": "images/bg-personaloffice.png",
+      "nextScene": null,
+      "content": "SUCCESS! The presentation was a huge hit! Your team's collaborative effort and strong communication led to an outstanding result. Everyone contributed their best work, and it shows. Congratulations on excellent leadership!",
+      "images": [
+        {
+          "src": "images/trophy.png",
+          "x": 49.688115828732435,
+          "y": 46.13508736604246,
+          "scale": 0.33999999999999997,
+          "rotation": 0,
+          "zIndex": 3,
+          "opacity": 1
+        },
+        {
+          "src": "images/astro-happy.png",
+          "x": 12.893926809009626,
+          "y": 62.1719578495201,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 11,
+          "opacity": 1,
+          "effect": ""
+        },
+        {
+          "src": "images/fern-happy.png",
+          "x": 23.838373967850686,
+          "y": 60.167349039085394,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/sally-happy.png",
+          "x": 86.48230484845524,
+          "y": 59.88097635188044,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/tristen-happy.png",
+          "x": 70.01351769515153,
+          "y": 63.890193972749856,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        }
+      ],
+      "uiPositions": {
+        "textContent": {
+          "x": 41.24525659191218,
+          "y": 89.80692216479854,
+          "width": 100
+        },
+        "buttonsContainer": {
+          "x": 91.69394635266526,
+          "y": 95.67756225250017,
+          "width": 15
+        }
+      }
+    },
+    "9": {
+      "id": "scene_9",
+      "name": "Isolated Struggle",
+      "type": "image",
+      "background": "images/bg-personaloffice.png",
+      "nextScene": null,
+      "content": "The presentation didn't go as well as hoped. Working alone meant missing out on valuable perspectives and support from your teammates. While you completed the task, the result feels incomplete and the team relationships are strained. Sometimes collaboration really is the key to success.",
+      "images": [
+        {
+          "src": "images/astro-upset.png",
+          "x": 36.97171055845996,
+          "y": 63.31744859833993,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/fern-upset.png",
+          "x": 13.7,
+          "y": 51.3,
+          "scale": 0.7,
+          "rotation": 0,
+          "zIndex": 1,
+          "opacity": 1,
+          "effect": ""
+        },
+        {
+          "src": "images/sally-upset.png",
+          "x": 92,
+          "y": 54.2,
+          "scale": 0.7,
+          "rotation": 0,
+          "zIndex": 1,
+          "opacity": 1,
+          "effect": ""
+        },
+        {
+          "src": "images/tristen-upset.png",
+          "x": 82.4,
+          "y": 56,
+          "scale": 0.7,
+          "rotation": 0,
+          "zIndex": 1,
+          "opacity": 1,
+          "effect": ""
+        }
+      ],
+      "uiPositions": {
+        "textContent": {
+          "x": 41.03679093174378,
+          "y": 88.08868604156879,
+          "width": 100
+        },
+        "buttonsContainer": {
+          "x": 92.84050748359147,
+          "y": 95.10481687809025,
+          "width": 12
+        }
+      }
+    },
+    "10": {
+      "id": "scene_10",
+      "name": "Mixed Results",
+      "type": "image",
+      "background": "images/bg-sharedoffice.png",
+      "nextScene": null,
+      "content": "The presentation went okay, but it could have been better. The unresolved tensions affected the team's performance, and while the work got done, it wasn't your team's best effort. You learned that addressing conflicts early leads to better outcomes for everyone.",
+      "images": [
+        {
+          "src": "images/astro-neutral.png",
+          "x": 50.105047149069236,
+          "y": 61.88558516231515,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/sally-neutral.png",
+          "x": 14.353186430188433,
+          "y": 63.460634941942416,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/tristen-neutral.png",
+          "x": 72.51510561717237,
+          "y": 59.88097635188044,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        },
+        {
+          "src": "images/fern-neutral.png",
+          "x": 30.405042263155323,
+          "y": 62.45833053672506,
+          "scale": 1,
+          "rotation": 0,
+          "zIndex": 2,
+          "opacity": 1
+        }
+      ],
+      "uiPositions": {
+        "textContent": {
+          "x": 40.82832527157538,
+          "y": 89.95010850840102,
+          "width": 100
+        },
+        "buttonsContainer": {
+          "x": 92.84050748359147,
+          "y": 95.10481687809025,
+          "width": 12
+        }
+      }
+    }
+  },
+  "defaults": {
+    "uiPositions": {
+      "textContent": {
+        "x": 33.21932867542874,
+        "y": 90.0932948520035,
+        "width": 65
+      },
+      "buttonsContainer": {
+        "x": 91.69394635266526,
+        "y": 95.67756225250017,
+        "width": 15
+      },
+      "choiceButton": {
+        "x": 83.04262145567661,
+        "y": 84.79540013871177,
+        "width": 33
+      }
+    }
+  }
+}

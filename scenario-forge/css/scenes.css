@@ -1,0 +1,207 @@
+/* Scene Items */
+.scene-item {
+  width: 100px;
+  height: 40px;
+  background: #1a1a1a;
+  border: 0px solid #34495e;
+  border-radius: 5px;
+  cursor: move;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  user-select: none;
+}
+
+.scene-item:hover {
+  background: #34495e;
+  border-color: #3498db;
+}
+
+.scene-item.active {
+  background: #3498db;
+  border-color: #2980b9;
+}
+
+.scene-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.9);
+  z-index: 1000;
+}
+
+.scene-item.drag-over {
+  border-color: #27ae60;
+  background: #1e3a2a;
+}
+
+/* Scene Type Color Coding */
+.scene-item.scene-type-choice {
+  background: #2980b9; /* Blue for choice scenes */
+  color: white;
+}
+
+.scene-item.scene-type-choice:hover {
+  background: #3498db; /* Lighter blue on hover */
+}
+
+.scene-item.scene-type-choice.active {
+  background: #1abc9c; /* Teal when active */
+  border-color: #16a085;
+}
+
+.scene-item.scene-type-image {
+  background: #5a9c12; /* Yellow for image scenes */
+  color: white;
+}
+
+.scene-item.scene-type-image:hover {
+  background: #e67e22; /* Orange on hover */
+}
+
+.scene-item.scene-type-image.active {
+  background: #e74c3c; /* Red when active */
+  border-color: #c0392b;
+}
+
+.scene-item-title {
+  font-weight: bold;
+  font-size: 11px;
+  margin-bottom: 4px;
+  word-wrap: break-word;
+  line-height: 1.2;
+}
+
+.scene-item-id {
+  font-size: 10px;
+  color: #bdc3c7;
+  word-wrap: break-word;
+}
+
+/* Override text color for better contrast on colored backgrounds */
+.scene-item.scene-type-choice .scene-item-id,
+.scene-item.scene-type-image .scene-item-id {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Scene Objects List */
+.scene-objects-section {
+  margin-top: 12px;
+}
+
+.scene-objects-list {
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #34495e;
+  border-radius: 4px;
+  background: #1a1a1a;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.scene-object-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #34495e;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 49%;
+}
+
+.scene-object-item:hover {
+  background: #2c3e50;
+}
+
+.scene-object-item.selected {
+  background: #3498db;
+  color: white;
+}
+
+.scene-object-item:last-child {
+  border-bottom: none;
+}
+
+.scene-object-info {
+  flex: 1;
+  font-size: 12px;
+}
+
+.scene-object-name {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.scene-object-details {
+  color: #bdc3c7;
+  font-size: 10px;
+}
+
+.scene-object-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.scene-object-actions button {
+  padding: 2px 6px;
+  border: none;
+  border-radius: 2px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.scene-object-actions button:hover {
+  opacity: 0.8;
+}
+
+.scene-object-actions .select-btn {
+  background: #3498db;
+  color: white;
+}
+
+.scene-object-actions .delete-btn {
+  background: #e74c3c;
+  color: white;
+}
+
+.scene-objects-empty {
+  padding: 16px;
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Drag insertion indicator */
+.scene-insertion-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #27ae60;
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 999;
+}
+
+.scene-insertion-indicator.visible {
+  opacity: 1;
+}
+
+/* Responsive Scene Items */
+@media (max-width: 768px) {
+  .scene-item {
+    min-width: 60px;
+    width: 60px;
+    height: 60px;
+  }
+
+  .selected-object-panel .object-properties-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
