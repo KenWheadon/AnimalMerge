@@ -25,18 +25,28 @@ const gridManager = {
         if (spotConfig) {
           const isPurchased = gameState.purchasedCells.has(`${i}-${j}`);
           const cellClass = isPurchased ? "grid-cell" : "grid-cell grass";
-          const cellContent =
-            isPurchased && gameState.grid[i][j]
-              ? `<img src="${
-                  GAME_CONFIG.animalImages[gameState.grid[i][j]]
-                }" alt="${gameState.grid[i][j]}" class="animal-image" />`
-              : "";
+
+          // Only show animals that are valid for the current level
+          let cellContent = "";
+          if (
+            isPurchased &&
+            gameState.grid[i][j] &&
+            validateAnimalForLevel(gameState.grid[i][j])
+          ) {
+            cellContent = `<img src="${
+              GAME_CONFIG.animalImages[gameState.grid[i][j]]
+            }" alt="${gameState.grid[i][j]}" class="animal-image" />`;
+          }
 
           html += `<td><div id="cell-${i}-${j}" class="${cellClass}" 
                       data-row="${i}" data-col="${j}" 
                       ${!isPurchased ? `data-cost="${spotConfig.cost}"` : ""}
                       draggable="${
-                        isPurchased && gameState.grid[i][j] ? "true" : "false"
+                        isPurchased &&
+                        gameState.grid[i][j] &&
+                        validateAnimalForLevel(gameState.grid[i][j])
+                          ? "true"
+                          : "false"
                       }"
                       >${cellContent}</div></td>`;
         } else {
@@ -68,7 +78,11 @@ const gridManager = {
         existingValue.remove();
       }
 
-      if (gameState.grid[i][j]) {
+      // Only display animals that are valid for the current level
+      if (
+        gameState.grid[i][j] &&
+        validateAnimalForLevel(gameState.grid[i][j])
+      ) {
         const animalType = gameState.grid[i][j];
         const animalConfig = GAME_CONFIG.animalTypes[animalType];
 
@@ -86,9 +100,18 @@ const gridManager = {
 
         cell.draggable = true;
       } else {
+        // Either no animal or invalid animal for current level
         cell.classList.remove("occupied");
         cell.innerHTML = "";
         cell.draggable = false;
+
+        // Clean up invalid animals from the grid
+        if (
+          gameState.grid[i][j] &&
+          !validateAnimalForLevel(gameState.grid[i][j])
+        ) {
+          gameState.grid[i][j] = null;
+        }
       }
     } else {
       cell.className = "grid-cell grass";
@@ -216,6 +239,14 @@ const gridManager = {
     }
 
     const animalType = gameState.grid[i][j];
+
+    // Validate animal is still valid for current level
+    if (!validateAnimalForLevel(animalType)) {
+      audioManager.playSound("invalid-action");
+      updateStatus("This animal is not valid in the current level! 🚫");
+      return;
+    }
+
     const animalConfig = GAME_CONFIG.animalTypes[animalType];
 
     if (animalConfig.sellPrice <= 0) {
@@ -245,6 +276,11 @@ const gridManager = {
     if (!gameState.purchasedCells.has(`${i}-${j}`) || !gameState.grid[i][j])
       return;
 
+    // Validate animal is still valid for current level
+    if (!validateAnimalForLevel(gameState.grid[i][j])) {
+      return;
+    }
+
     if (e.shiftKey) {
       sellAnimal(i, j, gameState.grid[i][j]);
     } else {
@@ -261,6 +297,13 @@ const gridManager = {
     }
 
     const animalType = gameState.grid[i][j];
+
+    // Validate animal is still valid for current level
+    if (!validateAnimalForLevel(animalType)) {
+      e.preventDefault();
+      return;
+    }
+
     const animalConfig = GAME_CONFIG.animalTypes[animalType];
     if (animalConfig.sellPrice > 0) {
       audioManager.playRandomSound("ooh");
@@ -387,6 +430,12 @@ const gridManager = {
       return;
 
     const animalType = gameState.grid[i][j];
+
+    // Validate animal is still valid for current level
+    if (!validateAnimalForLevel(animalType)) {
+      return;
+    }
+
     const animalConfig = GAME_CONFIG.animalTypes[animalType];
     if (animalConfig.sellPrice > 0) {
       audioManager.playRandomSound("ooh");
@@ -515,7 +564,8 @@ const gridManager = {
       return false;
     }
 
-    return true;
+    // Check if both animals and the merge result are valid for current level
+    return canMergeInLevel(sourceType, targetType);
   },
 
   canSwap(sourceI, sourceJ, targetI, targetJ) {
@@ -527,6 +577,14 @@ const gridManager = {
     const targetType = gameState.grid[targetI][targetJ];
 
     if (!sourceType || !targetType) {
+      return false;
+    }
+
+    // Both animals must be valid for current level to swap
+    if (
+      !validateAnimalForLevel(sourceType) ||
+      !validateAnimalForLevel(targetType)
+    ) {
       return false;
     }
 
@@ -553,12 +611,13 @@ const gridManager = {
       return false;
     }
 
-    return true;
+    // Source animal must be valid for current level
+    return validateAnimalForLevel(sourceType);
   },
 
   showValidTargets(sourceI, sourceJ) {
     const sourceType = gameState.grid[sourceI][sourceJ];
-    if (!sourceType) return;
+    if (!sourceType || !validateAnimalForLevel(sourceType)) return;
 
     GAME_CONFIG.gridConfig.availableSpots.forEach(({ row: i, col: j }) => {
       if (i === sourceI && j === sourceJ) return;

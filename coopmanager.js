@@ -33,6 +33,11 @@ const coopManager = {
 
     return purchaseEntries
       .map(([animalType, config]) => {
+        // Check if animal is available in current level
+        if (!isAnimalAvailableInLevel(animalType)) {
+          return ""; // Don't show button if not available in level
+        }
+
         const animalConfig = GAME_CONFIG.animalTypes[animalType];
         const imageSrc = GAME_CONFIG.animalImages[animalType];
         const costText = config.cost === 0 ? "Free" : `${config.cost}`;
@@ -61,6 +66,11 @@ const coopManager = {
     let html = "";
 
     Object.entries(GAME_CONFIG.coopConfig).forEach(([animalType, config]) => {
+      // Check if coop is available in current level
+      if (!isCoopAvailableInLevel(animalType)) {
+        return; // Skip this coop if not available in level
+      }
+
       const animalName =
         animalType.charAt(0).toUpperCase() + animalType.slice(1);
       const producedType = config.producesType;
@@ -174,6 +184,11 @@ const coopManager = {
   initializeFarmBuildingEventListeners() {
     Object.entries(GAME_CONFIG.purchaseConfig).forEach(
       ([animalType, config]) => {
+        // Skip if animal not available in current level
+        if (!isAnimalAvailableInLevel(animalType)) {
+          return;
+        }
+
         const buyButton = document.getElementById(`buy${animalType}`);
 
         if (buyButton) {
@@ -212,6 +227,11 @@ const coopManager = {
     );
 
     Object.entries(GAME_CONFIG.coopConfig).forEach(([animalType, config]) => {
+      // Skip if coop not available in current level
+      if (!isCoopAvailableInLevel(animalType)) {
+        return;
+      }
+
       const animalName =
         animalType.charAt(0).toUpperCase() + animalType.slice(1);
       const producedType = config.producesType;
@@ -283,7 +303,10 @@ const coopManager = {
         const button = document.getElementById(`buy${animalType}`);
 
         if (button) {
-          if (config.unlocked) {
+          // Check level availability and unlock status
+          const availableInLevel = isAnimalAvailableInLevel(animalType);
+
+          if (config.unlocked && availableInLevel) {
             button.classList.remove("hidden");
           } else {
             button.classList.add("hidden");
@@ -298,6 +321,13 @@ const coopManager = {
   },
 
   buyCoop(animalType) {
+    // Check if coop is available in current level
+    if (!isCoopAvailableInLevel(animalType)) {
+      audioManager.playSound("invalid-action");
+      updateStatus("This coop is not available in the current level! 🚫");
+      return;
+    }
+
     const config = GAME_CONFIG.coopConfig[animalType];
     const cost = config.buyCost;
     const animalName = animalType.charAt(0).toUpperCase() + animalType.slice(1);
@@ -324,7 +354,11 @@ const coopManager = {
         purchasedElement.classList.remove("hidden");
       }
 
-      if (GAME_CONFIG.purchaseConfig[producedType]) {
+      // Only unlock the purchase config if the animal is available in this level
+      if (
+        GAME_CONFIG.purchaseConfig[producedType] &&
+        isAnimalAvailableInLevel(producedType)
+      ) {
         GAME_CONFIG.purchaseConfig[producedType].unlocked = true;
         this.updateBuyAnimalButtons();
       }
@@ -419,10 +453,19 @@ const coopManager = {
 
   updateCoopVisibility() {
     Object.entries(GAME_CONFIG.coopConfig).forEach(([animalType]) => {
+      // Skip if coop not available in current level
+      if (!isCoopAvailableInLevel(animalType)) {
+        return;
+      }
+
       const animalName =
         animalType.charAt(0).toUpperCase() + animalType.slice(1);
 
-      if (gameState.createdAnimals.has(animalName)) {
+      // Only show coop if the animal has been created AND it's valid for the current level
+      if (
+        gameState.createdAnimals.has(animalName) &&
+        validateAnimalForLevel(animalName)
+      ) {
         const coopElement = document.getElementById(`${animalType}Coop`);
 
         if (coopElement && coopElement.classList.contains("hidden")) {
@@ -440,6 +483,11 @@ const coopManager = {
 
     let hasVisibleCoops = false;
     Object.entries(GAME_CONFIG.coopConfig).forEach(([animalType]) => {
+      // Skip if coop not available in current level
+      if (!isCoopAvailableInLevel(animalType)) {
+        return;
+      }
+
       const animalName =
         animalType.charAt(0).toUpperCase() + animalType.slice(1);
       if (gameState.createdAnimals.has(animalName)) {
@@ -456,6 +504,11 @@ const coopManager = {
 
   updatePlaceButtonStates() {
     Object.entries(GAME_CONFIG.coopConfig).forEach(([animalType, config]) => {
+      // Skip if coop not available in current level
+      if (!isCoopAvailableInLevel(animalType)) {
+        return;
+      }
+
       const producedType = config.producesType;
       const placeButton = document.getElementById(`place${producedType}`);
       const coop = gameState[`${animalType}Coop`];
@@ -493,7 +546,13 @@ const coopManager = {
 
   checkForNewUnlocks(newAnimalType) {
     const lowerAnimalType = newAnimalType.toLowerCase();
-    if (GAME_CONFIG.coopConfig[lowerAnimalType]) {
+
+    // Only unlock coops that are both configured and available in the current level
+    if (
+      GAME_CONFIG.coopConfig[lowerAnimalType] &&
+      isCoopAvailableInLevel(lowerAnimalType) &&
+      validateAnimalForLevel(newAnimalType)
+    ) {
       if (!this.unlockedCoops.has(lowerAnimalType)) {
         this.updateCoopVisibility();
         const animalConfig = GAME_CONFIG.animalTypes[newAnimalType];
@@ -521,6 +580,11 @@ const coopManager = {
 
   checkCoopLevelUp(eggType) {
     Object.entries(GAME_CONFIG.coopConfig).forEach(([animalType, config]) => {
+      // Skip if coop not available in current level
+      if (!isCoopAvailableInLevel(animalType)) {
+        return;
+      }
+
       if (config.producesType === eggType) {
         const coop = gameState[`${animalType}Coop`];
         if (coop && coop.owned) {
@@ -627,6 +691,11 @@ const coopManager = {
 
   updateCoopTimers() {
     Object.entries(GAME_CONFIG.coopConfig).forEach(([animalType, config]) => {
+      // Skip if coop not available in current level
+      if (!isCoopAvailableInLevel(animalType)) {
+        return;
+      }
+
       const coop = gameState[`${animalType}Coop`];
       const producedType = config.producesType;
 
@@ -1034,6 +1103,7 @@ const coopManager = {
 
     let mergedTypes = [];
     let mergesMade = false;
+    let skippedMerges = 0;
 
     const pairsToProcess = [...gameState.mergeablePairs];
 
@@ -1052,8 +1122,15 @@ const coopManager = {
         GAME_CONFIG.animalTypes[gameState.grid[target.i][target.j]].mergeTo
       ) {
         const sourceType = gameState.grid[source.i][source.j];
+        const targetType = gameState.grid[target.i][target.j];
         const newType =
           GAME_CONFIG.animalTypes[gameState.grid[target.i][target.j]].mergeTo;
+
+        // Check if merge is allowed in current level
+        if (!canMergeInLevel(sourceType, targetType)) {
+          skippedMerges++;
+          return; // Skip this merge if not allowed in level
+        }
 
         const sourceCell = document.getElementById(
           `cell-${source.i}-${source.j}`
@@ -1126,6 +1203,10 @@ const coopManager = {
       updateStatus(message);
 
       audioManager.updateBackgroundMusic();
+    } else if (skippedMerges > 0) {
+      updateStatus(
+        `Auto-merge skipped ${skippedMerges} merges (level restricted) ⚙️`
+      );
     }
 
     if (gameState.shuffle.owned && gameState.shuffle.enabled) {

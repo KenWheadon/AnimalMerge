@@ -13,6 +13,8 @@ let gameState = {
   totalMerges: 0,
   eggButtonClicked: false,
   achievements: [],
+  currentLevel: 1,
+  levelCompleted: false,
   autoMerge: {
     owned: false,
     level: 1,
@@ -35,7 +37,252 @@ let gameState = {
   isAutoMergeInProgress: false,
 };
 
+function getCurrentLevelConfig() {
+  return (
+    GAME_CONFIG.levelConfig[gameState.currentLevel] ||
+    GAME_CONFIG.levelConfig[1]
+  );
+}
+
+function getLevelFromURL() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const level = parseInt(urlParams.get("level")) || 1;
+  return Math.max(1, Math.min(4, level)); // Clamp between 1 and 4
+}
+
+function checkWinCondition() {
+  const levelConfig = getCurrentLevelConfig();
+  if (gameState.levelCompleted) return false; // Already completed
+
+  if (gameState.money >= levelConfig.winCondition.money) {
+    gameState.levelCompleted = true;
+    // Use setTimeout to avoid multiple triggers during the same money update
+    utilityManager.setTimeout(
+      () => {
+        if (gameState.levelCompleted) {
+          // Double-check in case it was reset
+          showLevelCompletePopup();
+        }
+      },
+      100,
+      "levelCompleteDelay"
+    );
+    return true;
+  }
+  return false;
+}
+
+function showLevelCompletePopup() {
+  const levelConfig = getCurrentLevelConfig();
+  const nextLevel = levelConfig.nextLevel;
+
+  const backdrop = utilityManager.createElement(
+    "div",
+    "level-complete-backdrop"
+  );
+  backdrop.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+
+  const popup = utilityManager.createElement("div", "level-complete-popup");
+  popup.style.cssText = `
+    background: linear-gradient(145deg, #10b981, #059669);
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    border: 2px solid #fbbf24;
+    animation: popupScale 0.5s ease-out;
+  `;
+
+  popup.innerHTML = `
+    <div style="margin-bottom: 1.5rem;">
+      <h2 style="color: white; font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🎉 Level Complete! 🎉</h2>
+      <h3 style="color: #fbbf24; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">${
+        levelConfig.name
+      }</h3>
+    </div>
+    <p style="color: white; font-size: 1.1rem; margin-bottom: 1.5rem; line-height: 1.6;">
+      Congratulations! You've earned <strong style="color: #fbbf24;">💰${
+        gameState.money
+      }</strong> and completed this level!
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      ${
+        nextLevel
+          ? `
+        <button id="nextLevelBtn" style="
+          background: linear-gradient(145deg, #fbbf24, #f59e0b);
+          color: #1f2937;
+          padding: 0.75rem 2rem;
+          border: none;
+          border-radius: 0.5rem;
+          font-weight: bold;
+          font-size: 1.1rem;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+          transition: all 0.2s;
+        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          Next Level
+        </button>
+      `
+          : `
+        <button id="finalCompleteBtn" style="
+          background: linear-gradient(145deg, #fbbf24, #f59e0b);
+          color: #1f2937;
+          padding: 0.75rem 2rem;
+          border: none;
+          border-radius: 0.5rem;
+          font-weight: bold;
+          font-size: 1.1rem;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+          transition: all 0.2s;
+        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          Game Complete!
+        </button>
+      `
+      }
+      <button id="continueLevelBtn" style="
+        background: linear-gradient(145deg, #374151, #1f2937);
+        color: #fbbf24;
+        padding: 0.75rem 2rem;
+        border: 2px solid #fbbf24;
+        border-radius: 0.5rem;
+        font-weight: bold;
+        font-size: 1.1rem;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+        transition: all 0.2s;
+      " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        Continue Playing
+      </button>
+    </div>
+  `;
+
+  if (!document.querySelector("#popup-animations")) {
+    const style = document.createElement("style");
+    style.id = "popup-animations";
+    style.textContent = `
+      @keyframes popupScale {
+        0% {
+          transform: scale(0.8);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  backdrop.appendChild(popup);
+  document.body.appendChild(backdrop);
+
+  // Event listeners
+  const nextLevelBtn = document.getElementById("nextLevelBtn");
+  const continueLevelBtn = document.getElementById("continueLevelBtn");
+  const finalCompleteBtn = document.getElementById("finalCompleteBtn");
+
+  if (nextLevelBtn) {
+    utilityManager.addEventListener(
+      nextLevelBtn,
+      "click",
+      () => {
+        window.location.href = `${window.location.pathname}?level=${nextLevel}`;
+      },
+      "nextLevel"
+    );
+  }
+
+  if (finalCompleteBtn) {
+    utilityManager.addEventListener(
+      finalCompleteBtn,
+      "click",
+      () => {
+        backdrop.remove();
+        updateStatus("🎊 Congratulations! You've mastered the entire farm! 🎊");
+      },
+      "finalComplete"
+    );
+  }
+
+  if (continueLevelBtn) {
+    utilityManager.addEventListener(
+      continueLevelBtn,
+      "click",
+      () => {
+        backdrop.remove();
+        gameState.levelCompleted = false; // Allow them to keep playing
+      },
+      "continueLevel"
+    );
+  }
+
+  // Close on backdrop click
+  utilityManager.addEventListener(
+    backdrop,
+    "click",
+    (e) => {
+      if (e.target === backdrop) {
+        backdrop.remove();
+        gameState.levelCompleted = false;
+      }
+    },
+    "levelCompleteBackdrop"
+  );
+}
+
+function isAnimalAvailableInLevel(animalType) {
+  const levelConfig = getCurrentLevelConfig();
+  return levelConfig.availableAnimals.includes(animalType);
+}
+
+function validateAnimalForLevel(animalType) {
+  if (!animalType) return false;
+  return isAnimalAvailableInLevel(animalType);
+}
+
+function canMergeInLevel(sourceType, targetType) {
+  // Both source animals must be valid for the level
+  if (
+    !validateAnimalForLevel(sourceType) ||
+    !validateAnimalForLevel(targetType)
+  ) {
+    return false;
+  }
+
+  // The merge result must also be valid for the level
+  const mergeResult = GAME_CONFIG.animalTypes[sourceType].mergeTo;
+  if (!mergeResult || !validateAnimalForLevel(mergeResult)) {
+    return false;
+  }
+
+  return true;
+}
+
+function isCoopAvailableInLevel(coopType) {
+  const levelConfig = getCurrentLevelConfig();
+  return levelConfig.availableCoops.includes(coopType);
+}
+
 function showTutorialPopup() {
+  const levelConfig = getCurrentLevelConfig();
+
   const popup = utilityManager.createElement(
     "div",
     "tutorial-popup-backdrop",
@@ -47,8 +294,10 @@ function showTutorialPopup() {
           <img src="images/cow.png" alt="Farm Guide" class="tutorial-cow-image" />
         </div>
         <div class="tutorial-text">
-          <h2 class="tutorial-title">Welcome to Furry Merge Farm!</h2>
+          <h2 class="tutorial-title">Welcome to ${levelConfig.name}!</h2>
           <div class="tutorial-instructions">
+            <p><strong>🎯 Level Goal:</strong> ${levelConfig.description}</p>
+            <p><strong>💰 Win Condition:</strong> Earn ${levelConfig.winCondition.money} money to complete this level!</p>
             <p><strong>🥚 Start with Eggs:</strong> Buy and place eggs on your grid to begin!</p>
             <p><strong>🔄 Merge Everything:</strong> Merge 2 of the same thing to upgrade it!</p>
             <p><strong>💰 Make Money:</strong> Sell animals by dragging them to the butcher shop!</p>
@@ -290,7 +539,20 @@ function hideCreditsGallery() {
 }
 
 function initializeGame() {
+  // Set current level from URL first
+  gameState.currentLevel = getLevelFromURL();
+
   const saveLoaded = saveManager.initialize();
+
+  // If save was loaded, ensure level consistency with URL
+  if (saveLoaded) {
+    const urlLevel = getLevelFromURL();
+    if (gameState.currentLevel !== urlLevel) {
+      // URL takes precedence over saved level
+      gameState.currentLevel = urlLevel;
+      gameState.levelCompleted = false; // Reset completion status for new level
+    }
+  }
 
   if (!saveLoaded) {
     gridManager.initializeGridState();
@@ -340,12 +602,15 @@ function initializeGame() {
 
   achievementManager.checkAchievements();
 
+  const levelConfig = getCurrentLevelConfig();
   if (!saveLoaded) {
     updateStatus(
-      "Start with initial grid spots! Click 🌱 grass squares to expand!"
+      `Start ${levelConfig.name}! Click 🌱 grass squares to expand! Goal: ${levelConfig.winCondition.money} money`
     );
   } else {
-    updateStatus("Game loaded! Welcome back! 🎉");
+    updateStatus(
+      `Welcome back to ${levelConfig.name}! Goal: ${levelConfig.winCondition.money} money 🎉`
+    );
   }
 
   GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
@@ -363,6 +628,8 @@ function initializeGame() {
 }
 
 function generateMainHTML() {
+  const levelConfig = getCurrentLevelConfig();
+
   const autoMergeBuyHidden = gameState.autoMerge.owned ? "hidden" : "";
   const autoMergeToggleHidden = gameState.autoMerge.owned ? "" : "hidden";
   const autoMergeProgressHidden = gameState.autoMerge.owned ? "" : "hidden";
@@ -394,6 +661,15 @@ function generateMainHTML() {
                 <div id="money" class="money-display text-center">Money: 💰${
                   gameState.money
                 }</div>
+                <div class="level-info text-center mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                  <div class="text-sm font-bold text-blue-800">Level ${
+                    gameState.currentLevel
+                  }</div>
+                  <div class="text-xs text-blue-600">${levelConfig.name}</div>
+                  <div class="text-xs text-blue-500">Goal: 💰${
+                    levelConfig.winCondition.money
+                  }</div>
+                </div>
             </div>
             
             <div class="flex-1 overflow-y-auto p-4">
@@ -490,7 +766,11 @@ function generateMainHTML() {
                 </div>
             </div>
 
-            <div id="status" class="status-display text-sm h-16 flex items-center justify-center">Drag or click 'Buy Egg 🥚' to start!</div>
+            <div id="status" class="status-display text-sm h-16 flex items-center justify-center">Level ${
+              gameState.currentLevel
+            }: ${levelConfig.description}. Goal: 💰${
+    levelConfig.winCondition.money
+  }</div>
 
         </div>
 
@@ -593,7 +873,8 @@ function updateMergeablePairs() {
     if (
       gameState.purchasedCells.has(`${i}-${j}`) &&
       gameState.grid[i][j] &&
-      GAME_CONFIG.animalTypes[gameState.grid[i][j]].mergeTo
+      GAME_CONFIG.animalTypes[gameState.grid[i][j]].mergeTo &&
+      validateAnimalForLevel(gameState.grid[i][j]) // Only consider animals valid for current level
     ) {
       for (const { di, dj } of neighbors) {
         const ni = i + di;
@@ -604,7 +885,8 @@ function updateMergeablePairs() {
             (spot) => spot.row === ni && spot.col === nj
           ) &&
           gameState.purchasedCells.has(`${ni}-${nj}`) &&
-          gameState.grid[ni][nj] === gameState.grid[i][j]
+          gameState.grid[ni][nj] === gameState.grid[i][j] &&
+          canMergeInLevel(gameState.grid[i][j], gameState.grid[ni][nj]) // Validate merge is allowed
         ) {
           const pairExists = gameState.mergeablePairs.some(
             (pair) =>
@@ -654,6 +936,13 @@ function placeAnimal(type) {
     return false;
   }
 
+  // Check if animal is available in current level
+  if (!isAnimalAvailableInLevel(type)) {
+    audioManager.playSound("invalid-action");
+    updateStatus("This animal is not available in the current level! 🚫");
+    return false;
+  }
+
   for (const { row: i, col: j } of GAME_CONFIG.gridConfig.availableSpots) {
     if (gameState.purchasedCells.has(`${i}-${j}`) && !gameState.grid[i][j]) {
       gameState.grid[i][j] = type;
@@ -690,6 +979,13 @@ function placeAnimal(type) {
 
 function buyAnimal(type, cost) {
   trackPlayerInteraction();
+
+  // Check if animal is available in current level
+  if (!isAnimalAvailableInLevel(type)) {
+    audioManager.playSound("invalid-action");
+    updateStatus("This animal is not available in the current level! 🚫");
+    return;
+  }
 
   if (gameState.money >= cost) {
     if (type === "Egg" && !gameState.eggButtonClicked) {
@@ -737,6 +1033,15 @@ function mergeAnimals(sourceI, sourceJ, targetI, targetJ) {
   }
 
   const sourceType = gameState.grid[sourceI][sourceJ];
+  const targetType = gameState.grid[targetI][targetJ];
+
+  // Validate that this merge is allowed in the current level
+  if (!canMergeInLevel(sourceType, targetType)) {
+    audioManager.playSound("invalid-action");
+    updateStatus("Cannot merge - not available in this level! 🚫");
+    return;
+  }
+
   const newType = GAME_CONFIG.animalTypes[sourceType].mergeTo;
 
   audioManager.playSound("manual-merge");
@@ -823,6 +1128,9 @@ function updateMoney() {
     500,
     "moneyUpdate"
   );
+
+  // Check win condition after money update
+  checkWinCondition();
 
   achievementManager.checkAchievements();
 }

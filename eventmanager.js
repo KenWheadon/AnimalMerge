@@ -5,19 +5,60 @@ const eventManager = {
 
   activeParticles: new Set(),
 
-  tutorialMessages: [
-    "🥚 Click the free Egg button to place your first animal!",
-    "🔄 Drag identical animals together to merge and upgrade them!",
-    "💰 Drag animals to the butcher shop to sell them for money!",
-    "🖱️ Right-click animals to quickly send them to the butcher!",
-    "🌱 Click grass squares with your money to expand your farm!",
-    "🏡 Create better animals to unlock coops that generate eggs automatically!",
-    "⚙️ Buy Auto-Merge to automatically combine animals every 25 seconds!",
-    "🔀 Buy Shuffle to rearrange your animals after auto-merging!",
-    "🔪 Buy Auto-Butcher to automatically sell your lowest value animals!",
-    "💡 Tip: Merge two of the same animal type to create the next tier!",
-    "🎯 Goal: Keep merging to discover all the different animal types!",
-  ],
+  getLevelSpecificTutorialMessages() {
+    const levelConfig = getCurrentLevelConfig();
+    const currentLevel = gameState.currentLevel;
+
+    let messages = [
+      "🥚 Click the free Egg button to place your first animal!",
+      "🔄 Drag identical animals together to merge and upgrade them!",
+      "💰 Drag animals to the butcher shop to sell them for money!",
+      "🖱️ Right-click animals to quickly send them to the butcher!",
+      "🌱 Click grass squares with your money to expand your farm!",
+    ];
+
+    // Add level-specific messages based on available features
+    if (levelConfig.availableCoops.length > 0) {
+      messages.push(
+        "🏡 Create better animals to unlock coops that generate eggs automatically!"
+      );
+    }
+
+    // Only show automation tips if the level has enough complexity
+    if (currentLevel >= 2) {
+      messages.push(
+        "⚙️ Buy Auto-Merge to automatically combine animals every 25 seconds!"
+      );
+      messages.push(
+        "🔀 Buy Shuffle to rearrange your animals after auto-merging!"
+      );
+    }
+
+    if (currentLevel >= 3) {
+      messages.push(
+        "🔪 Buy Auto-Butcher to automatically sell your lowest value animals!"
+      );
+    }
+
+    messages.push(
+      "💡 Tip: Merge two of the same animal type to create the next tier!"
+    );
+
+    // Level-specific goal reminder
+    messages.push(
+      `🎯 Level Goal: ${levelConfig.description} - Earn ${levelConfig.winCondition.money} money!`
+    );
+
+    if (levelConfig.availableAnimals.length > 3) {
+      messages.push(
+        "🎯 Goal: Keep merging to discover all the different animal types!"
+      );
+    }
+
+    return messages;
+  },
+
+  tutorialMessages: [],
   currentTutorialIndex: 0,
   lastTutorialTime: 0,
   initialTutorialComplete: false,
@@ -106,6 +147,7 @@ const eventManager = {
   },
 
   startInitialTutorialCycle() {
+    this.tutorialMessages = this.getLevelSpecificTutorialMessages();
     this.isPlayingTutorial = true;
     this.currentTutorialIndex = 0;
     this.lastTutorialTime = Date.now();
@@ -140,6 +182,7 @@ const eventManager = {
   playTutorialSequence() {
     if (this.isPlayingTutorial) return;
 
+    this.tutorialMessages = this.getLevelSpecificTutorialMessages();
     this.isPlayingTutorial = true;
     this.currentTutorialIndex = 0;
     this.lastTutorialTime = Date.now();
