@@ -1,417 +1,442 @@
 const achievementManager = {
-  achievementDefinitions: [
-    {
-      id: "first_coop",
-      name: "Coop Builder",
-      icon: "🏡",
-      description: "Purchase your first coop",
-      hint: "Building Related",
-      rarity: "Common",
-      points: 100,
-      earned: false,
-      checkCondition: () => {
-        for (const [animalType] of Object.entries(GAME_CONFIG.coopConfig)) {
-          if (gameState[`${animalType}Coop`]?.owned) return true;
-        }
-        return false;
-      },
-    },
-    {
-      id: "all_coops",
-      name: "Master Builder",
-      icon: "🏰",
-      description: "Purchase all available coops",
-      hint: "Building Related",
-      rarity: "Epic",
-      points: 1000,
-      earned: false,
-      checkCondition: () => {
-        return Object.entries(GAME_CONFIG.coopConfig).every(
-          ([animalType]) => gameState[`${animalType}Coop`]?.owned
-        );
-      },
-    },
-    {
-      id: "first_merge",
-      name: "Merger Novice",
-      icon: "🔄",
-      description: "Perform your first merge",
-      hint: "Merging Related",
-      rarity: "Common",
-      points: 100,
-      earned: false,
-      checkCondition: () => gameState.createdAnimals.size >= 2,
-    },
-    {
-      id: "auto_merge",
-      name: "Automation Expert",
-      icon: "⚙️",
-      description: "Purchase Auto-Merge",
-      hint: "Automation Related",
-      rarity: "Rare",
-      points: 500,
-      earned: false,
-      checkCondition: () => gameState.autoMerge.owned,
-    },
-    {
-      id: "max_tier",
-      name: "Apex Creator",
-      icon: "👑",
-      description: "Create the legendary beast",
-      hint: "Merging Related",
-      rarity: "Legendary",
-      points: 5000,
-      earned: false,
-      checkCondition: () => gameState.createdAnimals.has("EndDemoAnimal"),
-    },
-    {
-      id: "first_sale",
-      name: "First Sale",
-      icon: "💰",
-      description: "Sell your first animal",
-      hint: "Selling Related",
-      rarity: "Common",
-      points: 100,
-      earned: false,
-      checkCondition: () => gameState.totalSlaughtered >= 1,
-    },
-    {
-      id: "slaughter_10",
-      name: "Butcher Apprentice",
-      icon: "🔪",
-      description: "Sell 10 animals",
-      hint: "Selling Related",
-      rarity: "Common",
-      points: 200,
-      earned: false,
-      checkCondition: () => gameState.totalSlaughtered >= 10,
-    },
-    {
-      id: "slaughter_100",
-      name: "Master Butcher",
-      icon: "💀",
-      description: "Sell 100 animals",
-      hint: "Selling Related",
-      rarity: "Rare",
-      points: 1000,
-      earned: false,
-      checkCondition: () => gameState.totalSlaughtered >= 100,
-    },
-    {
-      id: "first_thousand",
-      name: "Wealthy Farmer",
-      icon: "💎",
-      description: "Accumulate 1000 money",
-      hint: "Wealth Related",
-      rarity: "Uncommon",
-      points: 300,
-      earned: false,
-      checkCondition: () => gameState.money >= 1000,
-    },
-    {
-      id: "ten_thousand",
-      name: "Rich Tycoon",
-      icon: "💸",
-      description: "Accumulate 10000 money",
-      hint: "Wealth Related",
-      rarity: "Epic",
-      points: 2000,
-      earned: false,
-      checkCondition: () => gameState.money >= 10000,
-    },
-    {
-      id: "discover_6",
-      name: "Animal Collector",
-      icon: "📚",
-      description: "Discover 6 different animal types",
-      hint: "Discovery Related",
-      rarity: "Common",
-      points: 200,
-      earned: false,
-      checkCondition: () => gameState.createdAnimals.size >= 6,
-    },
-    {
-      id: "discover_all",
-      name: "Zoologist",
-      icon: "🔬",
-      description: "Discover all animal types",
-      hint: "Discovery Related",
-      rarity: "Epic",
-      points: 1500,
-      earned: false,
-      checkCondition: () => {
-        const totalAnimals = Object.keys(GAME_CONFIG.animalTypes).length;
-        return gameState.createdAnimals.size >= totalAnimals;
-      },
-    },
-    {
-      id: "expand_grid",
-      name: "Land Owner",
-      icon: "🌱",
-      description: "Purchase 10 grid spaces",
-      hint: "Expansion Related",
-      rarity: "Uncommon",
-      points: 300,
-      earned: false,
-      checkCondition: () => gameState.purchasedCells.size >= 10,
-    },
-    {
-      id: "full_grid",
-      name: "Territory Master",
-      icon: "🗺️",
-      description: "Purchase all available grid spaces",
-      hint: "Expansion Related",
-      rarity: "Rare",
-      points: 800,
-      earned: false,
-      checkCondition: () => {
-        const totalSpots = GAME_CONFIG.gridConfig.availableSpots.length;
-        return gameState.purchasedCells.size >= totalSpots;
-      },
-    },
-  ],
-
-  rarityConfig: {
-    Common: { color: "#9ca3af", points: 100 },
-    Uncommon: { color: "#10b981", points: 300 },
-    Rare: { color: "#3b82f6", points: 500 },
-    Epic: { color: "#8b5cf6", points: 1000 },
-    Legendary: { color: "#f59e0b", points: 2000 },
-  },
+  achievements: [],
 
   initializeAchievements() {
+    // Initialize achievements array if it doesn't exist in gameState
     if (!gameState.achievements) {
-      gameState.achievements = this.achievementDefinitions.map((def) => ({
-        id: def.id,
-        earned: false,
-        earnedDate: null,
-      }));
+      gameState.achievements = [];
     }
+
+    // Ensure achievements from gameState are loaded
+    this.achievements = [...gameState.achievements];
+
+    this.defineAchievements();
+  },
+
+  defineAchievements() {
+    this.achievementDefinitions = [
+      {
+        id: "first_egg",
+        name: "First Steps",
+        description: "Place your first egg",
+        icon: "🥚",
+        rarity: "Common",
+        points: 10,
+        check: () => gameState.createdAnimals.size >= 1,
+      },
+      {
+        id: "first_merge",
+        name: "Merger",
+        description: "Perform your first merge",
+        icon: "🔄",
+        rarity: "Common",
+        points: 15,
+        check: () => gameState.totalMerges >= 1,
+      },
+      {
+        id: "first_sale",
+        name: "Entrepreneur",
+        description: "Sell your first animal",
+        icon: "💰",
+        rarity: "Common",
+        points: 20,
+        check: () => gameState.totalSlaughtered >= 1,
+      },
+      {
+        id: "money_milestone_10",
+        name: "Getting Started",
+        description: "Earn 10 money",
+        icon: "💵",
+        rarity: "Common",
+        points: 25,
+        check: () => gameState.money >= 10,
+      },
+      {
+        id: "money_milestone_50",
+        name: "Level 1 Master",
+        description: "Earn 50 money",
+        icon: "🏆",
+        rarity: "Uncommon",
+        points: 50,
+        check: () => gameState.money >= 50,
+      },
+      {
+        id: "money_milestone_100",
+        name: "Hundred Club",
+        description: "Earn 100 money",
+        icon: "💎",
+        rarity: "Uncommon",
+        points: 75,
+        check: () => gameState.money >= 100,
+      },
+      {
+        id: "money_milestone_500",
+        name: "Level 2 Master",
+        description: "Earn 500 money",
+        icon: "🌟",
+        rarity: "Rare",
+        points: 100,
+        check: () => gameState.money >= 500,
+      },
+      {
+        id: "money_milestone_1000",
+        name: "Level 3 Master",
+        description: "Earn 1000 money",
+        icon: "👑",
+        rarity: "Rare",
+        points: 150,
+        check: () => gameState.money >= 1000,
+      },
+      {
+        id: "money_milestone_10000",
+        name: "Big Business",
+        description: "Earn 10,000 money",
+        icon: "🏭",
+        rarity: "Epic",
+        points: 300,
+        check: () => gameState.money >= 10000,
+      },
+      {
+        id: "money_milestone_40000",
+        name: "Level 4 Master",
+        description: "Earn 40,000 money",
+        icon: "🚀",
+        rarity: "Legendary",
+        points: 500,
+        check: () => gameState.money >= 40000,
+      },
+      {
+        id: "merge_milestone_10",
+        name: "Merge Master",
+        description: "Perform 10 merges",
+        icon: "⚡",
+        rarity: "Common",
+        points: 30,
+        check: () => gameState.totalMerges >= 10,
+      },
+      {
+        id: "merge_milestone_50",
+        name: "Merge Expert",
+        description: "Perform 50 merges",
+        icon: "🔥",
+        rarity: "Uncommon",
+        points: 100,
+        check: () => gameState.totalMerges >= 50,
+      },
+      {
+        id: "slaughter_milestone_10",
+        name: "Butcher",
+        description: "Process 10 animals",
+        icon: "🔪",
+        rarity: "Common",
+        points: 40,
+        check: () => gameState.totalSlaughtered >= 10,
+      },
+      {
+        id: "slaughter_milestone_50",
+        name: "Master Butcher",
+        description: "Process 50 animals",
+        icon: "🥩",
+        rarity: "Uncommon",
+        points: 120,
+        check: () => gameState.totalSlaughtered >= 50,
+      },
+      {
+        id: "grid_expansion_5",
+        name: "Land Baron",
+        description: "Purchase 5 grid spots",
+        icon: "🌱",
+        rarity: "Common",
+        points: 35,
+        check: () => gameState.purchasedCells.size >= 7, // 2 starting + 5 purchased
+      },
+      {
+        id: "grid_expansion_10",
+        name: "Territory Expansion",
+        description: "Purchase 10 grid spots",
+        icon: "🏞️",
+        rarity: "Uncommon",
+        points: 80,
+        check: () => gameState.purchasedCells.size >= 12, // 2 starting + 10 purchased
+      },
+      {
+        id: "auto_merge_purchase",
+        name: "Automation Begins",
+        description: "Purchase Auto-Merge",
+        icon: "⚙️",
+        rarity: "Uncommon",
+        points: 60,
+        check: () => gameState.autoMerge.owned,
+      },
+      {
+        id: "shuffle_purchase",
+        name: "Mix It Up",
+        description: "Purchase Shuffle",
+        icon: "🔀",
+        rarity: "Uncommon",
+        points: 70,
+        check: () => gameState.shuffle.owned,
+      },
+      {
+        id: "auto_butcher_purchase",
+        name: "Full Automation",
+        description: "Purchase Auto-Butcher",
+        icon: "🤖",
+        rarity: "Rare",
+        points: 120,
+        check: () => gameState.autoButcher.owned,
+      },
+      {
+        id: "first_coop",
+        name: "Farm Builder",
+        description: "Build your first coop",
+        icon: "🏡",
+        rarity: "Uncommon",
+        points: 90,
+        check: () => {
+          return Object.entries(GAME_CONFIG.coopConfig).some(([animalType]) => {
+            const coop = gameState[`${animalType}Coop`];
+            return coop && coop.owned;
+          });
+        },
+      },
+      {
+        id: "all_coops_level",
+        name: "Coop Empire",
+        description: "Own all coops available in current level",
+        icon: "🏘️",
+        rarity: "Rare",
+        points: 200,
+        check: () => {
+          const levelConfig = getCurrentLevelConfig();
+          if (levelConfig.availableCoops.length === 0) return false;
+
+          return levelConfig.availableCoops.every((animalType) => {
+            const coop = gameState[`${animalType}Coop`];
+            return coop && coop.owned;
+          });
+        },
+      },
+      {
+        id: "discover_all_animals_level",
+        name: "Animal Collector",
+        description: "Discover all animals in current level",
+        icon: "🦄",
+        rarity: "Epic",
+        points: 250,
+        check: () => {
+          const levelConfig = getCurrentLevelConfig();
+          const availableAnimals = levelConfig.availableAnimals.filter(
+            (animal) => GAME_CONFIG.animalTypes[animal].sellPrice > 0 // Only count sellable animals
+          );
+
+          return availableAnimals.every((animal) =>
+            gameState.createdAnimals.has(animal)
+          );
+        },
+      },
+    ];
   },
 
   checkAchievements() {
-    let newAchievements = [];
+    if (!this.achievementDefinitions) return;
 
-    this.achievementDefinitions.forEach((def) => {
-      const savedAchievement = gameState.achievements.find(
-        (a) => a.id === def.id
-      );
-
-      if (!savedAchievement?.earned && def.checkCondition()) {
-        if (savedAchievement) {
-          savedAchievement.earned = true;
-          savedAchievement.earnedDate = Date.now();
-        }
-
-        newAchievements.push(def);
-      }
-    });
-
-    newAchievements.forEach((achievement) => {
-      eventManager.showAchievement(
-        `${achievement.icon} ${achievement.name} (+${achievement.points} pts)`
-      );
-    });
-
-    if (newAchievements.length > 0) {
-      this.refreshAchievementDrawer();
-    }
-
-    return newAchievements.length > 0;
-  },
-
-  refreshAchievementDrawer() {
-    const drawer = document.getElementById("achievementDrawer");
-    if (drawer) {
-      const newDrawerHTML = this.generateAchievementDrawerHTML();
-      const tempDiv = utilityManager.createElement("div", "", newDrawerHTML);
-      const newDrawerElement = tempDiv.querySelector("#achievementDrawer");
-
-      const wasOpen = drawer.classList.contains("open");
-      drawer.innerHTML = newDrawerElement.innerHTML;
-
-      if (wasOpen) {
-        drawer.classList.add("open");
+    this.achievementDefinitions.forEach((achievement) => {
+      // Check if achievement was already earned
+      if (this.isAchievementEarned(achievement.id)) {
+        return; // Skip if already earned
       }
 
-      this.initializeEventListeners();
-    }
+      // Check if achievement condition is met
+      if (achievement.check()) {
+        this.awardAchievement(achievement);
+      }
+    });
   },
 
-  getAchievementStats() {
-    const earnedAchievements =
-      gameState.achievements?.filter((a) => a.earned) || [];
-    const totalAchievements = this.achievementDefinitions.length;
-
-    const earnedPoints = earnedAchievements.reduce((total, achievement) => {
-      const def = this.achievementDefinitions.find(
-        (d) => d.id === achievement.id
-      );
-      return total + (def?.points || 0);
-    }, 0);
-
-    const totalPoints = this.achievementDefinitions.reduce(
-      (total, def) => total + def.points,
-      0
+  isAchievementEarned(achievementId) {
+    return (
+      this.achievements.some((a) => a.id === achievementId) ||
+      gameState.achievements.some((a) => a.id === achievementId)
     );
-
-    return {
-      earnedCount: earnedAchievements.length,
-      totalCount: totalAchievements,
-      earnedPoints,
-      totalPoints,
-    };
   },
 
-  generateAchievementDrawerHTML() {
-    const stats = this.getAchievementStats();
-
-    const sortedAchievements = [...this.achievementDefinitions].sort((a, b) => {
-      const aEarned =
-        gameState.achievements?.find((ach) => ach.id === a.id)?.earned || false;
-      const bEarned =
-        gameState.achievements?.find((ach) => ach.id === b.id)?.earned || false;
-
-      if (aEarned && !bEarned) return -1;
-      if (!aEarned && bEarned) return 1;
-      if (aEarned === bEarned) {
-        if (a.points !== b.points) return b.points - a.points;
-        return a.name.localeCompare(b.name);
-      }
-      return 0;
-    });
-
-    const achievementsHTML = sortedAchievements
-      .map((def) => {
-        const savedAchievement = gameState.achievements?.find(
-          (a) => a.id === def.id
-        );
-        const isEarned = savedAchievement?.earned || false;
-        const rarityColor = this.rarityConfig[def.rarity]?.color || "#9ca3af";
-
-        if (isEarned) {
-          return `
-          <div class="achievement-item earned">
-            <div class="achievement-icon">${def.icon}</div>
-            <div class="achievement-content">
-              <div class="achievement-name">${def.name}</div>
-              <div class="achievement-description">${def.description}</div>
-              <div class="achievement-meta">
-                <span class="achievement-rarity" style="color: ${rarityColor}">${def.rarity}</span>
-                <span class="achievement-points">+${def.points} pts</span>
-              </div>
-            </div>
-          </div>
-        `;
-        } else {
-          return `
-          <div class="achievement-item locked">
-            <div class="achievement-icon">🔒</div>
-            <div class="achievement-content">
-              <div class="achievement-name">??????</div>
-              <div class="achievement-description">${def.hint}</div>
-              <div class="achievement-meta">
-                <span class="achievement-rarity" style="color: ${rarityColor}">${def.rarity}</span>
-                <span class="achievement-points">+${def.points} pts</span>
-              </div>
-            </div>
-          </div>
-        `;
-        }
-      })
-      .join("");
-
-    return `
-      <div id="achievementDrawer" class="achievement-drawer">
-        <div class="achievement-header">
-          <h3>🏆 Achievements</h3>
-          <button id="achievementDrawerClose" class="drawer-close-btn">×</button>
-        </div>
-        <div class="achievement-stats">
-          <div class="stats-row">
-            <span>${stats.earnedCount}/${stats.totalCount} Unlocked</span>
-          </div>
-          <div class="stats-row">
-            <span>${utilityManager.formatNumber(
-              stats.earnedPoints
-            )}/${utilityManager.formatNumber(stats.totalPoints)} points</span>
-          </div>
-        </div>
-        <div class="achievement-list">
-          ${achievementsHTML}
-        </div>
-      </div>
-      <button id="achievementDrawerToggle" class="achievement-toggle-btn">🏆</button>
-    `;
-  },
-
-  updateAchievementDisplay() {
-    this.refreshAchievementDrawer();
-  },
-
-  toggleDrawer() {
-    const drawer = document.getElementById("achievementDrawer");
-    const toggle = document.getElementById("achievementDrawerToggle");
-
-    if (drawer && toggle) {
-      drawer.classList.toggle("open");
-      toggle.classList.toggle("active");
-
-      if (drawer.classList.contains("open")) {
-        this.refreshAchievementDrawer();
-      }
+  awardAchievement(achievement) {
+    // Double-check to prevent duplicates
+    if (this.isAchievementEarned(achievement.id)) {
+      return;
     }
+
+    const earnedAchievement = {
+      id: achievement.id,
+      name: achievement.name,
+      description: achievement.description,
+      icon: achievement.icon,
+      rarity: achievement.rarity,
+      points: achievement.points,
+      earnedAt: Date.now(),
+    };
+
+    // Add to both local and gameState arrays
+    this.achievements.push(earnedAchievement);
+    gameState.achievements.push(earnedAchievement);
+
+    // Show achievement notification
+    eventManager.showAchievement(`${achievement.icon} ${achievement.name}`);
+
+    // Play achievement sound
+    audioManager.playSound("achievement-awarded");
+
+    // Save progress
+    saveManager.saveOnAction();
+  },
+
+  getEarnedAchievements() {
+    return this.achievements.filter((a) => a.earnedAt);
+  },
+
+  getTotalPoints() {
+    return this.getEarnedAchievements().reduce((total, achievement) => {
+      return total + (achievement.points || 0);
+    }, 0);
+  },
+
+  getAchievementsByRarity(rarity) {
+    return this.achievements.filter((a) => a.rarity === rarity);
+  },
+
+  getRarityColor(rarity) {
+    const colors = {
+      Common: "#9ca3af",
+      Uncommon: "#10b981",
+      Rare: "#3b82f6",
+      Epic: "#8b5cf6",
+      Legendary: "#f59e0b",
+    };
+    return colors[rarity] || "#9ca3af";
   },
 
   initializeEventListeners() {
-    const toggleBtn = document.getElementById("achievementDrawerToggle");
-    const closeBtn = document.getElementById("achievementDrawerClose");
+    const toggleButton = document.getElementById("achievementToggleBtn");
+    const drawer = document.getElementById("achievementDrawer");
+    const closeButton = document.getElementById("drawerCloseBtn");
 
-    if (toggleBtn) {
+    if (toggleButton && drawer) {
       utilityManager.addEventListener(
-        toggleBtn,
-        "mouseenter",
-        () => {
-          audioManager.playSound("button-hover");
-        },
-        "achievementToggleHover"
-      );
-
-      const newToggleBtn = toggleBtn.cloneNode(true);
-      toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
-
-      utilityManager.addEventListener(
-        newToggleBtn,
+        toggleButton,
         "click",
         () => {
-          trackPlayerInteraction();
           audioManager.playSound("button-click");
-          this.toggleDrawer();
+          drawer.classList.toggle("open");
+          toggleButton.classList.toggle("active");
+          this.updateAchievementDisplay();
         },
-        "achievementToggleClick"
+        "achievementToggle"
       );
     }
 
-    if (closeBtn) {
+    if (closeButton && drawer) {
       utilityManager.addEventListener(
-        closeBtn,
-        "mouseenter",
-        () => {
-          audioManager.playSound("button-hover");
-        },
-        "achievementCloseHover"
-      );
-
-      utilityManager.addEventListener(
-        closeBtn,
+        closeButton,
         "click",
         () => {
-          trackPlayerInteraction();
           audioManager.playSound("button-click");
-          this.toggleDrawer();
+          drawer.classList.remove("open");
+          toggleButton.classList.remove("active");
         },
-        "achievementCloseClick"
+        "achievementClose"
       );
     }
+
+    // Close drawer when clicking outside
+    if (drawer) {
+      utilityManager.addEventListener(
+        document,
+        "click",
+        (e) => {
+          if (
+            drawer.classList.contains("open") &&
+            !drawer.contains(e.target) &&
+            !toggleButton.contains(e.target)
+          ) {
+            drawer.classList.remove("open");
+            toggleButton.classList.remove("active");
+          }
+        },
+        "achievementOutsideClick"
+      );
+    }
+  },
+
+  updateAchievementDisplay() {
+    const statsElement = document.querySelector(".achievement-stats");
+    const listElement = document.querySelector(".achievement-list");
+
+    if (!statsElement || !listElement || !this.achievementDefinitions) return;
+
+    const earnedCount = this.achievements.length;
+    const totalCount = this.achievementDefinitions.length;
+    const totalPoints = this.getTotalPoints();
+
+    statsElement.innerHTML = `
+      <div class="stats-row">
+        <span>Achievements: ${earnedCount}/${totalCount}</span>
+      </div>
+      <div class="stats-row">
+        <span>Total Points: ${totalPoints}</span>
+      </div>
+    `;
+
+    listElement.innerHTML = this.achievementDefinitions
+      .map((achievement) => {
+        const isEarned = this.isAchievementEarned(achievement.id);
+        const itemClass = isEarned ? "earned" : "locked";
+        const rarityColor = this.getRarityColor(achievement.rarity);
+
+        return `
+          <div class="achievement-item ${itemClass}">
+            <div class="achievement-icon" style="background-color: ${rarityColor}20; color: ${rarityColor};">
+              ${achievement.icon}
+            </div>
+            <div class="achievement-content">
+              <div class="achievement-name">${achievement.name}</div>
+              <div class="achievement-description">${achievement.description}</div>
+              <div class="achievement-meta">
+                <span class="achievement-rarity" style="color: ${rarityColor};">${achievement.rarity}</span>
+                <span class="achievement-points">${achievement.points} pts</span>
+              </div>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  },
+
+  generateAchievementDrawerHTML() {
+    return `
+      <button id="achievementToggleBtn" class="achievement-toggle-btn" title="View Achievements">
+        🏆
+      </button>
+
+      <div id="achievementDrawer" class="achievement-drawer">
+        <div class="achievement-header">
+          <h3>🏆 Achievements</h3>
+          <button id="drawerCloseBtn" class="drawer-close-btn">×</button>
+        </div>
+
+        <div class="achievement-stats">
+          <div class="stats-row">
+            <span>Achievements: 0/0</span>
+          </div>
+          <div class="stats-row">
+            <span>Total Points: 0</span>
+          </div>
+        </div>
+
+        <div class="achievement-list">
+          <!-- Achievements will be dynamically populated -->
+        </div>
+      </div>
+    `;
   },
 };

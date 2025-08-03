@@ -29,7 +29,7 @@ const GAME_CONFIG = {
     1: {
       name: "Mantis Madness",
       description: "Start with basic mantis eggs",
-      winCondition: { money: 50 },
+      winCondition: { money: 20 },
       availableAnimals: ["Egg", "Mantis", "Mantis2"],
       availableCoops: [],
       nextLevel: 2,
@@ -37,7 +37,7 @@ const GAME_CONFIG = {
     2: {
       name: "Cat Colony",
       description: "Mantis and cats join the farm",
-      winCondition: { money: 500 },
+      winCondition: { money: 250 },
       availableAnimals: [
         "Egg",
         "Mantis",
@@ -53,7 +53,7 @@ const GAME_CONFIG = {
     3: {
       name: "Panda Paradise",
       description: "Add pandas to your growing farm",
-      winCondition: { money: 1000 },
+      winCondition: { money: 700 },
       availableAnimals: [
         "Egg",
         "Mantis",
@@ -74,7 +74,7 @@ const GAME_CONFIG = {
     4: {
       name: "Ultimate Farm",
       description: "All animals available - master the farm!",
-      winCondition: { money: 40000 },
+      winCondition: { money: 25000 },
       availableAnimals: [
         "Egg",
         "Mantis",

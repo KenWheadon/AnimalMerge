@@ -81,6 +81,7 @@ const eventManager = {
       coopManager.toggleAutoButcher()
     );
     this.setupButtonListener("helpButton", () => this.playTutorialSequence());
+    this.setupButtonListener("levelSelectBtn", () => showLevelSelectPopup());
   },
 
   setupButtonListener(id, callback) {

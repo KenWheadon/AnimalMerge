@@ -14,6 +14,7 @@ let gameState = {
   eggButtonClicked: false,
   achievements: [],
   currentLevel: 1,
+  highestUnlockedLevel: 1,
   levelCompleted: false,
   autoMerge: {
     owned: false,
@@ -44,10 +45,76 @@ function getCurrentLevelConfig() {
   );
 }
 
-function getLevelFromURL() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const level = parseInt(urlParams.get("level")) || 1;
-  return Math.max(1, Math.min(4, level)); // Clamp between 1 and 4
+function switchToLevel(newLevel) {
+  if (newLevel < 1 || newLevel > 4) {
+    console.error(`Invalid level: ${newLevel}`);
+    return false;
+  }
+
+  if (newLevel > gameState.highestUnlockedLevel) {
+    console.error(
+      `Level ${newLevel} not unlocked yet. Highest unlocked: ${gameState.highestUnlockedLevel}`
+    );
+    return false;
+  }
+
+  console.log(`Switching to level ${newLevel}`);
+  gameState.currentLevel = newLevel;
+
+  // Save current progress before switching
+  saveManager.saveGame();
+
+  // Reset game state for new level
+  resetGameStateForNewLevel();
+
+  // Reinitialize game for new level
+  reinitializeGame();
+
+  return true;
+}
+
+function unlockNextLevel() {
+  const nextLevel = gameState.currentLevel + 1;
+  if (nextLevel <= 4 && nextLevel > gameState.highestUnlockedLevel) {
+    gameState.highestUnlockedLevel = nextLevel;
+    console.log(`Unlocked level ${nextLevel}`);
+    saveManager.saveGame(); // Save progression
+    return true;
+  }
+  return false;
+}
+
+function isAnimalAvailableInLevel(animalType) {
+  const levelConfig = getCurrentLevelConfig();
+  return levelConfig.availableAnimals.includes(animalType);
+}
+
+function validateAnimalForLevel(animalType) {
+  if (!animalType) return false;
+  return isAnimalAvailableInLevel(animalType);
+}
+
+function canMergeInLevel(sourceType, targetType) {
+  // Both source animals must be valid for the level
+  if (
+    !validateAnimalForLevel(sourceType) ||
+    !validateAnimalForLevel(targetType)
+  ) {
+    return false;
+  }
+
+  // The merge result must also be valid for the level
+  const mergeResult = GAME_CONFIG.animalTypes[sourceType].mergeTo;
+  if (!mergeResult || !validateAnimalForLevel(mergeResult)) {
+    return false;
+  }
+
+  return true;
+}
+
+function isCoopAvailableInLevel(coopType) {
+  const levelConfig = getCurrentLevelConfig();
+  return levelConfig.availableCoops.includes(coopType);
 }
 
 function checkWinCondition() {
@@ -56,6 +123,13 @@ function checkWinCondition() {
 
   if (gameState.money >= levelConfig.winCondition.money) {
     gameState.levelCompleted = true;
+
+    // Unlock next level if this is a new completion
+    const nextLevel = levelConfig.nextLevel;
+    if (nextLevel && nextLevel > gameState.highestUnlockedLevel) {
+      unlockNextLevel();
+    }
+
     // Use setTimeout to avoid multiple triggers during the same money update
     utilityManager.setTimeout(
       () => {
@@ -75,6 +149,8 @@ function checkWinCondition() {
 function showLevelCompletePopup() {
   const levelConfig = getCurrentLevelConfig();
   const nextLevel = levelConfig.nextLevel;
+  const canAccessNextLevel =
+    nextLevel && nextLevel <= gameState.highestUnlockedLevel;
 
   const backdrop = utilityManager.createElement(
     "div",
@@ -118,10 +194,11 @@ function showLevelCompletePopup() {
       Congratulations! You've earned <strong style="color: #fbbf24;">💰${
         gameState.money
       }</strong> and completed this level!
+      ${nextLevel ? `<br><br>Level ${nextLevel} is now unlocked!` : ""}
     </p>
     <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
       ${
-        nextLevel
+        canAccessNextLevel
           ? `
         <button id="nextLevelBtn" style="
           background: linear-gradient(145deg, #fbbf24, #f59e0b);
@@ -135,10 +212,11 @@ function showLevelCompletePopup() {
           box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
           transition: all 0.2s;
         " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-          Next Level
+          Go to Level ${nextLevel}
         </button>
       `
-          : `
+          : !nextLevel
+          ? `
         <button id="finalCompleteBtn" style="
           background: linear-gradient(145deg, #fbbf24, #f59e0b);
           color: #1f2937;
@@ -154,6 +232,7 @@ function showLevelCompletePopup() {
           Game Complete!
         </button>
       `
+          : ""
       }
       <button id="continueLevelBtn" style="
         background: linear-gradient(145deg, #374151, #1f2937);
@@ -168,6 +247,20 @@ function showLevelCompletePopup() {
         transition: all 0.2s;
       " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         Continue Playing
+      </button>
+      <button id="showLevelSelectBtn" style="
+        background: linear-gradient(145deg, #6366f1, #4f46e5);
+        color: white;
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: bold;
+        font-size: 1.1rem;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        transition: all 0.2s;
+      " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        Level Select
       </button>
     </div>
   `;
@@ -197,13 +290,16 @@ function showLevelCompletePopup() {
   const nextLevelBtn = document.getElementById("nextLevelBtn");
   const continueLevelBtn = document.getElementById("continueLevelBtn");
   const finalCompleteBtn = document.getElementById("finalCompleteBtn");
+  const showLevelSelectBtn = document.getElementById("showLevelSelectBtn");
 
   if (nextLevelBtn) {
     utilityManager.addEventListener(
       nextLevelBtn,
       "click",
       () => {
-        window.location.href = `${window.location.pathname}?level=${nextLevel}`;
+        console.log(`Going to level ${nextLevel}`);
+        backdrop.remove();
+        switchToLevel(nextLevel);
       },
       "nextLevel"
     );
@@ -233,6 +329,18 @@ function showLevelCompletePopup() {
     );
   }
 
+  if (showLevelSelectBtn) {
+    utilityManager.addEventListener(
+      showLevelSelectBtn,
+      "click",
+      () => {
+        backdrop.remove();
+        showLevelSelectPopup();
+      },
+      "showLevelSelect"
+    );
+  }
+
   // Close on backdrop click
   utilityManager.addEventListener(
     backdrop,
@@ -247,37 +355,148 @@ function showLevelCompletePopup() {
   );
 }
 
-function isAnimalAvailableInLevel(animalType) {
-  const levelConfig = getCurrentLevelConfig();
-  return levelConfig.availableAnimals.includes(animalType);
-}
+function showLevelSelectPopup() {
+  const backdrop = utilityManager.createElement("div", "level-select-backdrop");
+  backdrop.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
 
-function validateAnimalForLevel(animalType) {
-  if (!animalType) return false;
-  return isAnimalAvailableInLevel(animalType);
-}
+  const popup = utilityManager.createElement("div", "level-select-popup");
+  popup.style.cssText = `
+    background: linear-gradient(145deg, #1f2937, #374151);
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    max-width: 600px;
+    width: 90%;
+    border: 2px solid #fbbf24;
+    animation: popupScale 0.5s ease-out;
+  `;
 
-function canMergeInLevel(sourceType, targetType) {
-  // Both source animals must be valid for the level
-  if (
-    !validateAnimalForLevel(sourceType) ||
-    !validateAnimalForLevel(targetType)
-  ) {
-    return false;
+  let levelButtons = "";
+  for (let level = 1; level <= 4; level++) {
+    const config = GAME_CONFIG.levelConfig[level];
+    const isUnlocked = level <= gameState.highestUnlockedLevel;
+    const isCurrent = level === gameState.currentLevel;
+
+    const buttonStyle = isUnlocked
+      ? isCurrent
+        ? "background: linear-gradient(145deg, #10b981, #059669); color: white;"
+        : "background: linear-gradient(145deg, #fbbf24, #f59e0b); color: #1f2937;"
+      : "background: linear-gradient(145deg, #6b7280, #4b5563); color: #9ca3af; cursor: not-allowed;";
+
+    levelButtons += `
+      <button id="selectLevel${level}" ${!isUnlocked ? "disabled" : ""} style="
+        ${buttonStyle}
+        padding: 1rem 1.5rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: ${isUnlocked ? "pointer" : "not-allowed"};
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        transition: all 0.2s;
+        margin: 0.5rem;
+        min-width: 200px;
+      " ${
+        isUnlocked
+          ? `onmouseover="if(!this.disabled) this.style.transform='scale(1.05)'" onmouseout="if(!this.disabled) this.style.transform='scale(1)'"`
+          : ""
+      }>
+        <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">
+          ${isCurrent ? "▶ " : ""}Level ${level}${isUnlocked ? "" : " 🔒"}
+        </div>
+        <div style="font-size: 0.9rem; opacity: 0.8;">
+          ${config.name}
+        </div>
+        <div style="font-size: 0.8rem; opacity: 0.7;">
+          Goal: 💰${config.winCondition.money}
+        </div>
+      </button>
+    `;
   }
 
-  // The merge result must also be valid for the level
-  const mergeResult = GAME_CONFIG.animalTypes[sourceType].mergeTo;
-  if (!mergeResult || !validateAnimalForLevel(mergeResult)) {
-    return false;
+  popup.innerHTML = `
+    <div style="margin-bottom: 2rem;">
+      <h2 style="color: #fbbf24; font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">Level Select</h2>
+      <p style="color: #d1d5db; font-size: 1rem;">Choose a level to play</p>
+      <p style="color: #9ca3af; font-size: 0.9rem;">Highest Unlocked: Level ${gameState.highestUnlockedLevel}</p>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin-bottom: 2rem;">
+      ${levelButtons}
+    </div>
+    <button id="closeLevelSelect" style="
+      background: linear-gradient(145deg, #374151, #1f2937);
+      color: #fbbf24;
+      padding: 0.75rem 2rem;
+      border: 2px solid #fbbf24;
+      border-radius: 0.5rem;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+      transition: all 0.2s;
+    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+      Cancel
+    </button>
+  `;
+
+  backdrop.appendChild(popup);
+  document.body.appendChild(backdrop);
+
+  // Event listeners for level buttons
+  for (let level = 1; level <= 4; level++) {
+    const button = document.getElementById(`selectLevel${level}`);
+    if (button && level <= gameState.highestUnlockedLevel) {
+      utilityManager.addEventListener(
+        button,
+        "click",
+        () => {
+          backdrop.remove();
+          if (level !== gameState.currentLevel) {
+            switchToLevel(level);
+          }
+        },
+        `selectLevel${level}`
+      );
+    }
   }
 
-  return true;
-}
+  // Close button
+  const closeButton = document.getElementById("closeLevelSelect");
+  if (closeButton) {
+    utilityManager.addEventListener(
+      closeButton,
+      "click",
+      () => {
+        backdrop.remove();
+      },
+      "closeLevelSelect"
+    );
+  }
 
-function isCoopAvailableInLevel(coopType) {
-  const levelConfig = getCurrentLevelConfig();
-  return levelConfig.availableCoops.includes(coopType);
+  // Close on backdrop click
+  utilityManager.addEventListener(
+    backdrop,
+    "click",
+    (e) => {
+      if (e.target === backdrop) {
+        backdrop.remove();
+      }
+    },
+    "levelSelectBackdrop"
+  );
 }
 
 function showTutorialPopup() {
@@ -539,26 +758,34 @@ function hideCreditsGallery() {
 }
 
 function initializeGame() {
-  // Set current level from URL first
-  gameState.currentLevel = getLevelFromURL();
+  console.log(`Initializing game...`);
 
   const saveLoaded = saveManager.initialize();
+  console.log(`Save loaded: ${saveLoaded}`);
 
-  // If save was loaded, ensure level consistency with URL
-  if (saveLoaded) {
-    const urlLevel = getLevelFromURL();
-    if (gameState.currentLevel !== urlLevel) {
-      // URL takes precedence over saved level
-      gameState.currentLevel = urlLevel;
-      gameState.levelCompleted = false; // Reset completion status for new level
-    }
-  }
-
+  // If no save loaded, start from level 1
   if (!saveLoaded) {
+    console.log("No save found, starting fresh at level 1");
+    gameState.currentLevel = 1;
+    gameState.highestUnlockedLevel = 1;
+    resetGameStateForNewLevel();
+
+    // Initialize fresh game state
     gridManager.initializeGridState();
     slaughterHouseManager.initializeSlaughterHouses();
     coopManager.initializeCoopStates();
   } else {
+    // Ensure level bounds
+    gameState.currentLevel = Math.max(
+      1,
+      Math.min(4, gameState.currentLevel || 1)
+    );
+    gameState.highestUnlockedLevel = Math.max(
+      1,
+      Math.min(4, gameState.highestUnlockedLevel || 1)
+    );
+
+    // Initialize loaded game state
     if (!gameState.grid || gameState.grid.length === 0) {
       gameState.grid = Array(GAME_CONFIG.gridConfig.rows)
         .fill(null)
@@ -577,6 +804,20 @@ function initializeGame() {
       ];
     }
     coopManager.initializeCoopStates();
+
+    // Ensure purchased cells is properly initialized
+    if (
+      !gameState.purchasedCells ||
+      !(gameState.purchasedCells instanceof Set)
+    ) {
+      gameState.purchasedCells = new Set();
+      // Add the free starting spots
+      GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
+        if (cost === 0) {
+          gameState.purchasedCells.add(`${row}-${col}`);
+        }
+      });
+    }
   }
 
   achievementManager.initializeAchievements();
@@ -603,9 +844,11 @@ function initializeGame() {
   achievementManager.checkAchievements();
 
   const levelConfig = getCurrentLevelConfig();
+  console.log(`Level config loaded: ${levelConfig.name}`);
+
   if (!saveLoaded) {
     updateStatus(
-      `Start ${levelConfig.name}! Click 🌱 grass squares to expand! Goal: ${levelConfig.winCondition.money} money`
+      `Welcome to ${levelConfig.name}! Click 🌱 grass squares to expand! Goal: ${levelConfig.winCondition.money} money`
     );
   } else {
     updateStatus(
@@ -625,6 +868,123 @@ function initializeGame() {
   coopManager.updateShuffleButtonState();
 
   showTutorialPopup();
+}
+
+function resetGameStateForNewLevel() {
+  // Preserve achievements and level progression across levels
+  const preservedAchievements = gameState.achievements || [];
+  const preservedHighestUnlockedLevel = gameState.highestUnlockedLevel || 1;
+  const preservedCurrentLevel = gameState.currentLevel || 1;
+
+  // Reset core game state
+  gameState.money = 0;
+  gameState.grid = [];
+  gameState.purchasedCells = new Set();
+  gameState.selectedCell = null;
+  gameState.draggedCell = null;
+  gameState.isSlaughterAnimating = false;
+  gameState.createdAnimals = new Set();
+  gameState.recentlyAnimatedCells = [];
+  gameState.mergeablePairs = [];
+  gameState.previousMergeablePairs = [];
+  gameState.totalSlaughtered = 0;
+  gameState.totalMerges = 0;
+  gameState.eggButtonClicked = false;
+  gameState.achievements = preservedAchievements; // Keep achievements
+  gameState.currentLevel = preservedCurrentLevel; // Keep current level
+  gameState.highestUnlockedLevel = preservedHighestUnlockedLevel; // Keep progression
+  gameState.levelCompleted = false;
+
+  // Reset automation states
+  gameState.autoMerge = {
+    owned: false,
+    level: 1,
+    baseInterval: GAME_CONFIG.autoMergeConfig.baseInterval,
+    currentInterval: GAME_CONFIG.autoMergeConfig.baseInterval,
+    timer: GAME_CONFIG.autoMergeConfig.baseInterval,
+    enabled: true,
+  };
+
+  gameState.shuffle = {
+    owned: false,
+    enabled: true,
+  };
+
+  gameState.autoButcher = {
+    owned: false,
+    enabled: true,
+    timer: GAME_CONFIG.autoButcherConfig.checkInterval,
+  };
+
+  gameState.slaughterHouses = [];
+  gameState.lastInteractionTime = Date.now();
+  gameState.isAutoMergeInProgress = false;
+
+  // Reset all coop states
+  Object.keys(GAME_CONFIG.coopConfig).forEach((animalType) => {
+    const coopKey = `${animalType}Coop`;
+    gameState[coopKey] = {
+      owned: false,
+      level: 1,
+      baseTime: GAME_CONFIG.coopConfig[animalType].baseTime,
+      timer: GAME_CONFIG.coopConfig[animalType].baseTime,
+      stored: 0,
+      eggsMerged: 0,
+      autoPlacement: true,
+    };
+  });
+
+  console.log("Game state reset for new level");
+}
+
+function reinitializeGame() {
+  // Clear existing timers
+  utilityManager.cleanup();
+
+  // Reinitialize all systems
+  gridManager.initializeGridState();
+  slaughterHouseManager.initializeSlaughterHouses();
+  coopManager.initializeCoopStates();
+
+  // Regenerate UI
+  document.getElementById("gameContainer").innerHTML = generateMainHTML();
+
+  // Reinitialize event listeners
+  gridManager.initializeGridEventListeners();
+  slaughterHouseManager.initializeSlaughterHouseEventListeners();
+  coopManager.initializeFarmBuildingEventListeners();
+  eventManager.initializeButtonEventListeners();
+  achievementManager.initializeEventListeners();
+
+  // Update all displays
+  updateAnimalValues();
+  updateMergeablePairs();
+  coopManager.updateEmptyMessageVisibility();
+  coopManager.updateBuyAnimalButtons();
+  coopManager.updateShuffleButtonState();
+  updateMoney();
+  updateAutoMergeLevel();
+  updatePanelVisibility();
+
+  // Setup grid grass cells
+  GAME_CONFIG.gridConfig.availableSpots.forEach(({ row, col, cost }) => {
+    if (cost > 0 && !gameState.purchasedCells.has(`${row}-${col}`)) {
+      gridManager.setupGrassCell(row, col, cost);
+    }
+  });
+
+  // Restart timers
+  startGameTimers();
+  eventManager.startInitialEggButtonAnimation();
+  eventManager.initializeIdleDetection();
+  coopManager.updateShuffleButtonState();
+
+  const levelConfig = getCurrentLevelConfig();
+  updateStatus(
+    `Welcome to ${levelConfig.name}! Goal: ${levelConfig.winCondition.money} money 🎯`
+  );
+
+  console.log(`Game reinitialized for level ${gameState.currentLevel}`);
 }
 
 function generateMainHTML() {
@@ -669,6 +1029,9 @@ function generateMainHTML() {
                   <div class="text-xs text-blue-500">Goal: 💰${
                     levelConfig.winCondition.money
                   }</div>
+                  <button id="levelSelectBtn" class="mt-1 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                    Level Select
+                  </button>
                 </div>
             </div>
             
